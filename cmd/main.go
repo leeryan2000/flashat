@@ -1,5 +1,6 @@
 package main
 
+import "fmt"
 import "github.com/gin-gonic/gin"
 
 func main() {
@@ -10,6 +11,8 @@ func main() {
 			"message": "pong",
 		})
 	})
+
+	fmt.Println("New line added to test branch")
 
 	r.Run() // default on :8080
 }
