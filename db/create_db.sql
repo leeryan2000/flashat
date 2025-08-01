@@ -1,0 +1,21 @@
+/* DROP database IF EXISTS dev;
+CREATE DATABASE dev; */
+
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password VARCHAR(100) NOT NULL,
+
+    role VARCHAR(50) DEFAULT 'user',
+
+    /* full_name VARCHAR(100), */
+    /* is_active BOOLEAN DEFAULT TRUE, */
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (id, email, hashed_password)
+VALUES (1, 'testemail', 'testpassword');
