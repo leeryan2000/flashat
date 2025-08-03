@@ -18,7 +18,3 @@ func SetupRoutes(handlers *handler.Handlers) *gin.Engine {
 
 	return router
 }
-
-
-
-

@@ -1,15 +1,15 @@
 package handler
 
 import (
-	"log"
-	"net/http"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/leeryan2000/flashat/model"
 	"github.com/leeryan2000/flashat/server"
+	"log"
+	"net/http"
 )
 
-type UserHandler struct{S *server.Server}
+type UserHandler struct{ S *server.Server }
 
 func (uh UserHandler) CreateUser(c *gin.Context) {
 	var user model.User
@@ -34,7 +34,6 @@ func (uh UserHandler) GetUsers(c *gin.Context) {
 	uh.S.DB.Find(&users)
 	c.JSON(http.StatusOK, users)
 }
-
 
 // func CreateUserLocal(db *gorm.DB) {
 //     var user = models.User {

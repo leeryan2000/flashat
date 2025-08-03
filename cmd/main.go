@@ -7,7 +7,6 @@ import (
 	"github.com/leeryan2000/flashat/server"
 )
 
-
 func main() {
 	s, err := server.StartServer()
 	if err != nil {

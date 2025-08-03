@@ -1,7 +1,6 @@
 package db
 
 import (
-	
 	"github.com/leeryan2000/flashat/config"
 	"github.com/leeryan2000/flashat/model"
 	"gorm.io/driver/postgres"

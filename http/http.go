@@ -7,8 +7,8 @@ import (
 )
 
 func InitializeServer(s *server.Server) {
-	handlers := handler.Handlers {
-		User: handler.UserHandler{S: s}, 
+	handlers := handler.Handlers{
+		User: handler.UserHandler{S: s},
 	}
 
 	http := route.SetupRoutes(&handlers)
