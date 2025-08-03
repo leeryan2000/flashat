@@ -1,5 +1,5 @@
 build:
-	go build -o bin/flashat
+	go build -o bin/flashat ./cmd/main.go
 
 run: build
 	bin/flashat

@@ -1,18 +1,18 @@
 package main
 
-import "fmt"
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+
+	"github.com/leeryan2000/flashat/http"
+	"github.com/leeryan2000/flashat/server"
+)
+
 
 func main() {
-	r := gin.Default()
+	s, err := server.StartServer()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	fmt.Println("New line added to test branch")
-
-	r.Run() // default on :8080
+	http.InitializeServer(s)
 }
