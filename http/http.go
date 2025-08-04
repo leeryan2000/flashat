@@ -1,16 +1,19 @@
 package http
 
 import (
-	"github.com/leeryan2000/flashat/handler"
-	"github.com/leeryan2000/flashat/http/route"
+	"github.com/leeryan2000/flashat/handlers"
+	"github.com/leeryan2000/flashat/http/routes"
+	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/server"
 )
 
 func InitializeServer(s *server.Server) {
-	handlers := handler.Handlers{
-		User: handler.UserHandler{S: s},
+	userRepo := &repo.GormUserRepository{ DB: s.DB }
+
+	handlers := handlers.Handlers{
+		User: handlers.UserHandler{Repo: userRepo},
 	}
 
-	http := route.SetupRoutes(&handlers)
+	http := routes.SetupRoutes(&handlers)
 	http.Run()
 }

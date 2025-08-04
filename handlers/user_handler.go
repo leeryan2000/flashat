@@ -1,37 +1,37 @@
-package handler
+package handlers
 
 import (
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/leeryan2000/flashat/model"
-	"github.com/leeryan2000/flashat/server"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/leeryan2000/flashat/model"
+	"github.com/leeryan2000/flashat/repo"
 )
 
-type UserHandler struct{ S *server.Server }
+type UserHandler struct{ Repo repo.UserRepository }
 
 func (uh UserHandler) CreateUser(c *gin.Context) {
 	var user model.User
-
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	if err := uh.S.DB.Create(&user).Error; err != nil {
+	if err := uh.Repo.CreateUser(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Fatal("Failed to add user to server")
 		return
 	}
-
 	c.JSON(http.StatusOK, user)
 }
 
-func (uh UserHandler) GetUsers(c *gin.Context) {
+func (uh UserHandler) GetAllUsers(c *gin.Context) {
 	var users []model.User
-	fmt.Println("here")
-	uh.S.DB.Find(&users)
+	users, err := uh.Repo.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, users)
 }
 

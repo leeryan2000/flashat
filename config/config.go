@@ -1,11 +1,14 @@
 package config
 
 type Configuration struct {
+	// database fields
 	DB_USER   string
 	DB_PASS   string
 	DB_DBNAME string
 	DB_DBHOST string
 	DB_PORT   string
+
+	
 }
 
 func GetConfig() Configuration {
