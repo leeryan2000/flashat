@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/leeryan2000/flashat/model"
+	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
 )
 
-type UserHandler struct{ Repo repo.UserRepository }
+type UserHandler struct{ Repo repo.UserRepo }
 
 func (uh UserHandler) CreateUser(c *gin.Context) {
-	var user model.User
+	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -26,7 +26,7 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (uh UserHandler) GetAllUsers(c *gin.Context) {
-	var users []model.User
+	var users []models.User
 	users, err := uh.Repo.GetAllUsers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

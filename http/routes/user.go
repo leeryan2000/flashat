@@ -8,6 +8,6 @@ import (
 func InitializeUserRoutes(router *gin.RouterGroup, h *handlers.Handlers) {
 	uh := h.User
 	userRoutes := router.Group("/user")
-	userRoutes.GET("/getUsers", uh.GetAllUsers)
+	userRoutes.GET("/getAllUsers", uh.GetAllUsers)
 	userRoutes.POST("/createUser", uh.CreateUser)
 }

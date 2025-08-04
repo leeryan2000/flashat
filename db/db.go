@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/leeryan2000/flashat/config"
-	"github.com/leeryan2000/flashat/model"
+	"github.com/leeryan2000/flashat/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -22,7 +22,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&models.User{})
 
 	return db, nil
 }

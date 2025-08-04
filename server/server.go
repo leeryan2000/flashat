@@ -20,3 +20,4 @@ func StartServer() (*Server, error) {
 
 	return s, nil
 }
+

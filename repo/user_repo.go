@@ -1,8 +1,8 @@
 package repo
 
-import "github.com/leeryan2000/flashat/model"
+import "github.com/leeryan2000/flashat/models"
 
-type UserRepository interface {
-    CreateUser(user *model.User) error
-    GetAllUsers() ([]model.User, error)
+type UserRepo interface {
+	CreateUser(user *models.User) error
+	GetAllUsers() ([]models.User, error)
 }
