@@ -18,3 +18,12 @@ func (m *UserRepoMock) GetAllUsers() ([]models.User, error) {
 	args := m.Called()
 	return args.Get(0).([]models.User), args.Error(1)
 }
+
+func (m *UserRepoMock) GetUserById(id uint) (*models.User, error) {
+	args := m.Called(id)
+	user, ok := args.Get(0).(*models.User)
+	if !ok {
+		return nil, args.Error(1)
+	}
+	return user, args.Error(1)
+}

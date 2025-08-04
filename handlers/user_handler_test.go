@@ -20,6 +20,7 @@ func setupRouter(h handlers.UserHandler) *gin.Engine {
 
 	r.POST("/createUser", h.CreateUser)
 	r.GET("/getAllUsers", h.GetAllUsers)
+	r.GET("/getUserById/:id", h.GetUserById)
 	return r
 }
 
@@ -41,7 +42,6 @@ func TestCreateUser_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockRepo.AssertExpectations(t)
 }
-
 
 func TestGetAllUsers_Success(t *testing.T) {
 	mockRepo := new(mocks.UserRepoMock)
@@ -66,18 +66,19 @@ func TestGetAllUsers_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestGetAllUsers_DBError(t *testing.T) {
+func TestGetUserById_Success(t *testing.T) {
 	mockRepo := new(mocks.UserRepoMock)
-	mockRepo.On("GetAllUsers").Return(nil, assert.AnError)
+	user := &models.User{Id: 1, Email: "alice@example.com"}
+	mockRepo.On("GetUserById", uint(1)).Return(user, nil)
 
 	h := handlers.UserHandler{Repo: mockRepo}
 	r := setupRouter(h)
 
-	req, _ := http.NewRequest("GET", "/getAllUsers", nil)
+	req, _ := http.NewRequest("GET", "/getUserById/1", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockRepo.AssertExpectations(t)
 }

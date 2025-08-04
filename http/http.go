@@ -8,7 +8,7 @@ import (
 )
 
 func InitializeServer(s *server.Server) {
-	userRepo := &repo.GormUserRepository{ DB: s.DB }
+	userRepo := &repo.GormUserRepo{DB: s.DB}
 
 	handlers := handlers.Handlers{
 		User: handlers.UserHandler{Repo: userRepo},

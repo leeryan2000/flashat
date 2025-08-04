@@ -7,8 +7,6 @@ type Configuration struct {
 	DB_DBNAME string
 	DB_DBHOST string
 	DB_PORT   string
-
-	
 }
 
 func GetConfig() Configuration {

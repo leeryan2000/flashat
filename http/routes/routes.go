@@ -10,7 +10,7 @@ func SetupRoutes(handlers *handlers.Handlers) *gin.Engine {
 	mainRouter := router.Group("/api")
 
 	InitializeUserRoutes(mainRouter, handlers)
-	
+
 	mainRouter.GET("/status", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "Ok",

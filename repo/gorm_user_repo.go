@@ -5,16 +5,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type GormUserRepository struct {
+type GormUserRepo struct {
 	DB *gorm.DB
 }
 
-func (r *GormUserRepository) CreateUser(user *models.User) error {
+func (r *GormUserRepo) CreateUser(user *models.User) error {
 	return r.DB.Create(user).Error
 }
 
-func (r *GormUserRepository) GetAllUsers() ([]models.User, error) {
+func (r *GormUserRepo) GetAllUsers() ([]models.User, error) {
 	var users []models.User
 	err := r.DB.Find(&users).Error
 	return users, err
+}
+
+func (r *GormUserRepo) GetUserById(id uint) (*models.User, error) {
+	user := &models.User{}
+	err := r.DB.First(&user, id).Error
+	return user, err
 }
