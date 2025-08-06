@@ -1,12 +1,16 @@
 build:
 	go build -o bin/flashat ./cmd/main.go
 
-run: build
+run: build setup
 	bin/flashat
 
 test:
 	go test -v ./handlers -count=1
 
-setup_db:
-	./setup_db.sh
-	
+setup:
+	.\setup_db.sh
+
+tidy:
+	go mod tidy
+	go fmt ./...
+

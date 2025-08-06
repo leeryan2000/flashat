@@ -27,3 +27,12 @@ func (m *UserRepoMock) GetUserById(id uint) (*models.User, error) {
 	}
 	return user, args.Error(1)
 }
+
+func (m *UserRepoMock) GetUserByEmail(email string) (*models.User, error) {
+	args := m.Called(email)
+	user, ok := args.Get(0).(*models.User)
+	if !ok {
+		return nil, args.Error(1)
+	}
+	return user, args.Error(1)
+}

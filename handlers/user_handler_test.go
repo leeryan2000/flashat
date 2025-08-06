@@ -26,7 +26,7 @@ func setupRouter(h handlers.UserHandler) *gin.Engine {
 
 func TestCreateUser_Success(t *testing.T) {
 	mockRepo := new(mocks.UserRepoMock)
-	user := models.User{Email: "testEmail@email.com", Hashed_Password: "123"}
+	user := models.User{Email: "testEmail@email.com", HashedPassword: "123"}
 	mockRepo.On("CreateUser", &user).Return(nil)
 
 	h := handlers.UserHandler{Repo: mockRepo}

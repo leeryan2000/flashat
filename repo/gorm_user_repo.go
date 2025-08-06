@@ -24,3 +24,12 @@ func (r *GormUserRepo) GetUserById(id uint) (*models.User, error) {
 	err := r.DB.First(&user, id).Error
 	return user, err
 }
+
+func (r *GormUserRepo) GetUserByEmail(email string) (*models.User, error) {
+	user := &models.User{}
+	err := r.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

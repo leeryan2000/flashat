@@ -12,6 +12,7 @@ func InitializeServer(s *server.Server) {
 
 	handlers := handlers.Handlers{
 		User: handlers.UserHandler{Repo: userRepo},
+		Auth: handlers.AuthHandler{Repo: userRepo},
 	}
 
 	http := routes.SetupRoutes(&handlers)
