@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
-	// "github.com/golang-jwt/jwt/v5"
 
 	"github.com/gin-gonic/gin"
 	"github.com/leeryan2000/flashat/repo"
@@ -31,19 +29,17 @@ func (ah AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	log.Println(input.Password)
-
 	if !utils.CheckPasswordHash(input.Password, user.HashedPassword) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	token, err := utils.GenerateToken(user.UID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 
 }
-
-// func generateJWT(userID uint) (string, error) {
-// 	claims := jwt.MapClaims {
-// 		"user_id": userID,
-// 	}
-// }

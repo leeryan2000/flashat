@@ -9,10 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// import (
-// 	"time"
-// )
-
 type User struct {
 	ID             uint   `gorm:"primaryKey"`
 	UID            string `gorm:"type:uuid;uniqueIndex" json:"uid"`
@@ -23,14 +19,13 @@ type User struct {
 	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
 
-func (u *User) BeforCreate(db *gorm.DB) error {
+func (u *User) BeforeCreate(db *gorm.DB) error {
 	// create UID
 	u.UID = uuid.NewString()
-
 	// Hash the password
 	hashedPassword, err := utils.HashPassword(u.HashedPassword)
 	if err != nil {
-		return errors.New("Failed to hash password")
+		return errors.New("failed to hash password")
 	}
 	u.HashedPassword = hashedPassword
 
