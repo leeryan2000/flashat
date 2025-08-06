@@ -2,8 +2,11 @@ package models
 
 import (
 	"errors"
-	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/leeryan2000/flashat/utils"
+	"gorm.io/gorm"
 )
 
 // import (
@@ -20,12 +23,16 @@ type User struct {
 	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
 
-func (u *User) Validate() error {
-	if !strings.Contains(u.Email, "@") {
-		return errors.New("invalid email")
+func (u *User) BeforCreate(db *gorm.DB) error {
+	// create UID
+	u.UID = uuid.NewString()
+
+	// Hash the password
+	hashedPassword, err := utils.HashPassword(u.HashedPassword)
+	if err != nil {
+		return errors.New("Failed to hash password")
 	}
-	if len(u.HashedPassword) < 6 {
-		return errors.New("password too short")
-	}
+	u.HashedPassword = hashedPassword
+
 	return nil
 }

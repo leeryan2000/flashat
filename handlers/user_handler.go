@@ -6,10 +6,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
-	"github.com/leeryan2000/flashat/utils"
 )
 
 type UserHandler struct{ Repo repo.UserRepo }
@@ -29,17 +27,9 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 	}
 
 	user := models.User{
-		UID:            uuid.NewString(),
 		Email:          createUserInput.Email,
 		HashedPassword: createUserInput.Password,
 	}
-
-	hashedPassword, err := utils.HashPassword(user.HashedPassword)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-	user.HashedPassword = hashedPassword
 
 	// ***** failed to add a user into database would cause increment of in primary id
 	if err := uh.Repo.CreateUser(&user); err != nil {
