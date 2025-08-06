@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	// "github.com/golang-jwt/jwt/v5"
 
 	"github.com/gin-gonic/gin"
 	"github.com/leeryan2000/flashat/repo"
@@ -40,3 +41,9 @@ func (ah AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 
 }
+
+// func generateJWT(userID uint) (string, error) {
+// 	claims := jwt.MapClaims {
+// 		"user_id": userID,
+// 	}
+// }

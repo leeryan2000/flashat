@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"strings"
+	"time"
 )
 
 // import (
@@ -10,9 +11,13 @@ import (
 // )
 
 type User struct {
-	Id             uint   `gorm:"primaryKey"`
+	ID             uint   `gorm:"primaryKey"`
+	UID            string `gorm:"type:uuid;uniqueIndex" json:"uid"`
 	Email          string `gorm:"unique" json:"email" `
 	HashedPassword string `gorm:"column:hashed_password" json:"-"`
+
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
 
 func (u *User) Validate() error {

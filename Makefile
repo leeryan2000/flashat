@@ -1,7 +1,7 @@
 build:
 	go build -o bin/flashat ./cmd/main.go
 
-run: build setup
+run: setup tidy build 
 	bin/flashat
 
 test:

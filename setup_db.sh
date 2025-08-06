@@ -9,6 +9,4 @@ DB_USER="dev"
 psql -U "$DB_USER" -d "$DB_NAME" -f db/cleanup.sql
 psql -U "$DB_USER" -d "$DB_NAME" -f db/create_db.sql
 
-INSERT INTO users
-
 echo "✅ Database setup completed."

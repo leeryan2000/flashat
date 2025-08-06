@@ -68,7 +68,7 @@ func TestGetAllUsers_Success(t *testing.T) {
 
 func TestGetUserById_Success(t *testing.T) {
 	mockRepo := new(mocks.UserRepoMock)
-	user := &models.User{Id: 1, Email: "alice@example.com"}
+	user := &models.User{ID: 1, Email: "alice@example.com"}
 	mockRepo.On("GetUserById", uint(1)).Return(user, nil)
 
 	h := handlers.UserHandler{Repo: mockRepo}

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/utils"
@@ -14,7 +15,7 @@ import (
 type UserHandler struct{ Repo repo.UserRepo }
 
 type createUserInput struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -23,13 +24,13 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 	var createUserInput createUserInput
 
 	if err := c.ShouldBindJSON(&createUserInput); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to bind model user"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to bind create user input"})
 		return
 	}
-	log.Println(createUserInput.Password)
 
-	user := models.User {
-		Email: createUserInput.Email,
+	user := models.User{
+		UID:            uuid.NewString(),
+		Email:          createUserInput.Email,
 		HashedPassword: createUserInput.Password,
 	}
 
@@ -38,7 +39,6 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
-	log.Println(hashedPassword)
 	user.HashedPassword = hashedPassword
 
 	// ***** failed to add a user into database would cause increment of in primary id
