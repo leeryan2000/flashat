@@ -11,8 +11,9 @@ func InitializeServer(s *server.Server) {
 	userRepo := &repo.GormUserRepo{DB: s.DB}
 
 	handlers := handlers.Handlers{
-		User: handlers.UserHandler{Repo: userRepo},
-		Auth: handlers.AuthHandler{Repo: userRepo},
+		User:      handlers.UserHandler{Repo: userRepo},
+		Auth:      handlers.AuthHandler{Repo: userRepo},
+		Websocket: handlers.WebsocketHandler{Hub: s.Hub},
 	}
 
 	http := routes.SetupRoutes(&handlers)

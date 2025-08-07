@@ -1,6 +1,7 @@
 package handlers
 
 type Handlers struct {
-	User UserHandler
-	Auth AuthHandler
+	User      UserHandler
+	Auth      AuthHandler
+	Websocket WebsocketHandler
 }

@@ -6,7 +6,8 @@ import (
 )
 
 type Server struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	Hub *Hub
 }
 
 func StartServer() (*Server, error) {
@@ -17,6 +18,10 @@ func StartServer() (*Server, error) {
 		return nil, err
 	}
 	s.DB = dbConnection
+
+	s.Hub = NewHub()
+	// start hub
+	go s.Hub.Run()
 
 	return s, nil
 }
