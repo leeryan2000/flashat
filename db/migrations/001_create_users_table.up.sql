@@ -1,6 +1,3 @@
-/* DROP database IF EXISTS dev;
-CREATE DATABASE dev; */
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
@@ -10,9 +7,6 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password VARCHAR(60) NOT NULL,
 
     role VARCHAR(50) DEFAULT 'user',
-
-    /* full_name VARCHAR(100), */
-    /* is_active BOOLEAN DEFAULT TRUE, */
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

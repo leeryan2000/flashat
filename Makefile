@@ -14,3 +14,8 @@ tidy:
 	go mod tidy
 	go fmt ./...
 
+migrate_up: 
+	./migrate.sh up
+
+migrate_down:
+	./migrate.sh down -all
