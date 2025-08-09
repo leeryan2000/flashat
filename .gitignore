@@ -2,3 +2,4 @@ demo.go
 *.pem
 setup_db.sh
 .env
+test/

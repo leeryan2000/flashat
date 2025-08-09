@@ -24,9 +24,9 @@ func Authenticate() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
-
 		// Store UID in context for downstream handlers
 		c.Set("uid", claims.UID)
+
 		c.Next()
 	}
 }

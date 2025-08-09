@@ -22,7 +22,7 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 	var createUserInput createUserInput
 
 	if err := c.ShouldBindJSON(&createUserInput); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to bind create user input"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Failed to bind create user input"})
 		return
 	}
 
@@ -33,7 +33,7 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 
 	// ***** failed to add a user into database would cause increment of in primary id
 	if err := uh.Repo.CreateUser(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Println("Failed to add user to server")
 		return
 	}
@@ -43,7 +43,7 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 func (uh UserHandler) GetAllUsers(c *gin.Context) {
 	users, err := uh.Repo.GetAllUsers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, users)
@@ -53,19 +53,19 @@ func (uh UserHandler) GetUserById(c *gin.Context) {
 	idParam := c.Param("id")
 
 	if idParam == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
 	user, err := uh.Repo.GetUserById(uint(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

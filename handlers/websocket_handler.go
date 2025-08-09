@@ -19,6 +19,14 @@ var upgrader = websocket.Upgrader{
 
 func (wh WebsocketHandler) ServeWs() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// UID retrive from user
+		uid := c.GetString("uid")
+		if uid == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No user found"})
+			log.Println("❌ WebSocket connection failed: No user found")
+			return
+		}
+
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			log.Println("❌ WebSocket upgrade failed:", err)
@@ -27,13 +35,14 @@ func (wh WebsocketHandler) ServeWs() gin.HandlerFunc {
 		log.Println("✅ WebSocket connection established")
 
 		client := &server.Client{
-			Hub:  wh.Hub,
-			Conn: conn,
-			Send: make(chan []byte, 256),
+			UID:   uid,
+			Hub:   wh.Hub,
+			Conn:  conn,
+			Send:  make(chan []byte, 256),
+			Rooms: make(map[string]bool),
 		}
 
 		client.Hub.Register <- client
-
 		go client.WritePump()
 		go client.ReadPump()
 	}

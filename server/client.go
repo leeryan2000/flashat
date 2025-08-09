@@ -1,13 +1,17 @@
 package server
 
 import (
+	"encoding/json"
+
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	Hub  *Hub
-	Conn *websocket.Conn
-	Send chan []byte
+	UID   string
+	Hub   *Hub
+	Conn  *websocket.Conn
+	Send  chan []byte
+	Rooms map[string]bool // rooms the client is subscribed to
 }
 
 func (c *Client) ReadPump() {
@@ -15,12 +19,23 @@ func (c *Client) ReadPump() {
 		c.Hub.Unregister <- c
 		c.Conn.Close()
 	}()
+
 	for {
-		_, message, err := c.Conn.ReadMessage()
+		// Read a full WS text frame
+		_, raw, err := c.Conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		c.Hub.Broadcast <- message
+		// Expect JSON envelope from frontend
+		var env Envelope
+		if err := json.Unmarshal(raw, &env); err != nil {
+			continue // ignore malformed
+		}
+		// stamp sender UID
+		env.FromID = c.UID
+
+		// hand off to hub for routing
+		c.Hub.Incoming <- &env
 	}
 }
 

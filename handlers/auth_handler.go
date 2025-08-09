@@ -19,24 +19,24 @@ type loginInput struct {
 func (ah AuthHandler) Login(c *gin.Context) {
 	var input loginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	user, err := ah.Repo.GetUserByEmail(input.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 		return
 	}
 
 	if !utils.CheckPasswordHash(input.Password, user.HashedPassword) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
 		return
 	}
 
 	token, err := utils.GenerateToken(user.UID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
