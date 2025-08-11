@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/leeryan2000/flashat/http"
 	"github.com/leeryan2000/flashat/server"
+	"github.com/leeryan2000/flashat/transport"
 )
 
 func main() {
@@ -13,5 +13,5 @@ func main() {
 		log.Fatal("shutdown error: ", err)
 	}
 
-	http.InitializeServer(s)
+	transport.InitializeServer(s)
 }

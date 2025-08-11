@@ -32,6 +32,7 @@ func NewPgxPool() (*pgxpool.Pool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
+	// set the config of pgx here
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, err

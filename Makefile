@@ -8,7 +8,8 @@ test:
 	go test -v ./handlers -count=1
 
 setup:
-	.\setup_db.sh
+	./migrate.sh goto 1
+	./migrate.sh up
 
 tidy:
 	go mod tidy

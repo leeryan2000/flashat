@@ -21,11 +21,6 @@ func (wh WebsocketHandler) ServeWs() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// UID retrive from user
 		uid := c.GetString("uid")
-		if uid == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No user found"})
-			log.Println("❌ WebSocket connection failed: No user found")
-			return
-		}
 
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {

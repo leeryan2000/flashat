@@ -19,7 +19,7 @@ CREATE TABLE conversation_participants (
 
 CREATE TABLE conversation_counters (
   conversation_id uuid PRIMARY KEY REFERENCES conversations(id) ON DELETE CASCADE,
-  last_seq        bigint NOT NULL DEFAULT 0, -- last message sequence number
+  last_seq        bigint NOT NULL DEFAULT 0 -- last message sequence number
 );
 
 -- create counter row with next_seq=1 whenever a conversation is created

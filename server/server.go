@@ -7,9 +7,9 @@ import (
 )
 
 type Server struct {
-	DB  *gorm.DB
-	Hub *Hub
-	Pgx *pgxpool.Pool
+	DB   *gorm.DB
+	Hub  *Hub
+	Pool *pgxpool.Pool
 }
 
 func StartServer() (*Server, error) {
@@ -25,7 +25,7 @@ func StartServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.Pgx = pgx
+	s.Pool = pgx
 
 	s.Hub = NewHub()
 	// start hub

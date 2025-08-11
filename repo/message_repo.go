@@ -7,7 +7,6 @@ import (
 	"github.com/leeryan2000/flashat/models"
 )
 
-
 type MessageRepo interface {
 	SaveMessage(ctx context.Context, msg *models.Message) (int64, error)
 

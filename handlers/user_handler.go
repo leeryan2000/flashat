@@ -1,13 +1,14 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
+	"github.com/leeryan2000/flashat/utils"
 )
 
 type UserHandler struct{ Repo repo.UserRepo }
@@ -17,7 +18,7 @@ type createUserInput struct {
 	Password string `json:"password"`
 }
 
-func (uh UserHandler) CreateUser(c *gin.Context) {
+func (h UserHandler) CreateUser(c *gin.Context) {
 	// c.ShouldBindJSON can only read once for a struct body
 	var createUserInput createUserInput
 
@@ -26,22 +27,29 @@ func (uh UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
+	// Hash the password
+	hashedPassword, err := utils.HashPassword(createUserInput.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
 	user := models.User{
+		UID:            uuid.NewString(),
 		Email:          createUserInput.Email,
-		HashedPassword: createUserInput.Password,
+		HashedPassword: hashedPassword,
 	}
 
 	// ***** failed to add a user into database would cause increment of in primary id
-	if err := uh.Repo.CreateUser(&user); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		log.Println("Failed to add user to server")
+	if err := h.Repo.CreateUser(&user); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to server"})
 		return
 	}
 	c.JSON(http.StatusOK, user)
 }
 
-func (uh UserHandler) GetAllUsers(c *gin.Context) {
-	users, err := uh.Repo.GetAllUsers()
+func (h UserHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.Repo.GetAllUsers()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -49,7 +57,7 @@ func (uh UserHandler) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func (uh UserHandler) GetUserById(c *gin.Context) {
+func (h UserHandler) GetUserById(c *gin.Context) {
 	idParam := c.Param("id")
 
 	if idParam == "" {
@@ -63,7 +71,7 @@ func (uh UserHandler) GetUserById(c *gin.Context) {
 		return
 	}
 
-	user, err := uh.Repo.GetUserById(uint(id))
+	user, err := h.Repo.GetUserById(uint(id))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
