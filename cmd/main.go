@@ -10,7 +10,7 @@ import (
 func main() {
 	s, err := server.StartServer()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("shutdown error: ", err)
 	}
 
 	http.InitializeServer(s)

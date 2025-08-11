@@ -14,11 +14,11 @@ const (
 )
 
 type Envelope struct {
-	Type   MsgType `json:"type"`
-	RoomID string  `json:"roomId,omitempty"`
-	FromID string  `json:"fromId,omitempty"`
-	ToID   string  `json:"toId,omitempty"`
-	Body   string  `json:"body,omitempty"`
-	Seq    int64   `json:"seq,omitempty"` // optional for acks
-	Ts     int64   `json:"ts,omitempty"`
+	Type    MsgType `json:"type"`
+	RoomID  string  `json:"roomId,omitempty"`
+	FromUID string  `json:"fromUid,omitempty"`
+	ToUID   string  `json:"toUid,omitempty"`
+	Body    string  `json:"body,omitempty"`
+	Seq     int64   `json:"seq,omitempty"` // optional for acks
+	Ts      int64   `json:"ts,omitempty"`
 }

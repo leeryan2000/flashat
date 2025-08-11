@@ -71,15 +71,3 @@ func (uh UserHandler) GetUserById(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
-
-// func CreateUserLocal(db *gorm.DB) {
-//     var user = models.User {
-// 		Email:"ryan1",
-// 		Hashed_Password:"testpassword",
-// 	}
-
-//     if err := db.Create(&user).Error; err != nil {
-// 		log.Fatal("Failed to add user to server")
-// 		return
-//     }
-// }

@@ -36,6 +36,7 @@ func (hub *Hub) Run() {
 			hub.ClientsByUID[c.UID] = c
 
 		case c := <-hub.Unregister:
+			// see if c exists in the hub
 			if _, ok := hub.Clients[c]; ok {
 				// remove from global set
 				delete(hub.Clients, c)
@@ -55,13 +56,13 @@ func (hub *Hub) Run() {
 		case env := <-hub.Incoming:
 			switch env.Type {
 			case MsgJoin:
-				hub.join(env.FromID, env.RoomID)
+				hub.join(env.FromUID, env.RoomID)
 			case MsgLeave:
-				hub.leave(env.FromID, env.RoomID)
+				hub.leave(env.FromUID, env.RoomID)
 			case MsgChat:
 				hub.broadcastToRoom(env.RoomID, env)
 			case MsgDirect:
-				hub.direct(env.ToID, env)
+				hub.direct(env.ToUID, env)
 			default:
 				// ignore or log unknown types
 				log.Println("❌ Unknown message type:", env.Type)

@@ -32,7 +32,7 @@ func (c *Client) ReadPump() {
 			continue // ignore malformed
 		}
 		// stamp sender UID
-		env.FromID = c.UID
+		env.FromUID = c.UID
 
 		// hand off to hub for routing
 		c.Hub.Incoming <- &env

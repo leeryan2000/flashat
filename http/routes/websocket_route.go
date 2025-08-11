@@ -8,10 +8,9 @@ import (
 
 func InitializeWebsocketRoutes(router *gin.RouterGroup, h *handlers.Handlers) {
 	wh := h.Websocket
-	
+
 	websocketRoutes := router.Group("/websocket")
 	websocketRoutes.Use(middlewares.Authenticate())
-	
 
 	websocketRoutes.GET("/ws", wh.ServeWs())
 }
