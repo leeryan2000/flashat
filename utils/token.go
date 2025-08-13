@@ -18,10 +18,10 @@ func GenerateToken(uid string) (string, error) {
 	claims := JWTClaims{
 		UID: uid,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)), // expires in 3 days
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "Flashat",
-			Subject:   "user-auth",
+			// ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)), // expires in 3 days
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			Issuer:   "Flashat",
+			Subject:  "user-auth",
 		},
 	}
 

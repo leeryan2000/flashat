@@ -11,5 +11,17 @@ func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers)
 	conversationRoutes := router.Group("/conversation")
 	conversationRoutes.Use(middlewares.Authenticate())
 
-	conversationRoutes.POST("/create", ch.CreateGroupConversation)
+	conversationRoutes.POST("/group", ch.CreateGroupConversation)
+	conversationRoutes.POST("/direct", ch.GetOrCreateDirectConversation)
+
+	conversationRoutes.GET("/", ch.ListConversationByUID)
+	conversationRoutes.GET("/:conversation_id", ch.GetConversationByID)
+	conversationRoutes.GET("/:conversation_id/participant", ch.ListParticipantByID)
+
+	conversationRoutes.POST("/participant", ch.AddParticipant)
+	conversationRoutes.PUT("/participant", ch.ModifyParticipant)
+	conversationRoutes.DELETE("/participant", ch.RemoveParticipant)
+
+	conversationRoutes.PUT("/read_seq", ch.UpdateLastReadSeq)
+	conversationRoutes.GET("/read_seq", ch.GetLastReadSeq)
 }
