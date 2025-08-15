@@ -5,7 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
+	"github.com/leeryan2000/flashat/utils"
 )
 
 type ConversationHandler struct {
@@ -46,7 +48,13 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 		}
 	}
 
-	conversation, err := h.Repo.CreateGroupConversation(c.Request.Context(), creatorUID, participantsUID, input.GroupName)
+	conv := &models.Conversation{
+		ID:        uuid.New(),
+		Type:      "group",
+		GroupName: &input.GroupName,
+	}
+
+	err = h.Repo.CreateGroupConversation(c.Request.Context(), conv, creatorUID, participantsUID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create group conversation"})
 		return
@@ -54,7 +62,7 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Group conversation created successfully",
-		"conversation": conversation,
+		"conversation": conv,
 	})
 }
 
@@ -88,7 +96,14 @@ func (h *ConversationHandler) GetOrCreateDirectConversation(c *gin.Context) {
 		return
 	}
 
-	conversation, err := h.Repo.GetOrCreateDirectConversation(c.Request.Context(), uid, targetUID)
+	directKey := utils.CanonDirectKey(uidStr, input.TargetUID)
+	conv := &models.Conversation{
+		ID:        uuid.New(),
+		Type:      "direct",
+		DirectKey: &directKey,
+	}
+
+	err = h.Repo.GetOrCreateDirectConversation(c.Request.Context(), conv, uid, targetUID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to get or create direct conversation"})
 		return
@@ -96,7 +111,7 @@ func (h *ConversationHandler) GetOrCreateDirectConversation(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Direct conversation retrieved or created successfully",
-		"conversation": conversation,
+		"conversation": conv,
 	})
 }
 
@@ -194,6 +209,8 @@ func (h *ConversationHandler) AddParticipant(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Parse conversation ID failed"})
 		return
 	}
+
+	
 
 	err = h.Repo.AddParticipant(c.Request.Context(), conversationID, participantUID)
 	if err != nil {

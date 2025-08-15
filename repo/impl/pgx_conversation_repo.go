@@ -8,43 +8,40 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
-	"github.com/leeryan2000/flashat/utils"
 )
 
 type PgxConversationRepo struct {
 	Pool *pgxpool.Pool
 }
 
-func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, creatorUID uuid.UUID, participantsUID []uuid.UUID, groupName string) (*models.Conversation, error) {
+func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv *models.Conversation, creatorUID uuid.UUID, participantsUID []uuid.UUID) error {
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	conv := &models.Conversation{}
-	convID := uuid.New()
 	// conversations: id, type, direct_key(NULL), created_at (default)
 	err = tx.QueryRow(ctx, `
 		INSERT INTO conversations (id, type, group_name)
-		VALUES ($1, 'group', $2)
+		VALUES ($1, $2, $3)
 		RETURNING id, type, group_name, created_at`,
-		convID, groupName,
+		conv.ID, conv.Type, conv.GroupName,
 	).Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.CreatedAt)
 
 	if err != nil {
 		log.Println("Failed to create group conversation:", err)
-		return nil, err
+		return err
 	}
 
 	// counters: start at 0 in default
 	_, err = tx.Exec(ctx, `
 		INSERT INTO conversation_counters (conversation_id)
 		VALUES ($1)`,
-		convID,
+		conv.ID,
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Add creator in participants table with role 'creator'
@@ -53,74 +50,70 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, creat
 		INSERT INTO conversation_participants (conversation_id, uid, role)
 		VALUES ($1, $2, 'creator')
 		ON CONFLICT (conversation_id, uid) DO NOTHING`,
-		convID, creatorUID,
+		conv.ID, creatorUID,
 	)
 
 	// Insert others as 'member', avoiding duplicates
 	set := map[uuid.UUID]struct{}{creatorUID: {}}
-	for _, u := range participantsUID {
-		if _, exists := set[u]; !exists {
+	for _, puid := range participantsUID {
+		if _, exists := set[puid]; !exists {
 			batch.Queue(`
 				INSERT INTO conversation_participants (conversation_id, uid)
 				VALUES ($1, $2)
 				ON CONFLICT (conversation_id, uid) DO NOTHING`,
-				convID, u,
+				conv.ID, puid,
 			)
 			// put the uuid to the set to avoid duplicates
-			set[u] = struct{}{}
+			set[puid] = struct{}{}
 		}
 	}
 	br := tx.SendBatch(ctx, batch)
 	if err = br.Close(); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err = tx.Commit(ctx); err != nil {
-		return nil, err
+		return err
 	}
 
-	return conv, nil
+	return nil
 }
 
-func (r *PgxConversationRepo) GetOrCreateDirectConversation(ctx context.Context, uidA, uidB uuid.UUID) (*models.Conversation, error) {
-	directKey := utils.CanonDirectKey(uidA.String(), uidB.String())
+func (r *PgxConversationRepo) GetOrCreateDirectConversation(ctx context.Context, conv *models.Conversation, uid, targetUID uuid.UUID) error {
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	conv := &models.Conversation{}
 	// Find if the direct conversation already exists
 	err = tx.QueryRow(ctx, `
 		SELECT id, type, direct_key, created_at
 		FROM conversations
 		WHERE direct_key = $1`,
-		directKey,
+		conv.DirectKey,
 	).Scan(&conv.ID, &conv.Type, &conv.DirectKey, &conv.CreatedAt)
 
 	if err == pgx.ErrNoRows {
 		// Not found, create a new direct conversation
-		convID := uuid.New()
-
 		err = tx.QueryRow(ctx, `
 			INSERT INTO conversations (id, type, direct_key)
-			VALUES ($1, 'direct', $2)
+			VALUES ($1, $2, $3)
 			RETURNING id, type, direct_key, created_at`,
-			convID, directKey,
+			conv.ID, conv.Type, conv.DirectKey,
 		).Scan(&conv.ID, &conv.Type, &conv.DirectKey, &conv.CreatedAt)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// add conversation counter
 		_, err = tx.Exec(ctx, `
 			INSERT INTO conversation_counters (conversation_id)
 			VALUES ($1)`,
-			convID,
+			conv.ID,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// Add participants to the conversation
@@ -129,19 +122,19 @@ func (r *PgxConversationRepo) GetOrCreateDirectConversation(ctx context.Context,
 			INSERT INTO conversation_participants (conversation_id, uid)
 			VALUES ($1, $2), ($1, $3)
 			ON CONFLICT (conversation_id, uid) DO NOTHING`,
-			conv.ID, uidA, uidB,
+			conv.ID, uid, targetUID,
 		)
 		br := tx.SendBatch(ctx, batch)
 		if err = br.Close(); err != nil {
-			return nil, err
+			return err
 		}
 	} else if err != nil {
-		return nil, err // Some other error occurred
+		return err // Some other error occurred
 	}
 	if err = tx.Commit(ctx); err != nil {
-		return nil, err
+		return err
 	}
-	return conv, nil
+	return nil
 }
 
 func (r *PgxConversationRepo) ListConversationByUID(ctx context.Context, uid uuid.UUID) ([]*models.Conversation, error) {
