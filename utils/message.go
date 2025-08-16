@@ -1,5 +1,6 @@
 package utils
 
+
 func CanonDirectKey(uid1, uid2 string) string {
 	a, b := uid1, uid2
 	if a > b { // lexicographic compare
@@ -7,3 +8,4 @@ func CanonDirectKey(uid1, uid2 string) string {
 	}
 	return a + ":" + b
 }
+

@@ -210,8 +210,6 @@ func (h *ConversationHandler) AddParticipant(c *gin.Context) {
 		return
 	}
 
-	
-
 	err = h.Repo.AddParticipant(c.Request.Context(), conversationID, participantUID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add participant"})

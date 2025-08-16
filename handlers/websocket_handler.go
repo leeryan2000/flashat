@@ -6,10 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/server"
 )
 
-type WebsocketHandler struct{ Hub *server.Hub }
+type WebsocketHandler struct {
+	Hub         *server.Hub
+	MessageRepo repo.MessageRepo
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -32,6 +36,7 @@ func (wh WebsocketHandler) ServeWs() gin.HandlerFunc {
 		client := &server.Client{
 			UID:   uid,
 			Hub:   wh.Hub,
+			Repo:  wh.MessageRepo,
 			Conn:  conn,
 			Send:  make(chan []byte, 256),
 			Rooms: make(map[string]bool),

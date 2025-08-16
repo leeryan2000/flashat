@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 
 	"github.com/gorilla/websocket"
+	"github.com/leeryan2000/flashat/repo"
 )
 
 type Client struct {
 	UID   string
 	Hub   *Hub
+	Repo  repo.MessageRepo // Message repository for message persistence
 	Conn  *websocket.Conn
 	Send  chan []byte
 	Rooms map[string]bool // rooms the client is subscribed to

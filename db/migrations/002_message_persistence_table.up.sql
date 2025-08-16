@@ -34,13 +34,3 @@ CREATE TABLE messages (
   created_at      timestamp WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (conversation_id, seq)
 );
-
-
--- Delivery status 
-CREATE TABLE message_receipts (
-  message_id      uuid REFERENCES messages(id),
-  uid             uuid NOT NULL,
-  delivered_at    timestamp WITH TIME ZONE,
-  read_at         timestamp WITH TIME ZONE,
-  PRIMARY KEY (message_id, uid)
-);
