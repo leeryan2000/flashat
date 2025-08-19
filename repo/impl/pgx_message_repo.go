@@ -19,9 +19,15 @@ const (
 )
 
 func clampLimit(n int) int {
-	if n <= 0 { n = defaultLimit }
-	if n < minLimit { n = minLimit }
-	if n > maxLimit { n = maxLimit }
+	if n <= 0 {
+		n = defaultLimit
+	}
+	if n < minLimit {
+		n = minLimit
+	}
+	if n > maxLimit {
+		n = maxLimit
+	}
 	return n
 }
 
@@ -31,7 +37,7 @@ func reverse(ms []models.Message) {
 	}
 }
 
-func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) error {
+func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) (*models.Message, error) {
 	// Implementation for saving a message using pgx
 	err := r.Pool.QueryRow(ctx, `
 		WITH s AS (
@@ -47,9 +53,9 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 		`, msg.ID, msg.ConversationID, msg.FromUID, msg.Body,
 	).Scan(&msg.ID, &msg.ConversationID, &msg.Seq, &msg.FromUID, &msg.Body, &msg.CreatedAt)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return msg, nil
 }
 
 func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUID, limit int) ([]models.Message, error) {
@@ -58,7 +64,7 @@ func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUI
 		FROM messages
 		WHERE conversation_id = $1
 		ORDER BY seq DESC
-		LIMIT $2`, 
+		LIMIT $2`,
 		conversationID, limit,
 	)
 	if err != nil {
@@ -79,7 +85,6 @@ func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUI
 	return messages, nil
 }
 
-
 func (r *PgxMessageRepo) ListBefore(ctx context.Context, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error) {
 	limit = clampLimit(limit)
 	rows, err := r.Pool.Query(ctx, `
@@ -87,7 +92,7 @@ func (r *PgxMessageRepo) ListBefore(ctx context.Context, conversationID uuid.UUI
 		FROM messages
 		WHERE conversation_id = $1 AND seq < $2
 		ORDER BY seq DESC
-		LIMIT $3`, 
+		LIMIT $3`,
 		conversationID, beforeSeq, limit,
 	)
 	if err != nil {
@@ -108,7 +113,6 @@ func (r *PgxMessageRepo) ListBefore(ctx context.Context, conversationID uuid.UUI
 	return messages, nil
 }
 
-
 func (r *PgxMessageRepo) ListAfter(ctx context.Context, conversationID uuid.UUID, afterSeq int64, limit int) ([]models.Message, error) {
 	limit = clampLimit(limit)
 	rows, err := r.Pool.Query(ctx, `
@@ -116,7 +120,7 @@ func (r *PgxMessageRepo) ListAfter(ctx context.Context, conversationID uuid.UUID
 		FROM messages
 		WHERE conversation_id = $1 AND seq > $2
 		ORDER BY seq ASC
-		LIMIT $3`, 
+		LIMIT $3`,
 		conversationID, afterSeq, limit,
 	)
 	if err != nil {

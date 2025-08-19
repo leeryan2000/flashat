@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/server"
+	"github.com/leeryan2000/flashat/service"
 )
 
 type WebsocketHandler struct {
-	Hub         *server.Hub
-	MessageRepo repo.MessageRepo
+	Hub            *server.Hub
+	MessageService *service.MessageService
 }
 
 var upgrader = websocket.Upgrader{
@@ -34,16 +34,15 @@ func (wh WebsocketHandler) ServeWs() gin.HandlerFunc {
 		log.Println("✅ WebSocket connection established")
 
 		client := &server.Client{
-			UID:   uid,
-			Hub:   wh.Hub,
-			Repo:  wh.MessageRepo,
-			Conn:  conn,
-			Send:  make(chan []byte, 256),
-			Rooms: make(map[string]bool),
+			UID:           uid,
+			Hub:           wh.Hub,
+			Conn:          conn,
+			Send:          make(chan []byte, 256),
+			Conversations: make(map[string]bool),
 		}
 
 		client.Hub.Register <- client
 		go client.WritePump()
-		go client.ReadPump()
+		go client.ReadPump(wh.MessageService.HandleEnvelope)
 	}
 }

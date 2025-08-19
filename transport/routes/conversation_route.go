@@ -3,13 +3,13 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/leeryan2000/flashat/handlers"
-	"github.com/leeryan2000/flashat/middlewares"
+	"github.com/leeryan2000/flashat/middleware"
 )
 
 func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers) {
 	ch := h.Conversation
 	conversationRoutes := router.Group("/conversation")
-	conversationRoutes.Use(middlewares.Authenticate())
+	conversationRoutes.Use(middleware.Authenticate())
 
 	conversationRoutes.POST("/group", ch.CreateGroupConversation)
 	conversationRoutes.POST("/direct", ch.GetOrCreateDirectConversation)

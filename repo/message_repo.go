@@ -8,12 +8,12 @@ import (
 )
 
 type MessageRepo interface {
-	SaveMessage(ctx context.Context, msg *models.Message) (int64, error)
+	SaveMessage(ctx context.Context, msg *models.Message) (*models.Message, error)
 
 	ListLatest(ctx context.Context, conversationID uuid.UUID, limit int) ([]models.Message, error)
-	
+
 	ListBefore(ctx context.Context, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error)
-	
+
 	ListAfter(ctx context.Context, conversationID uuid.UUID, afterSeq int64, limit int) ([]models.Message, error)
 
 	// Could implement read count in future
