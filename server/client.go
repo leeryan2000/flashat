@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/gorilla/websocket"
@@ -12,12 +13,12 @@ type Client struct {
 	Hub           *Hub
 	Conn          *websocket.Conn
 	Send          chan []byte
-	Conversations map[string]bool // rooms the client is subscribed to
+	Conversations map[string]struct{} // rooms the client is subscribed to
 }
 
-type HandleEnvelope func(*wire.Envelope) error
+type HandleEnvelope func(context.Context, *wire.Envelope) error
 
-func (c *Client) ReadPump(handle HandleEnvelope) {
+func (c *Client) ReadPump(ctx context.Context, handle HandleEnvelope) {
 	defer func() {
 		c.Hub.Unregister <- c
 		c.Conn.Close()
@@ -35,7 +36,9 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 			continue // ignore malformed
 		}
 
-		handle(&env)
+		if err = handle(ctx, &env); err != nil {
+			break
+		}
 	}
 }
 
@@ -45,8 +48,8 @@ func (c *Client) WritePump() {
 		c.Conn.Close()
 	}()
 
-	for msg := range c.Send {
-		err := c.Conn.WriteMessage(websocket.TextMessage, msg)
+	for env := range c.Send {
+		err := c.Conn.WriteMessage(websocket.TextMessage, env)
 		if err != nil {
 			break
 		}

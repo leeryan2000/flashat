@@ -13,8 +13,9 @@ func InitializeServer(s *server.Server) {
 		Conversation: handlers.ConversationHandler{Repo: s.ConversationRepo},
 
 		Websocket: handlers.WebsocketHandler{
-			Hub:            s.Hub,
-			MessageService: s.MessageService,
+			Hub:              s.Hub,
+			MessageService:   s.MessageService,
+			ConversationRepo: s.ConversationRepo,
 		},
 	}
 

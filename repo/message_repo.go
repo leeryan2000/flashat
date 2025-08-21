@@ -8,7 +8,7 @@ import (
 )
 
 type MessageRepo interface {
-	SaveMessage(ctx context.Context, msg *models.Message) (*models.Message, error)
+	SaveMessage(ctx context.Context, msg *models.Message) error
 
 	ListLatest(ctx context.Context, conversationID uuid.UUID, limit int) ([]models.Message, error)
 

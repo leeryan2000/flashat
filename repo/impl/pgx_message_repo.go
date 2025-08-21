@@ -37,7 +37,7 @@ func reverse(ms []models.Message) {
 	}
 }
 
-func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) (*models.Message, error) {
+func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) error {
 	// Implementation for saving a message using pgx
 	err := r.Pool.QueryRow(ctx, `
 		WITH s AS (
@@ -53,9 +53,9 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) (
 		`, msg.ID, msg.ConversationID, msg.FromUID, msg.Body,
 	).Scan(&msg.ID, &msg.ConversationID, &msg.Seq, &msg.FromUID, &msg.Body, &msg.CreatedAt)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return msg, nil
+	return nil
 }
 
 func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUID, limit int) ([]models.Message, error) {

@@ -1,10 +1,6 @@
 package wire
 
-import (
-	"encoding/json"
-
-	"github.com/google/uuid"
-)
+import "github.com/google/uuid"
 
 const (
 	MsgJoin   MsgType = "join"
@@ -17,7 +13,8 @@ const (
 	MsgPong   MsgType = "pong"
 )
 
-type MsgSend struct {
-	ConversationID uuid.UUID       `json:"conversation_id"`
-	Body           json.RawMessage `json:"body"`
+type Ack struct {
+	ServerMsgID uuid.UUID `json:"server_msg_id"`
+	ServerTS    int64     `json:"server_ts"`
+	Status      string    `json:"status"` // success, failed
 }

@@ -3,19 +3,20 @@ package server
 import "github.com/google/uuid"
 
 type Hub struct {
-	Clients       map[*Client]bool
+	Clients       map[*Client]struct{} // Changed from bool to struct{}
 	ClientsByUID  map[string]*Client
-	Conversations map[string]map[*Client]bool
+	Conversations map[string]map[*Client]struct{} // Changed from bool to struct{}
 
 	Register   chan *Client
 	Unregister chan *Client
 }
 
+// connect the user as long as the webpage is open
 func NewHub() *Hub {
 	return &Hub{
-		Clients:       make(map[*Client]bool),
+		Clients:       make(map[*Client]struct{}),
 		ClientsByUID:  make(map[string]*Client),
-		Conversations: make(map[string]map[*Client]bool),
+		Conversations: make(map[string]map[*Client]struct{}),
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 	}
@@ -34,15 +35,21 @@ func (hub *Hub) Run() {
 }
 
 func (hub *Hub) SendToUID(uid uuid.UUID, payload []byte) {
-
+	if client, ok := hub.ClientsByUID[uid.String()]; ok {
+		client.Send <- payload
+	}
 }
 
 func (hub *Hub) BroadcastToConversation(convID uuid.UUID, payload []byte) {
-
+	if clients, ok := hub.Conversations[convID.String()]; ok {
+		for client := range clients {
+			client.Send <- payload
+		}
+	}
 }
 
 func (hub *Hub) addClient(c *Client) {
-	hub.Clients[c] = true
+	hub.Clients[c] = struct{}{}
 	hub.ClientsByUID[c.UID] = c
 }
 

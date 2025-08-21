@@ -1,6 +1,12 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+
+	"github.com/google/uuid"
+	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/wire"
 )
@@ -10,28 +16,96 @@ type MessageService struct {
 	Repo repo.MessageRepo
 }
 
-func (service *MessageService) HandleEnvelope(env *wire.Envelope) error {
+func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Envelope) error {
 	// Process the envelope based on its type
 	switch env.Type {
+	case wire.MsgDirect, wire.MsgGroup:
+		s.handleConversation(ctx, env)
 	case wire.MsgJoin:
 		// Handle join message
 	case wire.MsgLeave:
 		// Handle leave message
-	case wire.MsgGroup:
-		// Handle group message
-	case wire.MsgDirect:
-		// Handle direct message
-	case wire.MsgSystem:
-		// Handle system message
-	case wire.MsgAck:
-		// Handle acknowledgment
-	case wire.MsgPing:
-		// Handle ping
-	case wire.MsgPong:
-		// Handle pong
 	default:
 		return nil // Unknown type, ignore
 	}
 
 	return nil // Processed successfully
+}
+
+func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envelope) error {
+	if env.ConversationID == "" {
+		return errors.New("missing conversation id")
+	}
+	conversationID, err := uuid.Parse(env.ConversationID)
+	if err != nil {
+		return err
+	}
+	fromUID, err := uuid.Parse(env.FromUID)
+	if err != nil {
+		return err
+	}
+
+	// Create server generated msgID to replace the client generated
+	msgID := uuid.New()
+	msg := &models.Message{
+		ID:             msgID,
+		ConversationID: conversationID,
+		FromUID:        fromUID,
+		Body:           env.Body,
+	}
+
+	err = s.Repo.SaveMessage(ctx, msg)
+	ack := &wire.Ack{
+		ServerMsgID: msg.ID,
+		ServerTS:    msg.CreatedAt.UnixMilli(),
+		Status:      "success",
+	}
+	if err != nil {
+		ack.Status = "failed"
+		return err
+	}
+	// make ack json.rawMessage
+	ackJSON, err := json.Marshal(ack)
+	if err != nil {
+		return err
+	}
+
+	// Ack for the sender
+	ackEnv := &wire.Envelope{
+		Type:           wire.MsgAck,
+		ConversationID: env.ConversationID,
+		ClientMsgID:    env.ClientMsgID,
+		FromUID:        env.FromUID,
+		Seq:            msg.Seq,
+		Ts:             env.Ts,
+		Body:           ackJSON,
+	}
+
+	ackEnvJSON, err := json.Marshal(ackEnv)
+	if err != nil {
+		return err
+	}
+
+	// Send ack to tell the client if the message saved successfully
+	s.Hub.SendToUID(fromUID, ackEnvJSON)
+
+	// Pack the Envelope to broadcast to user
+	outEnv := &wire.Envelope{
+		Type:           env.Type,
+		ConversationID: env.ConversationID,
+		ClientMsgID:    env.ClientMsgID,
+		FromUID:        env.FromUID,
+		Seq:            msg.Seq,
+		Ts:             env.Ts,
+		Body:           env.Body,
+	}
+
+	outEnvJSON, err := json.Marshal(outEnv)
+	if err != nil {
+		return err
+	}
+
+	s.Hub.BroadcastToConversation(conversationID, outEnvJSON)
+
+	return nil
 }

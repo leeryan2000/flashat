@@ -10,7 +10,7 @@ func InitializeWebsocketRoutes(router *gin.RouterGroup, h *handlers.Handlers) {
 	wh := h.Websocket
 
 	websocketRoutes := router.Group("/websocket")
-	websocketRoutes.Use(middleware.Authenticate())
+	router.Use(middleware.Authenticate()) // Ensure authentication middleware is applied
 
-	websocketRoutes.GET("/ws", wh.ServeWs())
+	websocketRoutes.GET("/ws", wh.ServeWs)
 }

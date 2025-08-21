@@ -39,7 +39,9 @@ func (h AuthHandler) Login(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
+	// ***** should later implement session
+	c.SetCookie("token", token, 3600, "", "", true, true)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 
 }
