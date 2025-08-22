@@ -43,7 +43,7 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 		WITH s AS (
 			Update conversation_counters
 			SET last_seq = last_seq + 1
-			WHERE conversation_id = $1
+			WHERE conversation_id = $2
 			RETURNING last_seq
 		)
 		INSERT INTO messages (id, conversation_id, seq, from_uid, body)

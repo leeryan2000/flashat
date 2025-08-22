@@ -1,12 +1,32 @@
 package routes
 
 import (
+	"log"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/leeryan2000/flashat/handlers"
 )
 
 func SetupRoutes(handlers *handlers.Handlers) *gin.Engine {
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOriginFunc: func(origin string) bool {
+			log.Println("CORS Origin:", origin)
+			return true
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowWildcard:    true,
+		AllowWebSockets:  true,
+		AllowFiles:       true,
+	}))
+
+	router.Static("/static", "./static")
+	router.StaticFile("/chat", "./static/chat.html")
+
 	mainRouter := router.Group("/api")
 
 	InitializeUserRoutes(mainRouter, handlers)

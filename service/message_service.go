@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
@@ -54,7 +55,10 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 		Body:           env.Body,
 	}
 
+	log.Println("Message Initial:", msg)
 	err = s.Repo.SaveMessage(ctx, msg)
+	log.Println("Message Saved:", msg)
+
 	ack := &wire.Ack{
 		ServerMsgID: msg.ID,
 		ServerTS:    msg.CreatedAt.UnixMilli(),
@@ -62,6 +66,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 	}
 	if err != nil {
 		ack.Status = "failed"
+		log.Println("❌ Failed to save message:", err)
 		return err
 	}
 	// make ack json.rawMessage

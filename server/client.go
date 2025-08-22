@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/gorilla/websocket"
 	"github.com/leeryan2000/flashat/wire"
@@ -12,15 +13,18 @@ type Client struct {
 	UID           string
 	Hub           *Hub
 	Conn          *websocket.Conn
+	Ctx           context.Context
+	Cancel        context.CancelFunc
 	Send          chan []byte
 	Conversations map[string]struct{} // rooms the client is subscribed to
 }
 
 type HandleEnvelope func(context.Context, *wire.Envelope) error
 
-func (c *Client) ReadPump(ctx context.Context, handle HandleEnvelope) {
+func (c *Client) ReadPump(handle HandleEnvelope) {
 	defer func() {
 		c.Hub.Unregister <- c
+		c.Cancel()
 		c.Conn.Close()
 	}()
 
@@ -30,13 +34,16 @@ func (c *Client) ReadPump(ctx context.Context, handle HandleEnvelope) {
 		if err != nil {
 			break
 		}
+		// ***** delete line
+		log.Println("Received message:", string(raw))
 		// Expect JSON envelope from frontend
 		var env wire.Envelope
 		if err := json.Unmarshal(raw, &env); err != nil {
-			continue // ignore malformed
+			log.Println("❌ Failed to unmarshal envelope:", err)
+			break // ignore malformed
 		}
 
-		if err = handle(ctx, &env); err != nil {
+		if err = handle(c.Ctx, &env); err != nil {
 			break
 		}
 	}
@@ -45,6 +52,7 @@ func (c *Client) ReadPump(ctx context.Context, handle HandleEnvelope) {
 func (c *Client) WritePump() {
 	defer func() {
 		c.Hub.Unregister <- c
+		c.Cancel()
 		c.Conn.Close()
 	}()
 

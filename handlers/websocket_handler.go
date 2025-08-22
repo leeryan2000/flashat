@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/server"
 	"github.com/leeryan2000/flashat/service"
-	"github.com/leeryan2000/flashat/utils"
 )
 
 type WebsocketHandler struct {
@@ -26,22 +26,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
-	token := c.Query("token")
-	if token == "" {
-		log.Println("❌ Missing token in WebSocket connection")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
-		return
-	}
-
-	// Validate the token
-	claims, err := utils.ParseToken(token)
-	if err != nil {
-		log.Println("❌ Invalid token:", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-	// UID retrive from user
-	uidStr := claims.UID
+	uidStr := c.GetString("uid")
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -50,10 +35,13 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	}
 	log.Println("✅ WebSocket connection established")
 
+	ctx, cancel := context.WithCancel(context.Background())
 	client := &server.Client{
 		UID:           uidStr,
 		Hub:           wh.Hub,
 		Conn:          conn,
+		Ctx:           ctx,
+		Cancel:        cancel,
 		Send:          make(chan []byte, 256),
 		Conversations: make(map[string]struct{}),
 	}
@@ -85,5 +73,5 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 
 	client.Hub.Register <- client
 	go client.WritePump()
-	go client.ReadPump(c.Request.Context(), wh.MessageService.HandleEnvelope)
+	go client.ReadPump(wh.MessageService.HandleEnvelope)
 }
