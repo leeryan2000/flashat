@@ -55,9 +55,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 		Body:           env.Body,
 	}
 
-	log.Println("Message Initial:", msg)
 	err = s.Repo.SaveMessage(ctx, msg)
-	log.Println("Message Saved:", msg)
 
 	ack := &wire.Ack{
 		ServerMsgID: msg.ID,

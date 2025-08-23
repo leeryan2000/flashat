@@ -65,6 +65,6 @@ func (hub *Hub) removeClient(c *Client) {
 				}
 			}
 		}
-		close(c.Send)
+		c.Cleanup()
 	}
 }

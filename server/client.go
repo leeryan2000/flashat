@@ -19,14 +19,17 @@ type Client struct {
 	Conversations map[string]struct{} // rooms the client is subscribed to
 }
 
+func (c *Client) Cleanup() {
+	c.Hub.Unregister <- c // Unregister the client from the Hub
+	c.Cancel()            // Cancel the context
+	c.Conn.Close()        // Close the WebSocket connection
+	close(c.Send)         // Close the send channel
+}
+
 type HandleEnvelope func(context.Context, *wire.Envelope) error
 
 func (c *Client) ReadPump(handle HandleEnvelope) {
-	defer func() {
-		c.Hub.Unregister <- c
-		c.Cancel()
-		c.Conn.Close()
-	}()
+	defer c.Cleanup()
 
 	for {
 		// Read a full WS text frame
@@ -50,12 +53,7 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 }
 
 func (c *Client) WritePump() {
-	defer func() {
-		c.Hub.Unregister <- c
-		c.Cancel()
-		c.Conn.Close()
-	}()
-
+	defer c.Cleanup()
 	for env := range c.Send {
 		err := c.Conn.WriteMessage(websocket.TextMessage, env)
 		if err != nil {

@@ -35,6 +35,7 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	}
 	log.Println("✅ WebSocket connection established")
 
+	// Create a context that lives with the client lifecycle
 	ctx, cancel := context.WithCancel(context.Background())
 	client := &server.Client{
 		UID:           uidStr,
@@ -49,14 +50,14 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	uid, err := uuid.Parse(uidStr)
 	if err != nil {
 		log.Println("❌ Failed to parse UID:", err)
-		conn.Close()
+		client.Cleanup()
 		return
 	}
 
 	conversations, err := wh.ConversationRepo.ListConversationByUID(c.Request.Context(), uid)
 	if err != nil {
 		log.Println("❌ Failed to retrieve conversations:", err)
-		conn.Close()
+		client.Cleanup()
 		return
 	}
 
