@@ -20,7 +20,7 @@ type MessageService struct {
 func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Envelope) error {
 	// Process the envelope based on its type
 	switch env.Type {
-	case wire.MsgDirect, wire.MsgGroup:
+	case wire.MsgChat:
 		s.handleConversation(ctx, env)
 	case wire.MsgJoin:
 		// Handle join message

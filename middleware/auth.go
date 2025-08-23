@@ -12,8 +12,16 @@ func Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr, err := c.Cookie("token")
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
-			return
+			// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
+			// return
+
+			// ***** test verision which read from query
+			tokenStr = c.Query("token")
+			if tokenStr == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
+				return
+			}
+
 		}
 
 		claims, err := utils.ParseToken(tokenStr)

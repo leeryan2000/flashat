@@ -5,8 +5,7 @@ import "github.com/google/uuid"
 const (
 	MsgJoin   MsgType = "join"
 	MsgLeave  MsgType = "leave"
-	MsgGroup  MsgType = "group"  // room broadcast
-	MsgDirect MsgType = "direct" // 1:1
+	MsgChat   MsgType = "chat"
 	MsgSystem MsgType = "system"
 	MsgAck    MsgType = "ack"
 	MsgPing   MsgType = "ping"

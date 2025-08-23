@@ -55,6 +55,7 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 func (c *Client) WritePump() {
 	defer c.Cleanup()
 	for env := range c.Send {
+		log.Print("Sending message:", string(env))
 		err := c.Conn.WriteMessage(websocket.TextMessage, env)
 		if err != nil {
 			break

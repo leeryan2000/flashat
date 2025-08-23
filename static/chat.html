@@ -19,14 +19,14 @@
   </style>
 </head>
 <body>
-  <h1>WebSocket Envelope Tester <span class="pill">type: "direct"</span></h1>
+  <h1>WebSocket Envelope Tester </h1>
 
   <fieldset>
     <legend>Login</legend>
     <label>Email</label>
-    <input id="email" placeholder="Enter your email" />
+    <input id="email" value="postmanTest@example.com" />
     <label>Password</label>
-    <input id="password" type="password" placeholder="Enter your password" />
+    <input id="password" type="password" value="123456" />
     <div style="margin-top:10px;">
       <button id="btnLogin">Login</button>
       <span id="loginStatus" style="margin-left:12px;">🔴 Not logged in</span>
@@ -36,7 +36,7 @@
   <fieldset>
   <legend>Connection</legend>
   <label>WebSocket URL (e.g., <code>wss://host/ws</code>)</label>
-  <input id="wsUrl" placeholder="wss://localhost:8080/ws" />
+  <input id="wsUrl" value="ws://localhost:8080/api/websocket/ws" />
   <div style="margin-top:10px;">
     <button id="btnConnect">Connect</button>
     <button id="btnDisconnect" disabled>Disconnect</button>
@@ -77,7 +77,7 @@
       </div>
     </div>
     <label>Body JSON</label>
-    <textarea id="body">{ "text": "hello world" }</textarea>
+    <textarea id="body">hello world</textarea>
     <div style="margin-top:10px;">
       <button id="btnSend" disabled>Send Envelope</button>
       <button id="btnAck" disabled title="Sends a fake ACK request shape for testing server handling">Send Read Receipt (example)</button>
