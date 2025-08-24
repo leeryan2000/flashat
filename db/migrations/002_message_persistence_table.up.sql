@@ -10,7 +10,7 @@ CREATE TABLE conversations (
 CREATE TABLE conversation_participants (
   conversation_id uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   uid             uuid NOT NULL,
-  role            text NOT NULL DEFAULT 'member',
+  role            text NOT NULL DEFAULT 'member', -- Role: 'creator', 'admin', 'member'
   last_read_seq   bigint NOT NULL DEFAULT 0,
   joined_at       timestamp WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (conversation_id, uid)

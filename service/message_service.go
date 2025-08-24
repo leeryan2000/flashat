@@ -58,9 +58,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 	err = s.Repo.SaveMessage(ctx, msg)
 
 	ack := &wire.Ack{
-		ServerMsgID: msg.ID,
-		ServerTS:    msg.CreatedAt.UnixMilli(),
-		Status:      "success",
+		Status: "success",
 	}
 	if err != nil {
 		ack.Status = "failed"
@@ -78,10 +76,11 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 		Type:           wire.MsgAck,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
+		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq,
-		Ts:             env.Ts,
-		Body:           ackJSON,
+		Ts:             msg.CreatedAt.UnixMilli(),
+		Body:           ackJSON,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 	}
 
 	ackEnvJSON, err := json.Marshal(ackEnv)
@@ -94,13 +93,14 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 
 	// Pack the Envelope to broadcast to user
 	outEnv := &wire.Envelope{
-		Type:           env.Type,
+		Type:           wire.MsgChat,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
+		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq,
-		Ts:             env.Ts,
-		Body:           env.Body,
+		Ts:             msg.CreatedAt.UnixMilli(),
+		Body:           env.Body, // ***** could create a wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
 	}
 
 	outEnvJSON, err := json.Marshal(outEnv)

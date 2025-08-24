@@ -10,6 +10,7 @@ type Envelope struct {
 	Type           MsgType `json:"type"`
 	ConversationID string  `json:"conversation_id,omitempty"`
 	ClientMsgID    string  `json:"client_msg_id,omitempty"`
+	ServerMsgID    string  `json:"server_msg_id,omitempty"`
 	FromUID        string  `json:"from_uid,omitempty"`
 	// discover whether seq is needed from the client
 	Seq  int64           `json:"seq,omitempty"`

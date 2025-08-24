@@ -1,6 +1,5 @@
 package wire
 
-import "github.com/google/uuid"
 
 const (
 	MsgJoin   MsgType = "join"
@@ -13,7 +12,5 @@ const (
 )
 
 type Ack struct {
-	ServerMsgID uuid.UUID `json:"server_msg_id"`
-	ServerTS    int64     `json:"server_ts"`
 	Status      string    `json:"status"` // success, failed
 }
