@@ -1,6 +1,5 @@
 package wire
 
-
 const (
 	MsgJoin   MsgType = "join"
 	MsgLeave  MsgType = "leave"
@@ -12,5 +11,5 @@ const (
 )
 
 type Ack struct {
-	Status      string    `json:"status"` // success, failed
+	Status string `json:"status"` // success, failed
 }

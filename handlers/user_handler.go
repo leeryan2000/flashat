@@ -16,6 +16,7 @@ type UserHandler struct{ Repo repo.UserRepo }
 type createUserInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Name     string `json:"name"`
 }
 
 func (h UserHandler) CreateUser(c *gin.Context) {
@@ -36,6 +37,7 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 
 	user := models.User{
 		UID:            uuid.NewString(),
+		Name:           createUserInput.Name,
 		Email:          createUserInput.Email,
 		HashedPassword: hashedPassword,
 	}
