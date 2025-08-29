@@ -10,4 +10,5 @@ func InitializeAuthRoutes(router *gin.RouterGroup, h *handlers.Handlers) {
 	authRoutes := router.Group("/auth")
 
 	authRoutes.POST("/login", ah.Login)
+	authRoutes.DELETE("/logout", ah.Logout)
 }

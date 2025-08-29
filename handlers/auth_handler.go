@@ -45,3 +45,8 @@ func (h AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 
 }
+
+func (h AuthHandler) Logout(c *gin.Context) {
+	c.SetCookie("token", "", -1, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
+}
