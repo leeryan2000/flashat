@@ -1,0 +1,41 @@
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+
+
+export function LoginForm() {
+    const {login, isLoading} = useAuth();
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        try {
+            await login(email, password);
+        } catch (error) {
+            setError("Login failed");
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            <button type="submit" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
+            </button>
+            {error && <p>{error}</p>}
+        </form>
+    );
+}

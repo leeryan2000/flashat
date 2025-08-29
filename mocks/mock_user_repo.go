@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/stretchr/testify/mock"
 )
@@ -19,8 +20,8 @@ func (m *UserRepoMock) GetAllUsers() ([]models.User, error) {
 	return args.Get(0).([]models.User), args.Error(1)
 }
 
-func (m *UserRepoMock) GetUserById(id uint) (*models.User, error) {
-	args := m.Called(id)
+func (m *UserRepoMock) GetUserByUid(uid uuid.UUID) (*models.User, error) {
+	args := m.Called(uid)
 	user, ok := args.Get(0).(*models.User)
 	if !ok {
 		return nil, args.Error(1)

@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"gorm.io/gorm"
 )
@@ -19,9 +20,9 @@ func (r *GormUserRepo) GetAllUsers() ([]models.User, error) {
 	return users, err
 }
 
-func (r *GormUserRepo) GetUserById(id uint) (*models.User, error) {
+func (r *GormUserRepo) GetUserByUid(uid uuid.UUID) (*models.User, error) {
 	user := &models.User{}
-	err := r.DB.First(&user, id).Error
+	err := r.DB.First(&user, "uid = ?", uid).Error
 	return user, err
 }
 

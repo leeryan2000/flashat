@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/utils"
 )
@@ -49,4 +50,22 @@ func (h AuthHandler) Login(c *gin.Context) {
 func (h AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
+}
+
+func (h AuthHandler) GetCurrentUser(c *gin.Context) {
+	uidStr := c.GetString("uid")
+
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid UID format"})
+		return
+	}
+
+	user, err := h.Repo.GetUserByUid(uid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

@@ -1,10 +1,13 @@
 package repo
 
-import "github.com/leeryan2000/flashat/models"
+import (
+	"github.com/google/uuid"
+	"github.com/leeryan2000/flashat/models"
+)
 
 type UserRepo interface {
 	CreateUser(user *models.User) error
 	GetAllUsers() ([]models.User, error)
-	GetUserById(id uint) (*models.User, error)
+	GetUserByUid(uid uuid.UUID) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 }

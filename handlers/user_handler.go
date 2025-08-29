@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -60,20 +59,20 @@ func (h UserHandler) GetAllUsers(c *gin.Context) {
 }
 
 func (h UserHandler) GetUserById(c *gin.Context) {
-	idParam := c.Param("id")
+	uidStr := c.Param("uid")
 
-	if idParam == "" {
+	if uidStr == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
 		return
 	}
 
-	id, err := strconv.Atoi(idParam)
+	uid, err := uuid.Parse(uidStr)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
-	user, err := h.Repo.GetUserById(uint(id))
+	user, err := h.Repo.GetUserByUid(uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -1,10 +1,12 @@
 import './App.css'
+import { LoginForm } from './components/LoginForm'
+import { AuthProvider } from './context/AuthContext'
 
 function App() {
   return (
-    <> 
-      <div>{import.meta.env.VITE_API_URL}</div>
-    </>
+    <AuthProvider> 
+      <div><LoginForm /></div>
+    </AuthProvider>
   )
 }
 
