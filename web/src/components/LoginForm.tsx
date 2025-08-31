@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 
 export function LoginForm() {
@@ -7,12 +8,14 @@ export function LoginForm() {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         try {
             await login(email, password);
+            navigate("/dashboard");
         } catch (error) {
             setError("Login failed");
         }
@@ -21,7 +24,7 @@ export function LoginForm() {
     return (
         <form onSubmit={handleSubmit}>
             <input
-                type="email"
+                type="text"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

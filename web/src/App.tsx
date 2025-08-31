@@ -1,11 +1,11 @@
 import './App.css'
-import { LoginForm } from './components/LoginForm'
 import { AuthProvider } from './context/AuthContext'
+import AppRouter from './routes/AppRouter'
 
 function App() {
   return (
     <AuthProvider> 
-      <div><LoginForm /></div>
+      <AppRouter />
     </AuthProvider>
   )
 }
