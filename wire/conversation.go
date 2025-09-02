@@ -12,6 +12,7 @@ type ConversationSummary struct {
 	// fields that are possible being null
 	// ***** find a way to display direct conversations title
 	Title       *string    `json:"title,omitempty"`
+	AvatarURL   *string    `json:"avatar_url,omitempty"`
 	LastMsgID   *uuid.UUID `json:"last_message_id,omitempty"`
 	LastMsgText *string    `json:"last_message_text,omitempty"`
 	LastMsgFrom *string    `json:"last_message_from,omitempty"`

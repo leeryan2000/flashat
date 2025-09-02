@@ -6,6 +6,7 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(60) NOT NULL,
+    user_avatar_url text NOT NULL DEFAULT 'User Default Avatar',
 
     role VARCHAR(50) DEFAULT 'user',
 

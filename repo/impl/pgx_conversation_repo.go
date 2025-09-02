@@ -24,11 +24,11 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 
 	// conversations: id, type, direct_key(NULL), created_at (default)
 	err = tx.QueryRow(ctx, `
-		INSERT INTO conversations (id, type, group_name)
-		VALUES ($1, $2, $3)
-		RETURNING id, type, group_name, created_at`,
-		conv.ID, conv.Type, conv.GroupName,
-	).Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.CreatedAt)
+		INSERT INTO conversations (id, type, group_name, group_avatar_url)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, type, group_name, group_avatar_url, created_at`,
+		conv.ID, conv.Type, conv.GroupName, conv.GroupAvatarUrl,
+	).Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.GroupAvatarUrl, &conv.CreatedAt)
 
 	if err != nil {
 		log.Println("Failed to create group conversation:", err)
@@ -265,7 +265,15 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 		SELECT
 			c.id        AS conversation_id,
 			c.type      AS type,
-			CASE WHEN c.type = 'group' THEN c.group_name END AS title,
+			CASE 
+				WHEN c.type = 'group' THEN c.group_name 
+				ELSE u.name
+			END AS title,
+
+			CASE 
+				WHEN c.type = 'group' THEN c.group_avatar_url
+				ELSE u.user_avatar_url
+			END AS avatar_url,
 
 			lm.id        AS last_message_id,
 			lm.last_msg_text,
@@ -293,6 +301,15 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 			ORDER BY m.seq DESC
 			LIMIT 1
 		) lm ON TRUE
+		LEFT JOIN LATERAL (
+			SELECT p.uid AS uid
+			FROM conversation_participants p
+			WHERE p.conversation_id = c.id
+				AND p.uid <> $1
+			LIMIT 1
+		) peer ON c.type = 'direct'
+		LEFT JOIN users u
+		  ON u.uid = peer.uid
 		ORDER BY COALESCE(lm.last_msg_ts, c.created_at) DESC;
 	`, uid)
 	if err != nil {
@@ -309,6 +326,7 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 			&c.ConversationID,
 			&c.ConvType,
 			&c.Title,
+			&c.AvatarURL,
 			&c.LastMsgID,
 			&c.LastMsgText,
 			&c.LastMsgFrom,

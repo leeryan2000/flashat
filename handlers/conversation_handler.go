@@ -48,10 +48,14 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 		}
 	}
 
+	// set up the url of default group avatar
+	avatar_url := "Default group avatar"
+
 	conv := &models.Conversation{
-		ID:        uuid.New(),
-		Type:      "group",
-		GroupName: &input.GroupName,
+		ID:             uuid.New(),
+		Type:           "group",
+		GroupName:      &input.GroupName,
+		GroupAvatarUrl: &avatar_url,
 	}
 
 	err = h.Repo.CreateGroupConversation(c.Request.Context(), conv, creatorUID, participantsUID)

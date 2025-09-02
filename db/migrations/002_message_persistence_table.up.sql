@@ -3,6 +3,7 @@ CREATE TABLE conversations (
   type         text NOT NULL CHECK (type IN ('direct','group')),
   direct_key   text UNIQUE, -- only for direct, and the key should be canonical
   group_name   text, -- only for group, optional group name
+  group_avatar_url text, -- only for group, optional group avatar URL
   created_at   timestamp WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
