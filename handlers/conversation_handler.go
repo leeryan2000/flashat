@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -355,7 +354,6 @@ func (h *ConversationHandler) GetLastReadSeq(c *gin.Context) {
 }
 
 func (h *ConversationHandler) GetSummary(c *gin.Context) {
-	log.Println("Getting conversation summary")
 	uidStr := c.GetString("uid")
 	uid, err := uuid.Parse(uidStr)
 	if err != nil {
