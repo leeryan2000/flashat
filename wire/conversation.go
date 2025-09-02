@@ -7,10 +7,11 @@ import (
 )
 
 type ConversationSummary struct {
-	Type           string    `json:"type"`
+	ConvType       string    `json:"type"` // group | direct
 	ConversationID uuid.UUID `json:"conversation_id"`
 	// fields that are possible being null
-	Title       *string    `json:"title,omitempty"` // ***** find a way to display direct conversations title
+	// ***** find a way to display direct conversations title
+	Title       *string    `json:"title,omitempty"`
 	LastMsgID   *uuid.UUID `json:"last_message_id,omitempty"`
 	LastMsgText *string    `json:"last_message_text,omitempty"`
 	LastMsgFrom *string    `json:"last_message_from,omitempty"`

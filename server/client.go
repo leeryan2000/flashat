@@ -26,7 +26,7 @@ func (c *Client) Cleanup() {
 	close(c.Send)         // Close the send channel
 }
 
-type HandleEnvelope func(context.Context, *wire.Envelope) error
+type HandleEnvelope func(context.Context, *wire.MsgEnvelope) error
 
 func (c *Client) ReadPump(handle HandleEnvelope) {
 	defer c.Cleanup()
@@ -40,7 +40,7 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 		// ***** delete line
 		log.Println("Received message:", string(raw))
 		// Expect JSON envelope from frontend
-		var env wire.Envelope
+		var env wire.MsgEnvelope
 		if err := json.Unmarshal(raw, &env); err != nil {
 			log.Println("❌ Failed to unmarshal envelope:", err)
 			break // ignore malformed

@@ -17,7 +17,7 @@ type MessageService struct {
 	Repo repo.MessageRepo
 }
 
-func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Envelope) error {
+func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelope) error {
 	// Process the envelope based on its type
 	switch env.Type {
 	case wire.MsgChat:
@@ -33,7 +33,7 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Envelope)
 	return nil // Processed successfully
 }
 
-func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envelope) error {
+func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEnvelope) error {
 	if env.ConversationID == "" {
 		return errors.New("missing conversation id")
 	}
@@ -72,7 +72,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 	}
 
 	// Ack for the sender
-	ackEnv := &wire.Envelope{
+	ackEnv := &wire.MsgEnvelope{
 		Type:           wire.MsgAck,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
@@ -92,7 +92,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 	s.Hub.SendToUID(fromUID, ackEnvJSON)
 
 	// Pack the Envelope to broadcast to user
-	outEnv := &wire.Envelope{
+	outEnv := &wire.MsgEnvelope{
 		Type:           wire.MsgChat,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
@@ -100,7 +100,8 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq, // client seq would be updated with server seq
 		Ts:             msg.CreatedAt.UnixMilli(),
-		Body:           env.Body, // ***** could create a wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
+		// ***** could create wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
+		Body: env.Body,
 	}
 
 	outEnvJSON, err := json.Marshal(outEnv)

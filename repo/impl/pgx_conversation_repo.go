@@ -307,7 +307,7 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 
 		if err := rows.Scan(
 			&c.ConversationID,
-			&c.Type,
+			&c.ConvType,
 			&c.Title,
 			&c.LastMsgID,
 			&c.LastMsgText,

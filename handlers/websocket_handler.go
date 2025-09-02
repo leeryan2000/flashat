@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/server"
 	"github.com/leeryan2000/flashat/service"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type WebsocketHandler struct {
@@ -54,16 +56,30 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 		return
 	}
 
-	conversations, err := wh.ConversationRepo.ListConversationByUID(c.Request.Context(), uid)
+	summaries, err := wh.ConversationRepo.GetSummary(c.Request.Context(), uid)
 	if err != nil {
 		log.Println("❌ Failed to retrieve conversations:", err)
 		client.Cleanup()
 		return
 	}
 
+	outEnv := &wire.Envelope{
+		Type: "conv_summary",
+		Body: summaries,
+	}
+
+	outEnvJson, err := json.Marshal(outEnv)
+	if err != nil {
+		log.Println("❌ Failed to marshal envelope:", err)
+		client.Cleanup()
+		return
+	}
+
+	client.Send <- outEnvJson
+
 	// Add the user to the conversations in the Hub
-	for _, conv := range conversations {
-		convID := conv.ID.String()
+	for _, conv := range summaries {
+		convID := conv.ConversationID.String()
 		if _, ok := wh.Hub.Conversations[convID]; !ok {
 			// create a new conversation if the conversation didn't exists in the slice
 			wh.Hub.Conversations[convID] = make(map[*server.Client]struct{})
