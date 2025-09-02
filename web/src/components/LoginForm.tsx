@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { PATHS } from "../routes/paths";
 
 
 export function LoginForm() {
@@ -15,7 +16,7 @@ export function LoginForm() {
         setError(null);
         try {
             await login(email, password);
-            navigate("/dashboard");
+            navigate(PATHS.chat);
         } catch (error) {
             setError("Login failed");
         }

@@ -24,4 +24,6 @@ func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers)
 
 	conversationRoutes.PUT("/read_seq", ch.UpdateLastReadSeq)
 	conversationRoutes.GET("/read_seq", ch.GetLastReadSeq)
+
+	conversationRoutes.GET("/summary", ch.GetSummary)
 }

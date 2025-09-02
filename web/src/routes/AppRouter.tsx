@@ -2,17 +2,18 @@ import type React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import { useAuth } from "../context/AuthContext";
-import DashBoard from "../pages/DashBoard";
-import Layout from "../layouts/layout";
+import Chat from "../pages/ChatExample";
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
+import Layout from "../layouts/Layout";
+import { PATHS } from "./paths";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
     return null;
   } // could show a loading spinner here
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to={PATHS.login} replace />;
 }
 
 export default function AppRouter() {
@@ -20,18 +21,18 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route
-          path="/dashboard"
+          path={PATHS.chat}
           element={
             <AuthCheck>
               <Layout />
             </AuthCheck>
           }
         >
-          <Route index element={<DashBoard />} />
+          <Route index element={<Chat />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
         </Route>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path={PATHS.login} element={<LoginPage />} />
         {/* 404, etc. */}
       </Routes>
     </BrowserRouter>

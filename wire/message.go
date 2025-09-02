@@ -11,5 +11,5 @@ const (
 )
 
 type Ack struct {
-	Status string `json:"status"` // success, failed
+	Status string `json:"status"` // sent, failed
 }

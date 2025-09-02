@@ -22,9 +22,6 @@ CREATE TABLE conversation_counters (
   last_seq        bigint NOT NULL DEFAULT 0 -- last message sequence number
 );
 
--- create counter row with next_seq=1 whenever a conversation is created
--- (do it in app tx or via trigger)
-
 CREATE TABLE messages (
   id              uuid PRIMARY KEY,
   conversation_id uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,

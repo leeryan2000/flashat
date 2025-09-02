@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type ConversationRepo interface {
@@ -23,4 +24,7 @@ type ConversationRepo interface {
 	// Read-state
 	UpdateLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID, seq int64) error
 	GetLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) (int64, error)
+
+	// Load conversations
+	GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error)
 }

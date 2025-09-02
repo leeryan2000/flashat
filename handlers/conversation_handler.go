@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -350,5 +351,26 @@ func (h *ConversationHandler) GetLastReadSeq(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "Last read sequence retrieved successfully",
 		"last_read_seq": lastReadSeq,
+	})
+}
+
+func (h *ConversationHandler) GetSummary(c *gin.Context) {
+	log.Println("Getting conversation summary")
+	uidStr := c.GetString("uid")
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Parse participant UID failed"})
+		return
+	}
+
+	summary, err := h.Repo.GetSummary(c.Request.Context(), uid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to get conversation summary"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Conversation summary retrieved successfully",
+		"summary": summary,
 	})
 }

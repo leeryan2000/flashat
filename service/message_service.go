@@ -98,7 +98,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.Envel
 		ClientMsgID:    env.ClientMsgID,
 		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
-		Seq:            msg.Seq,
+		Seq:            msg.Seq, // client seq would be updated with server seq
 		Ts:             msg.CreatedAt.UnixMilli(),
 		Body:           env.Body, // ***** could create a wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
 	}

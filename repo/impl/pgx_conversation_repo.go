@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type PgxConversationRepo struct {
@@ -257,4 +258,73 @@ func (r *PgxConversationRepo) GetLastReadSeq(ctx context.Context, conversationID
 	}
 
 	return seq, nil
+}
+
+func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error) {
+	rows, err := r.Pool.Query(ctx, `
+		SELECT
+			c.id        AS conversation_id,
+			c.type      AS type,
+			CASE WHEN c.type = 'group' THEN c.group_name END AS title,
+
+			lm.id        AS last_message_id,
+			lm.last_msg_text,
+			lm.from_uid  AS last_message_from,
+			lm.last_msg_ts,  -- timestamptz
+
+			COALESCE(cc.last_seq, lm.seq, 0) AS last_seq,
+			cp.last_read_seq,
+			GREATEST(COALESCE(cc.last_seq, lm.seq, 0) - cp.last_read_seq, 0) AS unread_count
+		FROM conversations c
+		JOIN conversation_participants cp
+		  ON cp.conversation_id = c.id
+		 AND cp.uid = $1
+		LEFT JOIN conversation_counters cc
+		  ON cc.conversation_id = c.id
+		LEFT JOIN LATERAL (
+			SELECT
+				m.id,
+				m.seq,
+				m.from_uid,
+				(m.body->>'text') AS last_msg_text,
+				m.created_at      AS last_msg_ts  -- timestamptz
+			FROM messages m
+			WHERE m.conversation_id = c.id
+			ORDER BY m.seq DESC
+			LIMIT 1
+		) lm ON TRUE
+		ORDER BY COALESCE(lm.last_msg_ts, c.created_at) DESC;
+	`, uid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*wire.ConversationSummary
+
+	for rows.Next() {
+		c := &wire.ConversationSummary{}
+
+		if err := rows.Scan(
+			&c.ConversationID,
+			&c.Type,
+			&c.Title,
+			&c.LastMsgID,
+			&c.LastMsgText,
+			&c.LastMsgFrom,
+			&c.LastMsgTs,
+			&c.LastSeq,
+			&c.LastReadSeq,
+			&c.UnreadCount,
+		); err != nil {
+			return nil, err
+		}
+
+		out = append(out, c)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
 }

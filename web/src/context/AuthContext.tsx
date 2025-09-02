@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })();
   }, []);
-
+  
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
