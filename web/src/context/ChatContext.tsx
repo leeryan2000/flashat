@@ -1,14 +1,37 @@
-import { createContext, use, useCallback, useState } from "react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useAuth } from "./AuthContext";
-import { v4 } from "uuid";
+import { api } from "../api/api";
+import { toConversation, type ConversationWire } from "../wire/conversation";
 // create types that match exactly what the server passed in
 
-type Conversation = {
+export type Conversation = {
   id: string;
+  type: "group" | "direct";
+
   title: string;
-  lastSeq?: number;
-  lastReadSeq?: number;
-  unread?: number;
+  avatarUrl?: string | null;
+  lastMsgId?: string;
+  lastMsgText?: string;
+  lastMsgFrom?: string;
+  // the timestamp in database are timestampz match it
+  lastMsgTs?: number;
+  lastSeq: number;
+
+  lastReadSeq: number;
+  unreadCount: number;
+};
+
+export type ConvState = {
+  entities: Record<string, Conversation>;
+  order: string[];
 };
 
 type Message = {
@@ -28,46 +51,72 @@ type SendMessageInput = {
 };
 
 interface ChatContext {
-  conversations: Record<string, Conversation>;
-  messages: Record<string, Message>;
+  convs: ConvState;
+  msgs: Record<string, Message>;
 
-  sendMessage: (input: SendMessageInput) => Promise<string>;
-  loadConversations: (conversations: Conversation[]) => void;
-  loadMessages: (messages: Message[]) => void; // sets up the messages when app started
-  markRead: (convId: string, seq: number) => void;
+  loadConvs: (convs: Conversation[]) => void;
+  // sendMessage: (input: SendMessageInput) => Promise<string>;
+  // loadMessages: (messages: Message[]) => void; // sets up the messages when app started
+  // markRead: (convId: string, seq: number) => void;
 }
 
 const ChatContext = createContext<ChatContext | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<Record<string, Conversation>>({});
-  const [messages, setMessages] = useState<Record<string, Message>>({});
+  const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
+  const [msgs, setMessages] = useState<Record<string, Message>>({});
 
-  const loadConversations = useCallback((convs: Conversation[]) => {
-    const newConversations = convs.reduce((acc, conv) => {
-      acc[conv.id] = conv;
-      return acc;
-    }, {} as Record<string, Conversation>);
-    setConversations(prev => ({ ...prev, ...newConversations }));
+  useEffect(() => {
+    // ***** Retrieve sidebar test
+    const fetchUser = async () => {
+      try {
+        const summaryWire = await api<ConversationWire[]>("/conversation/summary");
+        const summary = summaryWire.map(toConversation);
+        loadConvs(summary);
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+      } finally {
+      }
+    };
+    fetchUser();
   }, []);
 
-  // ***** use websocket probably with another context
-  const sendMessage = useCallback(
-    async (input: SendMessageInput): Promise<string> => {
-      const clientMsgId = v4();
-      const fromUid = user?.uid || "unknown";
-      const optimistic: Message = {
-        clientMsgId,
-        convId: input.convId,
-        fromUid: user?.uid || "unknown",
-        text: input.text,
-        seq: conversations[input.convId]?.lastSeq || 0,
-        status: "sending"
+  const loadConvs = useCallback((list: Conversation[]) => {
+    setConvs((prev) => {
+      const convs = { ...prev.entities };
+      for (const conv of list) {
+        convs[conv.id] = { ...(convs[conv.id] ?? {}), ...conv };
+      }
+      const order = Object.values(convs)
+        .sort((a, b) => {
+          const diff = (b.lastMsgTs ?? 0) - (a.lastMsgTs ?? 0);
+          return diff !== 0 ? diff : a.id.localeCompare(b.id);
+        })
+        .map((conv) => conv.id);
+      return {
+        entities: convs,
+        order: order,
       };
+    });
+  }, []);
 
-      return "";
-    },
-    []
+  const value = useMemo(
+    () => ({
+      convs,
+      msgs,
+      loadConvs,
+    }),
+    [convs, msgs]
   );
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+}
+
+export function useChat() {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error("useChat must be used within a ChatProvider");
+  }
+  return context;
 }

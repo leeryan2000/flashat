@@ -2,11 +2,12 @@ import type React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import { useAuth } from "../context/AuthContext";
-import Chat from "../pages/ChatExample";
+import Chat from "../pages/Chat";
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import Layout from "../layouts/Layout";
 import { PATHS } from "./paths";
+import { ChatProvider } from "../context/ChatContext";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,7 +25,9 @@ export default function AppRouter() {
           path={PATHS.chat}
           element={
             <AuthCheck>
-              <Layout />
+                <ChatProvider>
+                  <Layout />
+                </ChatProvider>
             </AuthCheck>
           }
         >

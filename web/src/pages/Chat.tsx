@@ -1,0 +1,206 @@
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
+import ConversationsSidebar from "../components/ConversationSidebar";
+import { useChat, type ConvState } from "../context/ChatContext";
+
+/**
+ * Minimal, self‑contained chat page with:
+ * - Left sidebar: conversation list (search + unread badge)
+ * - Right pane: messages for the selected conversation + composer
+ * - Routing: /chat and /chat/:id (useParams + navigate on row click)
+ * - Tailwind for styling
+ *
+ * Drop this file into your project (e.g., src/pages/ChatPage.tsx),
+ * add a route for it, and swap the mocked data for your API calls.
+ */
+
+// ---------- Types ----------
+export interface ConversationDemo {
+  id: string;
+  title: string;      // display name / group name
+  last: string;       // last message preview
+  ts: number;         // unix ms
+  unread?: number;    // unread count
+}
+
+export interface Message {
+  id: string;
+  convoId: string;
+  from: string;       // uid or display name
+  text: string;
+  ts: number;         // unix ms
+  mine?: boolean;     // render bubble on the right
+}
+
+// ---------- Mock data (replace with your API) ----------
+const MOCK_CONVOS: ConversationDemo[] = [
+  { id: "c1", title: "Alice", last: "See you tomorrow!", ts: Date.now() - 1000 * 60 * 3, unread: 2 },
+  { id: "c2", title: "Bob • Project", last: "Pushed a new branch.", ts: Date.now() - 1000 * 60 * 11 },
+  { id: "c3", title: "Team Rocket", last: "Prepare for trouble.", ts: Date.now() - 1000 * 60 * 60 * 5, unread: 7 },
+  { id: "c4", title: "Huai'en (You)", last: "Drafting the layout now", ts: Date.now() - 1000 * 60 * 60 * 10 },
+];
+
+export const MOCK_CONV_STATE: ConvState = {
+  entities: {
+    c1: {
+      id: "c1",
+      type: "direct",
+      title: "Alice",
+      avatarUrl: "https://example.com/avatars/alice.png",
+      lastMsgId: "msg-c1-0120",
+      lastMsgText: "See you tomorrow!",
+      lastMsgFrom: "alice-uid",
+      lastMsgTs: Date.now() - 1000 * 60 * 3, // 3 minutes ago
+      lastSeq: 120,
+      lastReadSeq: 118,
+      unreadCount: 2,
+    },
+    c2: {
+      id: "c2",
+      type: "direct",
+      title: "Bob • Project",
+      avatarUrl: "https://example.com/avatars/bob.png",
+      lastMsgId: "msg-c2-0085",
+      lastMsgText: "Pushed a new branch.",
+      lastMsgFrom: "bob-uid",
+      lastMsgTs: Date.now() - 1000 * 60 * 11, // 11 minutes ago
+      lastSeq: 85,
+      lastReadSeq: 85,
+      unreadCount: 0,
+    },
+    c3: {
+      id: "c3",
+      type: "group",
+      title: "Team Rocket",
+      avatarUrl: "https://example.com/avatars/team-rocket.png",
+      lastMsgId: "msg-c3-0402",
+      lastMsgText: "Prepare for trouble.",
+      lastMsgFrom: "jessie-uid",
+      lastMsgTs: Date.now() - 1000 * 60 * 60 * 5, // 5 hours ago
+      lastSeq: 402,
+      lastReadSeq: 395,
+      unreadCount: 7,
+    },
+    c4: {
+      id: "c4",
+      type: "direct",
+      title: "Huai'en (You)",
+      avatarUrl: null,
+      lastMsgId: "msg-c4-0260",
+      lastMsgText: "Drafting the layout now",
+      lastMsgFrom: "you-uid",
+      lastMsgTs: Date.now() - 1000 * 60 * 60 * 10, // 10 hours ago
+      lastSeq: 260,
+      lastReadSeq: 260,
+      unreadCount: 0,
+    },
+  },
+  // Sorted by recency (most recent first)
+  order: ["c1", "c2", "c3", "c4"],
+};
+
+const MOCK_MESSAGES: Message[] = [
+  { id: "m1", convoId: "c1", from: "Alice", text: "Hey!", ts: Date.now() - 1000 * 60 * 60, mine: false },
+  { id: "m2", convoId: "c1", from: "Huai'en", text: "Yo!", ts: Date.now() - 1000 * 60 * 58, mine: true },
+  { id: "m3", convoId: "c1", from: "Alice", text: "See you tomorrow!", ts: Date.now() - 1000 * 60 * 3, mine: false },
+  { id: "m4", convoId: "c2", from: "Bob", text: "Pushed a new branch.", ts: Date.now() - 1000 * 60 * 11, mine: false },
+  { id: "m5", convoId: "c3", from: "Jessie", text: "Prepare for trouble.", ts: Date.now() - 1000 * 60 * 60 * 5, mine: false },
+  { id: "m6", convoId: "c3", from: "James", text: "And make it double!", ts: Date.now() - 1000 * 60 * 60 * 5 + 10000, mine: false },
+  { id: "m7", convoId: "c4", from: "Huai'en", text: "Drafting the layout now", ts: Date.now() - 1000 * 60 * 60 * 10, mine: true },
+];
+
+// ---------- Messages pane ----------
+function MessagesPane({ convoId }:{ convoId: string }) {
+  const list = useMemo(() => MOCK_MESSAGES.filter(m => m.convoId===convoId).sort((a,b)=>a.ts-b.ts), [convoId]);
+  const boxRef = useRef<HTMLDivElement|null>(null);
+
+  useEffect(()=>{
+    // auto scroll to bottom on convo change or new message
+    boxRef.current?.scrollTo({ top: boxRef.current.scrollHeight })
+  }, [convoId, list.length]);
+
+  return (
+    <div className="h-full grid grid-rows-[1fr_auto]">
+      {/* messages list */}
+      <div ref={boxRef} className="overflow-y-auto space-y-2 pr-2">
+        {list.map(m => (
+          <div key={m.id} className={["flex", m.mine?"justify-end":"justify-start"].join(" ") }>
+            <div className={[
+              "max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow",
+              m.mine ? "bg-indigo-600 text-white rounded-br-sm" : "bg-slate-100 text-slate-900 rounded-bl-sm"
+            ].join(" ")}>
+              <p className="whitespace-pre-wrap break-words">{m.text}</p>
+              <p className="mt-1 text-[11px] opacity-70">{new Date(m.ts).toLocaleTimeString()}</p>
+            </div>
+          </div>
+        ))}
+        {list.length===0 && (
+          <div className="h-full grid place-items-center text-slate-400">No messages yet.</div>
+        )}
+      </div>
+
+      {/* composer */}
+      <Composer convoId={convoId} />
+    </div>
+  );
+}
+
+function Composer({ convoId }:{ convoId: string }) {
+  const [text, setText] = useState("");
+
+  function send() {
+    if (!text.trim()) return;
+    // TODO: replace with your ws/http send
+    alert(`Send to ${convoId}:\n${text}`);
+    setText("");
+  }
+
+  return (
+    <div className="mt-3 grid grid-cols-[1fr_auto] gap-2 rounded-xl border border-slate-200 p-2 bg-white">
+      <textarea
+        rows={1}
+        value={text}
+        onChange={e=>setText(e.target.value)}
+        onKeyDown={(e)=>{
+          if (e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+        }}
+        placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
+        className="resize-none w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-400"
+      />
+      <button onClick={send} className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:brightness-110 active:scale-95 transition">
+        Send
+      </button>
+    </div>
+  );
+}
+
+// ---------- Page shell (routes: /chat and /chat/:id) ----------
+export default function Chat() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { convs } = useChat();
+
+  useEffect(()=>{
+    // if no convo selected, open the most recent one by default
+    if (!selectedId && convs.order.length) setSelectedId(convs.order[0]);
+  }, [selectedId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="grid md:grid-cols-[320px_1fr] min-h-screen">
+      <ConversationsSidebar
+        convs={convs}
+        activeConvId={selectedId ?? undefined}
+        onOpen={(cid) => setSelectedId(cid)}   // <-- no navigate
+      />
+      <section className="bg-white p-6">
+        {selectedId ? (
+          <MessagesPane convoId={selectedId} />
+        ) : (
+          <div className="h-full grid place-items-center text-slate-400">
+            Pick a conversation on the left
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
