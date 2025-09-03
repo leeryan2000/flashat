@@ -44,6 +44,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [conversations, setConversations] = useState<Record<string, Conversation>>({});
   const [messages, setMessages] = useState<Record<string, Message>>({});
 
+  const loadConversations = useCallback((convs: Conversation[]) => {
+    const newConversations = convs.reduce((acc, conv) => {
+      acc[conv.id] = conv;
+      return acc;
+    }, {} as Record<string, Conversation>);
+    setConversations(prev => ({ ...prev, ...newConversations }));
+  }, []);
+
   // ***** use websocket probably with another context
   const sendMessage = useCallback(
     async (input: SendMessageInput): Promise<string> => {

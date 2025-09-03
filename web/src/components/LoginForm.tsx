@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 
 
 export function LoginForm() {
-    const {login, isLoading} = useAuth();
+    const {login, isLoading, isAuthenticated} = useAuth();
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    
+    useEffect(() => {
+        // redirect the user if logged in already
+        if (!isLoading && isAuthenticated) {
+            navigate(PATHS.chat);
+        }
+    }, [isLoading, isAuthenticated, navigate]);
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
