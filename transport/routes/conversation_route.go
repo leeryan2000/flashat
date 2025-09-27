@@ -4,12 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/leeryan2000/flashat/handlers"
 	"github.com/leeryan2000/flashat/middleware"
+	"github.com/leeryan2000/flashat/server"
 )
 
-func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers) {
+func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers, s *server.Server) {
 	ch := h.Conversation
 	conversationRoutes := router.Group("/conversation")
-	conversationRoutes.Use(middleware.Authenticate())
+	conversationRoutes.Use(middleware.Authenticate(s))
 
 	conversationRoutes.POST("/group", ch.CreateGroupConversation)
 	conversationRoutes.POST("/direct", ch.GetOrCreateDirectConversation)

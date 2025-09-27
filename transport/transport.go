@@ -20,6 +20,6 @@ func InitializeServer(s *server.Server) {
 		},
 	}
 
-	transport := routes.SetupRoutes(&handlers)
+	transport := routes.SetupRoutes(&handlers, s)
 	transport.Run()
 }
