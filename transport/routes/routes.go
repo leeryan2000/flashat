@@ -10,13 +10,15 @@ import (
 
 func SetupRoutes(handlers *handlers.Handlers) *gin.Engine {
 	router := gin.Default()
+	// cors config
+	// ***** modify cors settings for production
 	router.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(origin string) bool {
 			log.Println("CORS Origin:", origin)
 			return true
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowWildcard:    true,
@@ -33,6 +35,7 @@ func SetupRoutes(handlers *handlers.Handlers) *gin.Engine {
 	InitializeAuthRoutes(mainRouter, handlers)
 	InitializeWebsocketRoutes(mainRouter, handlers)
 	InitializeConversationRoutes(mainRouter, handlers)
+	InitializeMessageRoutes(mainRouter, handlers)
 
 	mainRouter.GET("/status", func(c *gin.Context) {
 		c.JSON(200, gin.H{

@@ -1,9 +1,28 @@
 // i want to write a react function that export hello world in frontend
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useState, useEffect, useRef, useMemo } from "react";
 
-export default function TestuseEffect() {
+
+export default function Test() {
+  const [count, setCount] = useState(0);
+
+  const onClick = () => {
+    setCount(count + 1); // captures 'count' from that render
+    console.log(count); // will log old 'count' value
+  }
+
+//   const onClick = useCallback(() => {
+//     setCount(c => c + 1); 
+//     console.log(count); 
+//   }
+// , []); // no dependencies, created once
+
+  // ...after some renders, onClick may still add 1 to an old 'count'
+  return <button onClick={onClick}>Click me</button>;
+}
+
+export function TestuseEffect() {
   const [users, setUsers] = useState<Array<{ id: number; email: string }>>([]);
 
   useEffect(() => {

@@ -41,7 +41,6 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 		HashedPassword: hashedPassword,
 	}
 
-	// ***** failed to add a user into database would cause increment of in primary id
 	if err := h.Repo.CreateUser(&user); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to server"})
 		return

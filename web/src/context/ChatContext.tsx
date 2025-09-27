@@ -30,29 +30,38 @@ export type Conversation = {
 };
 
 export type ConvState = {
+  order: string[]; // the order of conversation ids, sorted by timestamp of last message
   entities: Record<string, Conversation>;
-  order: string[];
 };
 
 type Message = {
-  id?: string; // server message id
-  clientMsgId?: string;
+  clientMsgId: string;
   convId: string;
   text: string;
   fromUid: string;
+  id?: string; // server message id
+  seq?: number; // would receive the seq from server
   ts?: number;
-  seq: number; // would receive the seq from server
-  status?: "sending" | "failed" | "sent"; // local only
+  status: "sending" | "failed" | "sent"; // local only
 };
 
-type SendMessageInput = {
+export type MsgSlice = {
+  order: number[]; // ordered message ids
+  entities: Record<number, Message>;
+  pendingOrder: string[]; // ordered client message ids
+  pendingEntities: Record<string, Message>;
+};
+
+export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
+
+type SendMsgInput = {
   convId: string;
   text: string;
 };
 
 interface ChatContext {
   convs: ConvState;
-  msgs: Record<string, Message>;
+  msgs: Record<string, MsgSlice>; // convId -> MsgSlice
 
   loadConvs: (convs: Conversation[]) => void;
   // sendMessage: (input: SendMessageInput) => Promise<string>;
@@ -65,13 +74,16 @@ const ChatContext = createContext<ChatContext | undefined>(undefined);
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
-  const [msgs, setMessages] = useState<Record<string, Message>>({});
+  const [msgs, setMsgs] = useState<MsgState>({});
 
+  // ***** should load the summary together with the connection of websocket
   useEffect(() => {
     // ***** Retrieve sidebar test
     const fetchUser = async () => {
       try {
-        const summaryWire = await api<ConversationWire[]>("/conversation/summary");
+        const summaryWire = await api<ConversationWire[]>(
+          "/conversation/summary"
+        );
         const summary = summaryWire.map(toConversation);
         loadConvs(summary);
       } catch (error) {
@@ -82,30 +94,58 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+  }, [user]);
+
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
-      const convs = { ...prev.entities };
+      const entities = { ...prev.entities };
+      // overwrite the conversation state with the new data
       for (const conv of list) {
-        convs[conv.id] = { ...(convs[conv.id] ?? {}), ...conv };
+        entities[conv.id] = { ...(entities[conv.id] ?? {}), ...conv };
       }
-      const order = Object.values(convs)
+
+      const order = Object.values(entities)
         .sort((a, b) => {
           const diff = (b.lastMsgTs ?? 0) - (a.lastMsgTs ?? 0);
           return diff !== 0 ? diff : a.id.localeCompare(b.id);
         })
         .map((conv) => conv.id);
       return {
-        entities: convs,
+        entities: entities,
         order: order,
       };
     });
   }, []);
+
+  const loadMsgs = useCallback((list: Message[]) => {
+    setMsgs((prev) => {
+      const newState = { ...prev };
+      for (const msg of list) {
+        const convId = msg.convId;
+        if (!newState[convId]) {
+          newState[convId] = {
+            order: [],
+            entities: {},
+            pendingOrder: [],
+            pendingEntities: {},
+          };
+        }
+        // acked message from server 
+        newState[convId].entities[msg.seq ?? 0] = msg;
+        newState[convId].order.push(msg.seq ?? 0);
+      }
+      return newState;
+    });
+  }, []);
+
 
   const value = useMemo(
     () => ({
       convs,
       msgs,
       loadConvs,
+      loadMsgs,
     }),
     [convs, msgs]
   );

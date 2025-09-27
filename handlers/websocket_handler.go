@@ -27,6 +27,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// ***** make it more bulletproof
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	uidStr := c.GetString("uid")
 

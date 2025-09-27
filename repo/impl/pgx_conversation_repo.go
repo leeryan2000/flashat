@@ -263,7 +263,7 @@ func (r *PgxConversationRepo) GetLastReadSeq(ctx context.Context, conversationID
 func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error) {
 	rows, err := r.Pool.Query(ctx, `
 		SELECT
-			c.id        AS conversation_id,
+			c.id        AS conv_id,
 			c.type      AS type,
 			CASE 
 				WHEN c.type = 'group' THEN c.group_name 
@@ -275,10 +275,10 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 				ELSE u.user_avatar_url
 			END AS avatar_url,
 
-			lm.id        AS last_message_id,
+			lm.id        AS last_msg_id,
 			lm.last_msg_text,
-			lm.from_uid  AS last_message_from,
-			lm.last_msg_ts,  -- timestamptz
+			lm.from_uid  AS last_msg_from,
+  			COALESCE((EXTRACT(EPOCH FROM lm.last_msg_ts) * 1000)::bigint, NULL) AS last_msg_ts,
 
 			COALESCE(cc.last_seq, lm.seq, 0) AS last_seq,
 			cp.last_read_seq,

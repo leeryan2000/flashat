@@ -49,8 +49,8 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 		INSERT INTO messages (id, conversation_id, seq, from_uid, body)
 		SELECT $1, $2, s.last_seq, $3, $4
 		FROM s
-		RETURNING id, conversation_id, seq, from_uid, body, created_at
-		`, msg.ID, msg.ConversationID, msg.FromUID, msg.Body,
+		RETURNING id, conversation_id, seq, from_uid, body, created_at`,
+		msg.ID, msg.ConversationID, msg.FromUID, msg.Body,
 	).Scan(&msg.ID, &msg.ConversationID, &msg.Seq, &msg.FromUID, &msg.Body, &msg.CreatedAt)
 	if err != nil {
 		return err
@@ -58,31 +58,35 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 	return nil
 }
 
-func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUID, limit int) ([]models.Message, error) {
+func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUID, limit int, uid uuid.UUID) ([]models.Message, error) {
+	limit = clampLimit(limit)
 	rows, err := r.Pool.Query(ctx, `
-		SELECT id, conversation_id, seq, from_uid, body, created_at
-		FROM messages
-		WHERE conversation_id = $1
-		ORDER BY seq DESC
-		LIMIT $2`,
-		conversationID, limit,
+		SELECT m.id, m.conversation_id, m.seq, m.from_uid, m.body, m.created_at
+		FROM messages m
+		JOIN conversation_participants p
+			ON p.conversation_id = m.conversation_id
+		AND p.uid = $1
+		WHERE m.conversation_id = $2
+		ORDER BY m.seq DESC
+		LIMIT $3`,
+		uid, conversationID, limit,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var messages []models.Message
+	msgs := make([]models.Message, 0, limit)
 	for rows.Next() {
 		var msg models.Message
 		if err := rows.Scan(&msg.ID, &msg.ConversationID, &msg.Seq, &msg.FromUID, &msg.Body, &msg.CreatedAt); err != nil {
 			return nil, err
 		}
-		messages = append(messages, msg)
+		msgs = append(msgs, msg)
 	}
 
-	reverse(messages) // Reverse to get the latest messages first, since the message order is descending
-	return messages, nil
+	reverse(msgs) // Reverse to get the latest messages first, since the message order is descending
+	return msgs, nil
 }
 
 func (r *PgxMessageRepo) ListBefore(ctx context.Context, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error) {

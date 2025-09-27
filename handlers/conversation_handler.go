@@ -351,10 +351,7 @@ func (h *ConversationHandler) GetLastReadSeq(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":       "Last read sequence retrieved successfully",
-		"last_read_seq": lastReadSeq,
-	})
+	c.JSON(http.StatusOK, lastReadSeq)
 }
 
 func (h *ConversationHandler) GetSummary(c *gin.Context) {
@@ -371,8 +368,5 @@ func (h *ConversationHandler) GetSummary(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Conversation summary retrieved successfully",
-		"summary": summary,
-	})
+	c.JSON(http.StatusOK, summary)
 }
