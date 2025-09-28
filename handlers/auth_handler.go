@@ -49,6 +49,7 @@ func (h AuthHandler) Login(c *gin.Context) {
 }
 
 func (h AuthHandler) Logout(c *gin.Context) {
+	// ***** see if there is a way to invalidate the JWT token
 	c.SetCookie("token", "", -1, "", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }

@@ -1,6 +1,5 @@
 import {
   createContext,
-  use,
   useCallback,
   useContext,
   useEffect,
@@ -10,6 +9,7 @@ import {
 import { useAuth } from "./AuthContext";
 import { api } from "../api/api";
 import { toConversation, type ConversationWire } from "../wire/conversation";
+import { toMessage, type MessageWire } from "../wire/message";
 // create types that match exactly what the server passed in
 
 export type Conversation = {
@@ -34,19 +34,22 @@ export type ConvState = {
   entities: Record<string, Conversation>;
 };
 
-type Message = {
-  clientMsgId: string;
+export type Message = {
   convId: string;
-  text: string;
   fromUid: string;
+  clientMsgId?: string;
+  ts: number; // used to order message when pending, updated from with server timestamp after acked
+  
   id?: string; // server message id
-  seq?: number; // would receive the seq from server
-  ts?: number;
-  status: "sending" | "failed" | "sent"; // local only
+  seq?: number; // server sequence number
+  
+  self?: boolean; 
+  text?: string;
+  status?: "sending" | "failed" | "sent"; // local only
 };
 
 export type MsgSlice = {
-  order: number[]; // ordered message ids
+  order: number[]; // ordered message seq
   entities: Record<number, Message>;
   pendingOrder: string[]; // ordered client message ids
   pendingEntities: Record<string, Message>;
@@ -79,23 +82,43 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // ***** should load the summary together with the connection of websocket
   useEffect(() => {
     // ***** Retrieve sidebar test
-    const fetchUser = async () => {
+    const fetchConvs = async () => {
       try {
         const summaryWire = await api<ConversationWire[]>(
           "/conversation/summary"
         );
         const summary = summaryWire.map(toConversation);
         loadConvs(summary);
+
       } catch (error) {
         console.error("Error fetching conversations:", error);
       } finally {
       }
+
+
     };
-    fetchUser();
+    fetchConvs();
   }, []);
 
   useEffect(() => {
-  }, [user]);
+    const fetchMessages = async () => {
+      if (convs.order.length > 0) {
+        try {
+          console.log("Fetching messages for convId:", convs.order[0]);
+          const msgWire = await api<MessageWire[]>(
+            `/message/latest/${convs.order[0]}?limit=50`
+          );
+          const msgs = msgWire.map((w) => toMessage(w));
+
+          loadMsgs(msgs);
+
+        } catch (error) {
+          console.error("Error fetching messages:", error);
+        }
+      }
+    };
+    fetchMessages();
+  }, [convs.order]);
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
@@ -122,6 +145,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setMsgs((prev) => {
       const newState = { ...prev };
       for (const msg of list) {
+        console.log("Processing message:", msg);
         const convId = msg.convId;
         if (!newState[convId]) {
           newState[convId] = {
@@ -131,14 +155,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             pendingEntities: {},
           };
         }
+
+        msg.status = "sent";
+        msg.self = user ? msg.fromUid === user.uid : false;
+        
         // acked message from server 
         newState[convId].entities[msg.seq ?? 0] = msg;
         newState[convId].order.push(msg.seq ?? 0);
+
+        console.log("Loaded messages for convId:", convId, newState[convId].order);
       }
       return newState;
     });
   }, []);
 
+  // Websocket Connection
 
   const value = useMemo(
     () => ({

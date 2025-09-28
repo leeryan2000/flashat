@@ -58,7 +58,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEn
 	err = s.Repo.SaveMessage(ctx, msg)
 
 	ack := &wire.Ack{
-		Status: "success",
+		Status: "sent",
 	}
 	if err != nil {
 		ack.Status = "failed"
@@ -96,8 +96,8 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEn
 		Type:           wire.MsgChat,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
-		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
+		ServerMsgID:    msg.ID.String(),
 		Seq:            msg.Seq, // client seq would be updated with server seq
 		Ts:             msg.CreatedAt.UnixMilli(),
 		// ***** could create wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone

@@ -15,22 +15,22 @@ import MessagesPane from "../components/MessagePane";
  */
 
 // ---------- Types ----------
-export interface ConversationDemo {
-  id: string;
-  title: string; // display name / group name
-  last: string; // last message preview
-  ts: number; // unix ms
-  unread?: number; // unread count
-}
+// export interface ConversationDemo {
+//   id: string;
+//   title: string; // display name / group name
+//   last: string; // last message preview
+//   ts: number; // unix ms
+//   unread?: number; // unread count
+// }
 
-export interface Message {
-  id: string;
-  convId: string;
-  from: string; // uid or display name
-  text: string;
-  ts: number; // unix ms
-  mine?: boolean; // render bubble on the right
-}
+// export interface Message {
+//   id: string;
+//   convId: string;
+//   from: string; // uid or display name
+//   text: string;
+//   ts: number; // unix ms
+//   self?: boolean; // render bubble on the right
+// }
 
 // ---------- Mock data (replace with your API) ----------
 // const MOCK_CONVOS: ConversationDemo[] = [
@@ -99,45 +99,12 @@ export const MOCK_CONV_STATE: ConvState = {
   order: ["c1", "c2", "c3", "c4"],
 };
 
-export function Composer({ convId }: { convId: string }) {
-  const [text, setText] = useState("");
 
-  function send() {
-    if (!text.trim()) return;
-    // TODO: replace with your ws/http send
-    alert(`Send to ${convId}:\n${text}`);
-    setText("");
-  }
-
-  return (
-    <div className="mt-3 grid grid-cols-[1fr_auto] gap-2 rounded-xl border border-slate-200 p-2 bg-white">
-      <textarea
-        rows={1}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            send();
-          }
-        }}
-        placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
-        className="resize-none w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      <button
-        onClick={send}
-        className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:brightness-110 active:scale-95 transition"
-      >
-        Send
-      </button>
-    </div>
-  );
-}
 
 // ---------- Page shell (routes: /chat and /chat/:id) ----------
 export default function Chat() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { convs } = useChat();
+  const { convs, msgs } = useChat();
 
   useEffect(() => {
     // if no convo selected, open the most recent one by default
@@ -154,7 +121,7 @@ export default function Chat() {
       />
       <section className="bg-white p-6">
         {selectedId ? (
-          <MessagesPane activeConvId={selectedId} />
+          <MessagesPane msg={msgs[selectedId]} activeConvId={selectedId} />
         ) : (
           <div className="h-full grid place-items-center text-slate-400">
             Add new contacts to start the conversation.

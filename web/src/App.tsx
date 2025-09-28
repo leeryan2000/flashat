@@ -1,7 +1,7 @@
 import './App.css'
 import { AuthProvider } from './context/AuthContext'
 import AppRouter from './routes/AppRouter'
-import Test from './test'
+// import Test from './test'
 
 function App() {
   return (

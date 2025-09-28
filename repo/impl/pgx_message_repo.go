@@ -44,6 +44,12 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 			Update conversation_counters
 			SET last_seq = last_seq + 1
 			WHERE conversation_id = $2
+				AND EXISTS (
+					SELECT 1
+					FROM conversation_participants p
+					WHERE p.conversation_id = $2
+						AND p.uid = $3
+					)
 			RETURNING last_seq
 		)
 		INSERT INTO messages (id, conversation_id, seq, from_uid, body)
@@ -61,7 +67,13 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUID, limit int, uid uuid.UUID) ([]models.Message, error) {
 	limit = clampLimit(limit)
 	rows, err := r.Pool.Query(ctx, `
-		SELECT m.id, m.conversation_id, m.seq, m.from_uid, m.body, m.created_at
+		SELECT 
+			m.id, 
+			m.conversation_id, 
+			m.seq, 
+			m.from_uid, 
+			m.body, 
+			(EXTRACT(EPOCH FROM m.created_at) * 1000)::bigint AS created_at
 		FROM messages m
 		JOIN conversation_participants p
 			ON p.conversation_id = m.conversation_id
