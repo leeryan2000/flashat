@@ -48,6 +48,18 @@ func (hub *Hub) BroadcastToConversation(convID uuid.UUID, payload []byte) {
 	}
 }
 
+func (hub *Hub) subscribeToConversation(uid uuid.UUID, convID string) {
+	// create the conversation map if it doesn't exist
+	if _, ok := hub.Conversations[convID]; !ok {
+		hub.Conversations[convID] = make(map[*Client]struct{})
+	}
+	// add the client to the conversation if the client exists
+	if client, ok := hub.ClientsByUID[uid.String()]; ok {
+		hub.Conversations[convID][client] = struct{}{}
+		client.Conversations[convID] = struct{}{}
+	}
+}
+
 func (hub *Hub) addClient(c *Client) {
 	hub.Clients[c] = struct{}{}
 	hub.ClientsByUID[c.UID] = c
