@@ -21,7 +21,9 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelo
 	// Process the envelope based on its type
 	switch env.Type {
 	case wire.MsgChat:
-		s.handleConversation(ctx, env)
+		s.handleChat(ctx, env)
+	case wire.MsgSubscribe:
+		s.handleSubscription(ctx, env)
 	case wire.MsgJoin:
 		// Handle join message
 	case wire.MsgLeave:
@@ -33,7 +35,7 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelo
 	return nil // Processed successfully
 }
 
-func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEnvelope) error {
+func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) error {
 	if env.ConversationID == "" {
 		return errors.New("missing conversation id")
 	}
@@ -79,7 +81,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEn
 		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq,
-		Ts:             msg.CreatedAt.UnixMilli(),
+		Ts:             msg.CreatedAt,
 		Body:           ackJSON,
 	}
 
@@ -99,7 +101,7 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEn
 		FromUID:        env.FromUID,
 		ServerMsgID:    msg.ID.String(),
 		Seq:            msg.Seq, // client seq would be updated with server seq
-		Ts:             msg.CreatedAt.UnixMilli(),
+		Ts:             msg.CreatedAt,
 		// ***** could create wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
 		Body: env.Body,
 	}
@@ -112,4 +114,8 @@ func (s *MessageService) handleConversation(ctx context.Context, env *wire.MsgEn
 	s.Hub.BroadcastToConversation(conversationID, outEnvJSON)
 
 	return nil
+}
+
+func (s *MessageService) handleSubscription(ctx context.Context, env *wire.MsgEnvelope) {
+
 }

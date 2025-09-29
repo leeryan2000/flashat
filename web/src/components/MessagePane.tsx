@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect} from "react";
 import type { MsgSlice} from "../context/ChatContext";
 import { Composer } from "./Composer";
 
@@ -36,7 +36,7 @@ export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activ
               msg.self ? "bg-indigo-600 text-white rounded-br-sm" : "bg-slate-100 text-slate-900 rounded-bl-sm"
             ].join(" ")}>
               <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-              <p className="mt-1 text-[11px] opacity-70">{new Date(msg.ts ?? 0).toLocaleString()}</p>
+              <p className="mt-1 text-[11px] opacity-70">{new Date(msg.ts ?? 0).toLocaleTimeString()}</p>
             </div>
           </div>
         ))}

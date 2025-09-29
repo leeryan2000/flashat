@@ -3,13 +3,14 @@ package wire
 import "encoding/json"
 
 const (
-	MsgJoin   MsgType = "join"
-	MsgLeave  MsgType = "leave"
-	MsgChat   MsgType = "chat"
-	MsgSystem MsgType = "system"
-	MsgAck    MsgType = "ack"
-	MsgPing   MsgType = "ping"
-	MsgPong   MsgType = "pong"
+	MsgJoin      MsgType = "join"
+	MsgLeave     MsgType = "leave"
+	MsgChat      MsgType = "chat"
+	MsgSystem    MsgType = "system"
+	MsgAck       MsgType = "ack"
+	MsgPing      MsgType = "ping"
+	MsgPong      MsgType = "pong"
+	MsgSubscribe MsgType = "subscribe"
 )
 
 type MsgType string

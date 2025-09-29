@@ -79,41 +79,40 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({});
 
-  // ***** should load the summary together with the connection of websocket
   useEffect(() => {
-    // ***** Retrieve sidebar test
-    const fetchConvs = async () => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    (async () => {
       try {
         const summaryWire = await api<ConversationWire[]>(
-          "/conversation/summary"
+          "/conversation/summary",
+          { signal } as any // to allow the controller.abort to send signal
         );
         const summary = summaryWire.map(toConversation);
         loadConvs(summary);
-
-      } catch (error) {
-        console.error("Error fetching conversations:", error);
-      } finally {
+      } catch (err) {
+        console.error("Error fetching conversations:", err);
       }
+    })();
 
-
-    };
-    fetchConvs();
+    return () => controller.abort();
   }, []);
-
+  
+  // ***** modify
   useEffect(() => {
     const fetchMessages = async () => {
       if (convs.order.length > 0) {
         try {
-          console.log("Fetching messages for convId:", convs.order[0]);
           const msgWire = await api<MessageWire[]>(
             `/message/latest/${convs.order[0]}?limit=50`
           );
           const msgs = msgWire.map((w) => toMessage(w));
-
+          console.log("Fetched messages:", msgs);
           loadMsgs(msgs);
 
-        } catch (error) {
-          console.error("Error fetching messages:", error);
+        } catch (err) {
+          console.error("Error fetching messages:", err);
         }
       }
     };
@@ -145,7 +144,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setMsgs((prev) => {
       const newState = { ...prev };
       for (const msg of list) {
-        console.log("Processing message:", msg);
         const convId = msg.convId;
         if (!newState[convId]) {
           newState[convId] = {
@@ -160,9 +158,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         msg.self = user ? msg.fromUid === user.uid : false;
         
         // acked message from server 
-        newState[convId].entities[msg.seq ?? 0] = msg;
-        newState[convId].order.push(msg.seq ?? 0);
-
+        if (msg.seq && !newState[convId].entities[msg.seq]) {
+          // update the existing message with id and seq
+          newState[convId].order.push(msg.seq ?? 0);
+          newState[convId].entities[msg.seq ?? 0] = msg;
+        } 
         console.log("Loaded messages for convId:", convId, newState[convId].order);
       }
       return newState;

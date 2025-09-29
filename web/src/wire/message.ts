@@ -5,17 +5,18 @@ export type MessageWire = {
   conversation_id: string;
   seq: number;
   from_uid: string;
+  created_at: number;
   body: {
     text: string;
-  }
-  created_at: number;
+  };
 };
 
-export const toMessage = (w: MessageWire) : Message => ({
-    convId: w.conversation_id,
-    id: w.id,
-    fromUid: w.from_uid,
-    text: w.body?.text ?? "", // safely get text from body
-    ts: w.created_at,
-    self: false,
+export const toMessage = (w: MessageWire): Message => ({
+  id: w.id,
+  convId: w.conversation_id,
+  seq: w.seq,
+  fromUid: w.from_uid,
+  ts: w.created_at,
+  text: w.body?.text ?? "", // safely get text from body
+  self: false,
 });
