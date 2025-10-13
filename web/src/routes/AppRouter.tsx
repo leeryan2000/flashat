@@ -8,6 +8,7 @@ import Settings from "../pages/Settings";
 import Layout from "../layouts/Layout";
 import { PATHS } from "./paths";
 import { ChatProvider } from "../context/ChatContext";
+import { WebSocketProvider } from "../context/WebSocketContext";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -25,9 +26,11 @@ export default function AppRouter() {
           path={PATHS.chat}
           element={
             <AuthCheck>
+              <WebSocketProvider url={import.meta.env.VITE_WS_URL}>
                 <ChatProvider>
                   <Layout />
                 </ChatProvider>
+              </WebSocketProvider>
             </AuthCheck>
           }
         >

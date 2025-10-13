@@ -10,6 +10,7 @@ import { useAuth } from "./AuthContext";
 import { api } from "../api/api";
 import { toConversation, type ConversationWire } from "../wire/conversation";
 import { toMessage, type MessageWire } from "../wire/message";
+import { useWebSocket } from "./WebSocketContext";
 // create types that match exactly what the server passed in
 
 export type Conversation = {
@@ -72,10 +73,11 @@ interface ChatContext {
   // markRead: (convId: string, seq: number) => void;
 }
 
-const ChatContext = createContext<ChatContext | undefined>(undefined);
+const ChatContext = createContext<ChatContext | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({});
 
@@ -163,7 +165,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           newState[convId].order.push(msg.seq ?? 0);
           newState[convId].entities[msg.seq ?? 0] = msg;
         } 
-        console.log("Loaded messages for convId:", convId, newState[convId].order);
       }
       return newState;
     });
