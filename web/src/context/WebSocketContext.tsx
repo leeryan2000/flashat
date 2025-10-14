@@ -45,11 +45,12 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
       socket.close();
       setStatus("closed");
     };
-  }, [url]);
+  }, []);
 
   const send = useCallback((data: string) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(data);
+      console.log("Sent message:", data);
     } else {
       console.warn("WebSocket not open; message dropped.");
     }

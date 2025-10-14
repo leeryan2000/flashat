@@ -77,7 +77,6 @@ const ChatContext = createContext<ChatContext | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({});
 
@@ -103,11 +102,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   
   // ***** modify
   useEffect(() => {
-    const fetchMessages = async () => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    
+    (async () => {
       if (convs.order.length > 0) {
         try {
           const msgWire = await api<MessageWire[]>(
-            `/message/latest/${convs.order[0]}?limit=50`
+            `/message/latest/${convs.order[0]}?limit=50`,
+            { signal } as any
           );
           const msgs = msgWire.map((w) => toMessage(w));
           console.log("Fetched messages:", msgs);
@@ -117,8 +120,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           console.error("Error fetching messages:", err);
         }
       }
-    };
-    fetchMessages();
+    })();
+
+    return () => controller.abort();
   }, [convs.order]);
 
   const loadConvs = useCallback((list: Conversation[]) => {

@@ -55,7 +55,7 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 		INSERT INTO messages (id, conversation_id, seq, from_uid, body)
 		SELECT $1, $2, s.last_seq, $3, $4
 		FROM s
-		RETURNING id, conversation_id, seq, from_uid, body, created_at`,
+		RETURNING id, conversation_id, seq, from_uid, body, (EXTRACT(EPOCH FROM created_at) * 1000)::bigint AS created_at`,
 		msg.ID, msg.ConversationID, msg.FromUID, msg.Body,
 	).Scan(&msg.ID, &msg.ConversationID, &msg.Seq, &msg.FromUID, &msg.Body, &msg.CreatedAt)
 	if err != nil {
