@@ -27,33 +27,31 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const [status, setStatus] = useState<WSStatus>("idle");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const createdRef = useRef(false);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
+    const uuid = crypto.randomUUID();
+    console.log(`Establishing WebSocket connection with UUID: ${uuid}`);
+    
     const ws = new WebSocket(url);
     socketRef.current = ws;
 
     setStatus("connecting");
 
     ws.onopen = () => setStatus("open");
-
-    const handleBeforeUnload = () => {
-      ws.close(1001, "page unload"); // best-effort clean close
+    ws.onclose = () => {
       setStatus("closed");
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    ws.onclose = (e) => {
-      setStatus("closed");
-      console.log(`WS close code=${e.code} reason="${e.reason}" wasClean=${e.wasClean}`)
-    };
-    ws.onerror = () => setStatus("closed");
-
+      console.log(`WS close id=`, uuid)
+    }; 
     ws.onmessage = (event) => {
       setLastMessage(event.data);
     };
 
     return () => {
       ws.close();
+      socketRef.current = null;
+      console.log("WebSocket closed on component unmount id:", uuid);
       setStatus("closed");
     };
   }, []);

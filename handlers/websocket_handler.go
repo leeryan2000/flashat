@@ -45,6 +45,7 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 
 	// Create a context that lives with the client lifecycle
 	ctx, cancel := context.WithCancel(context.Background())
+
 	client := &server.Client{
 		UID:           uidStr,
 		Hub:           wh.Hub,

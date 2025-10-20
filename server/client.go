@@ -24,9 +24,6 @@ func (c *Client) Cleanup() {
 	c.Hub.Unregister <- c // Unregister the client from the Hub
 	c.Cancel()            // Cancel the context
 	c.Conn.Close()        // Close the WebSocket connection
-	close(c.Send)         // Close the send channel
-	// ***** delete
-	log.Println("WebSocket connection closed for UID:", c.UID)
 }
 
 type HandleEnvelope func(context.Context, *wire.MsgEnvelope) error

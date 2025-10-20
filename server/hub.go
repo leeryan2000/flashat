@@ -1,6 +1,8 @@
 package server
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 )
 
@@ -66,12 +68,14 @@ func (hub *Hub) subscribeToConversation(uid uuid.UUID, convID string) {
 func (hub *Hub) addClient(c *Client) {
 	hub.Clients[c] = struct{}{}
 	hub.ClientsByUID[c.UID] = c
+	log.Println("Client registered:", c.UID)
 }
 
 func (hub *Hub) removeClient(c *Client) {
 	if _, ok := hub.Clients[c]; ok {
 		delete(hub.Clients, c)
 		delete(hub.ClientsByUID, c.UID)
+		close(c.Send)
 		for conv := range c.Conversations {
 			if set, ok := hub.Conversations[conv]; ok {
 				delete(set, c)
@@ -80,6 +84,5 @@ func (hub *Hub) removeClient(c *Client) {
 				}
 			}
 		}
-		c.Cleanup()
 	}
 }
