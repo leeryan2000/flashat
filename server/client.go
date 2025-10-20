@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/leeryan2000/flashat/wire"
@@ -24,12 +25,22 @@ func (c *Client) Cleanup() {
 	c.Cancel()            // Cancel the context
 	c.Conn.Close()        // Close the WebSocket connection
 	close(c.Send)         // Close the send channel
+	// ***** delete
+	log.Println("WebSocket connection closed for UID:", c.UID)
 }
 
 type HandleEnvelope func(context.Context, *wire.MsgEnvelope) error
 
 func (c *Client) ReadPump(handle HandleEnvelope) {
 	defer c.Cleanup()
+
+	// add pong handler
+	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	c.Conn.SetPongHandler(func(string) error {
+		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		log.Println("Pong received from UID:", c.UID)
+		return nil
+	})
 
 	for {
 		// Read a full WS text frame

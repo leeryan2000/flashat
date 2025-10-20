@@ -13,7 +13,7 @@ import { Composer } from "./Composer";
 // ];
 
 
-
+// ***** messages in the conversation sometimes would display your message as others message
 // ---------- Messages pane ----------
 export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activeConvId: string}) {
   const list = useMemo(() => msg.order.map(seq => msg.entities[seq]).filter(Boolean) ?? [], [msg]);

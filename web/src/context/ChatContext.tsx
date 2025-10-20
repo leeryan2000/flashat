@@ -68,15 +68,15 @@ interface ChatContext {
   msgs: Record<string, MsgSlice>; // convId -> MsgSlice
 
   loadConvs: (convs: Conversation[]) => void;
-  // sendMessage: (input: SendMessageInput) => Promise<string>;
-  // loadMessages: (messages: Message[]) => void; // sets up the messages when app started
-  // markRead: (convId: string, seq: number) => void;
+  loadMsgs: (messages: Message[]) => void;
+  sendMessage: (text: string, convId: string) => void;
 }
 
 const ChatContext = createContext<ChatContext | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { send } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({});
 
@@ -174,6 +174,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const sendMessage = useCallback((text: string, convId: string) => {
+    if (text.trim() === "") return;
+    const message = { 
+      type: "chat",
+      conversation_id: convId,
+      client_msg_id: crypto.randomUUID(),
+      from_uid: user?.uid,
+      ts: Date.now(),
+      body: {
+        text: text.trim()
+      }
+    };
+    send(JSON.stringify(message));
+  }, [send, user]);
+
   // Websocket Connection
 
   const value = useMemo(
@@ -182,6 +197,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       msgs,
       loadConvs,
       loadMsgs,
+      sendMessage,
     }),
     [convs, msgs]
   );
@@ -196,3 +212,4 @@ export function useChat() {
   }
   return context;
 }
+

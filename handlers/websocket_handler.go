@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -28,6 +29,13 @@ var upgrader = websocket.Upgrader{
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	uidStr := c.GetString("uid")
 
+	// see if the user are connected already
+	if _, ok := wh.Hub.ClientsByUID[uidStr]; ok {
+		log.Println("User already connected:", uidStr)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User already connected"})
+		return
+	}
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("❌ WebSocket upgrade failed:", err)
@@ -48,6 +56,26 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	}
 
 	client.Hub.Register <- client
+
 	go client.WritePump()
 	go client.ReadPump(wh.MessageService.HandleEnvelope)
+
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+				log.Println("Sending ping to UID:", client.UID)
+				if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					log.Println("❌ Ping failed, closing connection:", err)
+					client.Cleanup()
+					return
+				}
+			case <-client.Ctx.Done():
+				return
+			}
+		}
+	}()
 }

@@ -29,20 +29,31 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const socket = new WebSocket(url);
-    socketRef.current = socket;
+    const ws = new WebSocket(url);
+    socketRef.current = ws;
+
     setStatus("connecting");
 
-    socket.onopen = () => setStatus("open");
-    socket.onclose = () => setStatus("closed");
-    socket.onerror = () => setStatus("closed");
+    ws.onopen = () => setStatus("open");
 
-    socket.onmessage = (event) => {
+    const handleBeforeUnload = () => {
+      ws.close(1001, "page unload"); // best-effort clean close
+      setStatus("closed");
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    ws.onclose = (e) => {
+      setStatus("closed");
+      console.log(`WS close code=${e.code} reason="${e.reason}" wasClean=${e.wasClean}`)
+    };
+    ws.onerror = () => setStatus("closed");
+
+    ws.onmessage = (event) => {
       setLastMessage(event.data);
     };
 
     return () => {
-      socket.close();
+      ws.close();
       setStatus("closed");
     };
   }, []);

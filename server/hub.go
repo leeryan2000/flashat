@@ -1,6 +1,8 @@
 package server
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type Hub struct {
 	Clients       map[*Client]struct{} // Changed from bool to struct{}
@@ -48,6 +50,7 @@ func (hub *Hub) BroadcastToConversation(convID uuid.UUID, payload []byte) {
 	}
 }
 
+// ***** implement subscribeToConversation
 func (hub *Hub) subscribeToConversation(uid uuid.UUID, convID string) {
 	// create the conversation map if it doesn't exist
 	if _, ok := hub.Conversations[convID]; !ok {
