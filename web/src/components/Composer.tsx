@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 
 export function Composer({ convId }: { convId: string }) {
   const [text, setText] = useState("");
   const { sendMessage } = useChat();
-  const { user } = useAuth();
 
   function send() {
     if (text.trim() === "") return;

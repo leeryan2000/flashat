@@ -27,8 +27,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const [status, setStatus] = useState<WSStatus>("idle");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  const createdRef = useRef(false);
-  const mountedRef = useRef(false);
+
 
   useEffect(() => {
     const uuid = crypto.randomUUID();
@@ -44,8 +43,8 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
       setStatus("closed");
       console.log(`WS close id=`, uuid)
     }; 
-    ws.onmessage = (event) => {
-      setLastMessage(event.data);
+    ws.onmessage = (wire) => {
+      setLastMessage(wire.data);
     };
 
     return () => {

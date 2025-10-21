@@ -57,11 +57,6 @@ export type MsgSlice = {
 
 export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
 
-type SendMsgInput = {
-  convId: string;
-  text: string;
-};
-
 interface ChatContext {
   convs: ConvState;
   msgs: Record<string, MsgSlice>; // convId -> MsgSlice
