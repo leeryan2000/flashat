@@ -44,7 +44,6 @@ export type Message = {
   id?: string; // server message id
   seq?: number; // server sequence number
   
-  self?: boolean; 
   text?: string;
   status?: "sending" | "failed" | "sent"; // local only
 };
@@ -161,7 +160,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
 
         msg.status = "sent";
-        msg.self = user ? msg.fromUid === user.uid : false;
         
         // acked message from server 
         if (msg.seq && !newState[convId].entities[msg.seq]) {

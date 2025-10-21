@@ -1,6 +1,8 @@
 import { useMemo, useRef, useEffect} from "react";
 import type { MsgSlice} from "../context/ChatContext";
 import { Composer } from "./Composer";
+import { useAuth } from "../context/AuthContext";
+import type { Message } from "../context/ChatContext";
 
 // const MOCK_MESSAGES: Message[] = [
 //   { id: "m1", convId: "e745cf8a-4e24-4a3e-a85f-54464d2beadc", from: "Alice", text: "Hey!", ts: Date.now() - 1000 * 60 * 60, self: false },
@@ -16,6 +18,7 @@ import { Composer } from "./Composer";
 // ***** messages in the conversation sometimes would display your message as others message
 // ---------- Messages pane ----------
 export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activeConvId: string}) {
+  const { user, isAuthenticated } =  useAuth();
   const list = useMemo(() => msg.order.map(seq => msg.entities[seq]).filter(Boolean) ?? [], [msg]);
   // const list = useMemo(() => MOCK_MESSAGES.filter(m => m.convId === activeConvId), [activeConvId]);
   const boxRef = useRef<HTMLDivElement|null>(null);
@@ -25,15 +28,29 @@ export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activ
     boxRef.current?.scrollTo({ top: boxRef.current.scrollHeight })
   }, [list.length]);
 
+  if (!isAuthenticated) 
+    return (
+      <div className="h-full grid grid-rows-[1fr_auto]">
+        <div className="overflow-y-auto pr-2 grid place-items-center text-slate-400">
+          Loading…
+        </div>
+        <Composer convId={activeConvId} />
+      </div>
+    );
+
+  const isSelf = (msg: Message) => {
+    return user ? msg.fromUid === user.uid : false;
+  }
+  
   return (
     <div className="h-full grid grid-rows-[1fr_auto]">
       {/* messages list */}
       <div ref={boxRef} className="overflow-y-auto space-y-2 pr-2">
         {list.map(msg => (
-          <div key={msg.id} className={["flex", msg.self ?"justify-end":"justify-start"].join(" ") }>
+          <div key={msg.id} className={["flex", isSelf(msg) ?"justify-end":"justify-start"].join(" ") }>
             <div className={[
               "max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow",
-              msg.self ? "bg-indigo-600 text-white rounded-br-sm" : "bg-slate-100 text-slate-900 rounded-bl-sm"
+              isSelf(msg) ? "bg-indigo-600 text-white rounded-br-sm" : "bg-slate-100 text-slate-900 rounded-bl-sm"
             ].join(" ")}>
               <p className="whitespace-pre-wrap break-words">{msg.text}</p>
               <p className="mt-1 text-[11px] opacity-70">{new Date(msg.ts ?? 0).toLocaleTimeString()}</p>
