@@ -13,7 +13,7 @@ type WSStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
 type WebSocketContextType = {
   status: WSStatus;
-  lastMessage: string | null;
+  lastMsg: string | null;
   send: (data: string) => void;
   disconnect: () => void;
 };
@@ -25,7 +25,7 @@ type WebSocketProviderProps = PropsWithChildren<{
 
 export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const [status, setStatus] = useState<WSStatus>("idle");
-  const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [lastMsg, setLastMsg] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
 
@@ -44,7 +44,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
       console.log(`WS close id=`, uuid)
     }; 
     ws.onmessage = (wire) => {
-      setLastMessage(wire.data);
+      setLastMsg(wire.data);
     };
 
     return () => {
@@ -72,11 +72,11 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const value = useMemo(
     () => ({
       status,
-      lastMessage,
+      lastMsg,
       send,
       disconnect,
     }),
-    [status, lastMessage]
+    [status, lastMsg]
   );
 
   return (

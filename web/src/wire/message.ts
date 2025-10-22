@@ -1,6 +1,6 @@
 import type { Message } from "../context/ChatContext";
 
-export type MessageWire = {
+export type MsgWire = {
   id: string;
   conversation_id: string;
   seq: number;
@@ -11,12 +11,11 @@ export type MessageWire = {
   };
 };
 
-export const toMessage = (w: MessageWire): Message => ({
+export const toMessage = (w: MsgWire): Message => ({
   id: w.id,
   convId: w.conversation_id,
   seq: w.seq,
   fromUid: w.from_uid,
   ts: w.created_at,
   text: w.body?.text ?? "", // safely get text from body
-  self: false,
 });

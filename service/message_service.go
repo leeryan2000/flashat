@@ -20,13 +20,13 @@ type MessageService struct {
 func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelope) error {
 	// Process the envelope based on its type
 	switch env.Type {
-	case wire.MsgChat:
+	case wire.Chat:
 		s.handleChat(ctx, env)
-	case wire.MsgSubscribe:
+	case wire.Subscribe:
 		s.handleSubscription(ctx, env)
-	case wire.MsgJoin:
+	case wire.Join:
 		// Handle join message
-	case wire.MsgLeave:
+	case wire.Leave:
 		// Handle leave message
 	default:
 		return nil // Unknown type, ignore
@@ -59,7 +59,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 
 	err = s.Repo.SaveMessage(ctx, msg)
 
-	ack := &wire.Ack{
+	ack := &wire.MsgAck{
 		Status: "sent",
 	}
 	if err != nil {
@@ -75,7 +75,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 
 	// Ack for the sender
 	ackEnv := &wire.MsgEnvelope{
-		Type:           wire.MsgAck,
+		Type:           wire.Ack,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
 		ServerMsgID:    msg.ID.String(),
@@ -95,7 +95,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 
 	// Pack the Envelope to broadcast to user
 	outEnv := &wire.MsgEnvelope{
-		Type:           wire.MsgChat,
+		Type:           wire.Chat,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
 		FromUID:        env.FromUID,

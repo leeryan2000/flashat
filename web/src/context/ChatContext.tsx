@@ -9,7 +9,7 @@ import {
 import { useAuth } from "./AuthContext";
 import { api } from "../api/api";
 import { toConversation, type ConversationWire } from "../wire/conversation";
-import { toMessage, type MessageWire } from "../wire/message";
+import { toMessage, type MsgWire } from "../wire/message";
 import { useWebSocket } from "./WebSocketContext";
 // create types that match exactly what the server passed in
 
@@ -71,6 +71,7 @@ const ChatContext = createContext<ChatContext | null>(null);
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { send } = useWebSocket();
+  const { lastMsg } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({});
 
@@ -102,7 +103,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       if (convs.order.length > 0) {
         try {
-          const msgWire = await api<MessageWire[]>(
+          const msgWire = await api<MsgWire[]>(
             `/message/latest/${convs.order[0]}?limit=50`,
             { signal } as any
           );
@@ -118,6 +119,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     return () => controller.abort();
   }, [convs.order]);
+
+  useEffect(() => {
+    if (!lastMsg) return;
+    const jsonMsg = JSON.parse(lastMsg);
+    
+
+
+  }), [lastMsg];
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
