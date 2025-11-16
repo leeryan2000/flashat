@@ -12,23 +12,23 @@ function timeAgo(ts: number) {
 
 export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ convs: ConvState; activeConvId?: string; onOpen:(id:string)=>void }) {
   // Query for the title search
-  const [q, setQ] = useState("");
+  const [query, setQ] = useState("");
   // filters the conversations by title
   const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
+    const needle = query.trim().toLowerCase();
     return convs.order
     .map(id => convs.entities[id])
     .filter((c): c is Conversation => !!c) 
     .filter(conv => conv.title?.toLowerCase().includes(needle));
 
-  }, [convs.order, convs.entities, q]);
+  }, [convs.order, convs.entities, query]);
 
   return (
     <div className="h-full bg-slate-900 text-slate-100 w-80 flex-shrink-0 grid grid-rows-[auto_1fr]">
       {/* search */}
       <div className="p-3 border-b border-slate-800">
         <input
-          value={q}
+          value={query}
           onChange={e=>setQ(e.target.value)}
           placeholder="Search conversations"
           className="w-full rounded-xl bg-slate-800/60 px-3 py-2 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400"

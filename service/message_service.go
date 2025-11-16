@@ -116,6 +116,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 	return nil
 }
 
+// ***** continue here: implement subscription of user, sending wire from client to tell the server that which conversation the user should be subscribed to
 func (s *MessageService) handleSubscription(ctx context.Context, env *wire.MsgEnvelope) {
 
 }

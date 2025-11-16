@@ -17,7 +17,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  blockUntilReady = true,          // <-- optional opt-out
+  Fallback = DefaultAuthFallback,  // <-- optional custom loading UI
+}: {
+  children: React.ReactNode;
+  blockUntilReady?: boolean;
+  Fallback?: React.ComponentType;
+}) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(user);
       } catch (error) {
         console.error("Failed to fetch user:", error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -68,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       // see if user is truthy, if not then its not authenticated
-      isAuthenticated: !!user,
+      isAuthenticated: !isLoading && !!user,
       login,
       logout,
       isLoading,
@@ -76,10 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user, isLoading]
   );
 
+  if (blockUntilReady && isLoading) {
+    return <Fallback />;
+  } 
+
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
+  );
+}
+
+function DefaultAuthFallback() {
+  return (
+    <div className="grid min-h-screen place-items-center text-slate-500">
+      Loading session…
+    </div>
   );
 }
 

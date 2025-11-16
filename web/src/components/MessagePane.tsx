@@ -4,23 +4,12 @@ import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../context/ChatContext";
 
-// const MOCK_MESSAGES: Message[] = [
-//   { id: "m1", convId: "e745cf8a-4e24-4a3e-a85f-54464d2beadc", from: "Alice", text: "Hey!", ts: Date.now() - 1000 * 60 * 60, self: false },
-//   { id: "m2", convId: "e745cf8a-4e24-4a3e-a85f-54464d2beadc", from: "Huai'en", text: "Yo!", ts: Date.now() - 1000 * 60 * 58, self: true },
-//   { id: "m3", convId: "e745cf8a-4e24-4a3e-a85f-54464d2beadc", from: "Alice", text: "See you tomorrow!", ts: Date.now() - 1000 * 60 * 3, self: false },
-//   { id: "m4", convId: "c2", from: "Bob", text: "Pushed a new branch.", ts: Date.now() - 1000 * 60 * 11, self: false },
-//   { id: "m5", convId: "c3", from: "Jessie", text: "Prepare for trouble.", ts: Date.now() - 1000 * 60 * 60 * 5, self: false },
-//   { id: "m6", convId: "c3", from: "James", text: "And make it double!", ts: Date.now() - 1000 * 60 * 60 * 5 + 10000, self: false },
-//   { id: "m7", convId: "c4", from: "Huai'en", text: "Drafting the layout now", ts: Date.now() - 1000 * 60 * 60 * 10, self: true },
-// ];
-
 
 // ***** messages in the conversation sometimes would display your message as others message
 // ---------- Messages pane ----------
 export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activeConvId: string}) {
   const { user, isAuthenticated } =  useAuth();
   const list = useMemo(() => msg.order.map(seq => msg.entities[seq]).filter(Boolean) ?? [], [msg]);
-  // const list = useMemo(() => MOCK_MESSAGES.filter(m => m.convId === activeConvId), [activeConvId]);
   const boxRef = useRef<HTMLDivElement|null>(null);
 
   useEffect(()=>{
@@ -39,6 +28,7 @@ export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activ
     );
 
   const isSelf = (msg: Message) => {
+    console.log("Checking isSelf for msg:", user ? msg.fromUid === user.uid : false);
     return user ? msg.fromUid === user.uid : false;
   }
   

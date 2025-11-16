@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ConversationsSidebar from "../components/ConversationSidebar";
 import { useChat } from "../context/ChatContext";
 import MessagesPane from "../components/MessagePane";
+import type { MsgWire } from "../wire/message";
 
 
 export default function Chat() {
@@ -13,6 +14,19 @@ export default function Chat() {
     if (!selectedId && convs.order.length) setSelectedId(convs.order[0]);
   }, [selectedId]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    (async () => {
+      try {
+      } catch (err) {
+        console.error("Error fetching messages for selected convo:", err);
+      } 
+    })();
+  }, [selectedId]);
 
   return (
     <div className="grid md:grid-cols-[320px_1fr] min-h-screen">
