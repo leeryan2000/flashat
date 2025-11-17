@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -60,23 +59,4 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 
 	go client.WritePump()
 	go client.ReadPump(wh.MessageService.HandleEnvelope)
-
-	go func() {
-		ticker := time.NewTicker(30 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-				log.Println("Sending ping to UID:", client.UID)
-				if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-					log.Println("❌ Ping failed, closing connection:", err)
-					client.Cleanup()
-					return
-				}
-			case <-client.Ctx.Done():
-				return
-			}
-		}
-	}()
 }

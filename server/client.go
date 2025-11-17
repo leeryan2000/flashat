@@ -26,15 +26,21 @@ func (c *Client) Cleanup() {
 	c.Conn.Close()        // Close the WebSocket connection
 }
 
+const (
+	writeWait = 10 * time.Second // per-write deadline (text, ping, close)
+	pongWait  = 60 * time.Second // must receive PONG within this after last read/ping
+	pingEvery = 25 * time.Second // send PINGs this often; must be < pongWait and < infra idle timeout
+)
+
 type HandleEnvelope func(context.Context, *wire.MsgEnvelope) error
 
 func (c *Client) ReadPump(handle HandleEnvelope) {
 	defer c.Cleanup()
 
 	// add pong handler
-	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.Conn.SetPongHandler(func(string) error {
-		c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		log.Println("Pong received from UID:", c.UID)
 		return nil
 	})
@@ -61,12 +67,40 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 }
 
 func (c *Client) WritePump() {
-	defer c.Cleanup()
-	for env := range c.Send {
-		log.Print("Sending message:", string(env))
-		err := c.Conn.WriteMessage(websocket.TextMessage, env)
-		if err != nil {
-			break
+	ticker := time.NewTicker(pingEvery)
+	defer func() {
+		c.Cleanup()
+		ticker.Stop()
+	}()
+
+	for {
+		select {
+		case msg, ok := <-c.Send:
+			if !ok {
+				_ = c.Conn.WriteControl(
+					websocket.CloseMessage,
+					websocket.FormatCloseMessage(websocket.CloseNormalClosure, "hub closed"),
+					time.Now().Add(writeWait),
+				)
+				return
+			}
+			log.Print("Sending message:", string(msg))
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.Conn.WriteMessage(websocket.TextMessage, msg)
+			if err != nil {
+				return
+			}
+		case <-ticker.C:
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			log.Println("Sending ping to UID:", c.UID)
+			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				log.Println("❌ Ping failed, closing connection:", err)
+				c.Cleanup()
+				return
+			}
+		case <-c.Ctx.Done():
+			return
 		}
 	}
+
 }

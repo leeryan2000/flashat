@@ -99,7 +99,7 @@ export function AuthProvider({
 function DefaultAuthFallback() {
   return (
     <div className="grid min-h-screen place-items-center text-slate-500">
-      Loading session…
+      Loading…
     </div>
   );
 }
