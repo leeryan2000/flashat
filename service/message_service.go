@@ -13,8 +13,9 @@ import (
 )
 
 type MessageService struct {
-	Hub  Hub
-	Repo repo.MessageRepo
+	Hub              Hub
+	MessageRepo      repo.MessageRepo
+	ConversationRepo repo.ConversationRepo
 }
 
 func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelope) error {
@@ -22,8 +23,6 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelo
 	switch env.Type {
 	case wire.Chat:
 		s.handleChat(ctx, env)
-	case wire.Subscribe:
-		s.handleSubscription(ctx, env)
 	case wire.Join:
 		// Handle join message
 	case wire.Leave:
@@ -36,18 +35,20 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelo
 }
 
 func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) error {
+	log.Println("Handling chat message from UID:", env.FromUID)
 	if env.ConversationID == "" {
 		return errors.New("missing conversation id")
 	}
+
 	conversationID, err := uuid.Parse(env.ConversationID)
 	if err != nil {
 		return err
 	}
+
 	fromUID, err := uuid.Parse(env.FromUID)
 	if err != nil {
 		return err
 	}
-
 	// Create server generated msgID to replace the client generated
 	msgID := uuid.New()
 	msg := &models.Message{
@@ -57,7 +58,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 		Body:           env.Body,
 	}
 
-	err = s.Repo.SaveMessage(ctx, msg)
+	err = s.MessageRepo.SaveMessage(ctx, msg)
 
 	ack := &wire.MsgAck{
 		Status: "sent",
@@ -110,13 +111,18 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 	if err != nil {
 		return err
 	}
+	// retrieve participants from conversation using convID
+	participants, err := s.ConversationRepo.ListParticipantByID(ctx, conversationID)
+	if err != nil {
+		return err
+	}
 
-	s.Hub.BroadcastToConversation(conversationID, outEnvJSON)
+	uids := make([]uuid.UUID, 0, len(participants))
+	for _, p := range participants {
+		uids = append(uids, p.UID)
+	}
+
+	s.Hub.BroadcastToParticipant(uids, outEnvJSON)
 
 	return nil
-}
-
-// ***** continue here: implement subscription of user, sending wire from client to tell the server that which conversation the user should be subscribed to
-func (s *MessageService) handleSubscription(ctx context.Context, env *wire.MsgEnvelope) {
-
 }

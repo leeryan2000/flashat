@@ -7,9 +7,8 @@ import (
 )
 
 type Hub struct {
-	Clients       map[*Client]struct{} // Changed from bool to struct{}
-	ClientsByUID  map[string]*Client
-	Conversations map[string]map[*Client]struct{} // Changed from bool to struct{}
+	Clients      map[*Client]struct{} // Changed from bool to struct{}
+	ClientsByUID map[string]*Client
 
 	Register   chan *Client
 	Unregister chan *Client
@@ -18,11 +17,11 @@ type Hub struct {
 // connect the user as long as the webpage is open
 func NewHub() *Hub {
 	return &Hub{
-		Clients:       make(map[*Client]struct{}),
-		ClientsByUID:  make(map[string]*Client),
-		Conversations: make(map[string]map[*Client]struct{}),
-		Register:      make(chan *Client),
-		Unregister:    make(chan *Client),
+		Clients: make(map[*Client]struct{}),
+		// ***** should change to map[string]map[*Client]struct{} if allowing multiple connections per user from different devices
+		ClientsByUID: make(map[string]*Client),
+		Register:     make(chan *Client),
+		Unregister:   make(chan *Client),
 	}
 }
 
@@ -44,24 +43,13 @@ func (hub *Hub) SendToUID(uid uuid.UUID, payload []byte) {
 	}
 }
 
-func (hub *Hub) BroadcastToConversation(convID uuid.UUID, payload []byte) {
-	if clients, ok := hub.Conversations[convID.String()]; ok {
-		for client := range clients {
+func (hub *Hub) BroadcastToParticipant(uids []uuid.UUID, payload []byte) {
+	// check if the participants are online and send the payload
+	for _, uid := range uids {
+		if client, ok := hub.ClientsByUID[uid.String()]; ok {
+			log.Println("Broadcasting to UID:", uid)
 			client.Send <- payload
 		}
-	}
-}
-
-// ***** implement subscribeToConversation
-func (hub *Hub) subscribeToConversation(uid uuid.UUID, convID string) {
-	// create the conversation map if it doesn't exist
-	if _, ok := hub.Conversations[convID]; !ok {
-		hub.Conversations[convID] = make(map[*Client]struct{})
-	}
-	// add the client to the conversation if the client exists
-	if client, ok := hub.ClientsByUID[uid.String()]; ok {
-		hub.Conversations[convID][client] = struct{}{}
-		client.Conversations[convID] = struct{}{}
 	}
 }
 
@@ -76,13 +64,5 @@ func (hub *Hub) removeClient(c *Client) {
 		delete(hub.Clients, c)
 		delete(hub.ClientsByUID, c.UID)
 		close(c.Send)
-		for conv := range c.Conversations {
-			if set, ok := hub.Conversations[conv]; ok {
-				delete(set, c)
-				if len(set) == 0 {
-					delete(hub.Conversations, conv)
-				}
-			}
-		}
 	}
 }

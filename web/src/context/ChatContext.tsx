@@ -55,6 +55,7 @@ export type MsgSlice = {
   pendingEntities: Record<string, Message>;
 };
 
+// Messages stored by conversation id 
 export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
 
 interface ChatContext {
@@ -73,7 +74,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { send } = useWebSocket();
   const { lastMsg } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
-  const [msgs, setMsgs] = useState<MsgState>({});
+  const [msgs, setMsgs] = useState<MsgState>({}); // Messages for the client stored here
 
   useEffect(() => {
     const controller = new AbortController();
@@ -123,8 +124,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!lastMsg) return;
     const jsonMsg = JSON.parse(lastMsg);
-    
-
+    console.log("Received WS message In ChatContext Through LastMsg:", jsonMsg);
 
   }), [lastMsg];
 

@@ -28,7 +28,6 @@ export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activ
     );
 
   const isSelf = (msg: Message) => {
-    console.log("Checking isSelf for msg:", user ? msg.fromUid === user.uid : false);
     return user ? msg.fromUid === user.uid : false;
   }
   

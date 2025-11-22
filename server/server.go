@@ -67,14 +67,15 @@ func StartServer() (*Server, error) {
 	// Service
 	// Message service creation
 	s.MessageService = &service.MessageService{
-		Hub:  s.Hub,
-		Repo: &repo.PgxMessageRepo{Pool: s.Pool},
+		Hub:              s.Hub,
+		MessageRepo:      &repo.PgxMessageRepo{Pool: s.Pool},
+		ConversationRepo: &repo.PgxConversationRepo{Pool: s.Pool},
 	}
 
 	// Repo
 	s.UserRepo = &repo.GormUserRepo{DB: s.DB}
-	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}
+	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
 
 	RunPeriodicTask(func() {
 		checkClients(s)
