@@ -124,9 +124,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!lastMsg) return;
     const jsonMsg = JSON.parse(lastMsg);
-    console.log("Received WS message In ChatContext Through LastMsg:", jsonMsg);
+    if (jsonMsg.type === "ack") {
+      
+    }
+    else if (jsonMsg.type === "chat") {
+      const msg = toMessage(jsonMsg);
+      loadMsgs([msg]);
+    }
 
-  }), [lastMsg];
+  }, [lastMsg]);
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
@@ -151,30 +157,30 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const loadMsgs = useCallback((list: Message[]) => {
     setMsgs((prev) => {
-      const newState = { ...prev };
-      for (const msg of list) {
-        const convId = msg.convId;
-        if (!newState[convId]) {
-          newState[convId] = {
-            order: [],
-            entities: {},
-            pendingOrder: [],
-            pendingEntities: {},
-          };
-        }
+      let next = prev;
+      for (const incoming of list) {
+        const convId = incoming.convId;
+        const prevSlice = next[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
 
-        msg.status = "sent";
-        
-        // acked message from server 
-        if (msg.seq && !newState[convId].entities[msg.seq]) {
-          // update the existing message with id and seq
-          newState[convId].order.push(msg.seq ?? 0);
-          newState[convId].entities[msg.seq ?? 0] = msg;
-        } 
+        if (Object.hasOwn(prevSlice.entities, String(incoming.seq))) continue;
+
+        const msg: Message = { ...incoming, status: "sent" };
+
+        if (msg.seq) {
+          const newSlice: MsgSlice = {
+            order: [...prevSlice.order, msg.seq],
+            entities: { ...prevSlice.entities, [msg.seq]: msg },
+            pendingOrder: prevSlice.pendingOrder,
+            pendingEntities: prevSlice.pendingEntities,
+          }
+          next = { ...next, [convId]: newSlice };
+        }
       }
-      return newState;
+      return next;
     });
   }, []);
+
+  // ***** continue: implement ack of messages sent by user itself
 
   const sendMessage = useCallback((text: string, convId: string) => {
     if (text.trim() === "") return;

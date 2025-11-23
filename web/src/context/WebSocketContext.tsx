@@ -43,6 +43,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
       setStatus("closed");
       console.log(`WS close id=`, uuid)
     }; 
+    // Set lastMsg when a message is received
     ws.onmessage = (wire) => {
       setLastMsg(wire.data);
     };

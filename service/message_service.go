@@ -122,7 +122,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 		uids = append(uids, p.UID)
 	}
 
-	s.Hub.BroadcastToParticipant(uids, outEnvJSON)
+	s.Hub.BroadcastToParticipant(uids, fromUID, outEnvJSON)
 
 	return nil
 }

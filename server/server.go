@@ -41,8 +41,6 @@ func checkClients(s *Server) {
 	log.Println("Checking connected clients...", len(s.Hub.ClientsByUID))
 }
 
-// *****=========
-
 func StartServer() (*Server, error) {
 	s := &Server{}
 
