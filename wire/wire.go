@@ -15,7 +15,7 @@ const (
 
 type WireType string
 
-type MsgEnvelope struct {
+type Msg struct {
 	Type           WireType `json:"type"`
 	ConversationID string   `json:"conversation_id,omitempty"`
 	ClientMsgID    string   `json:"client_msg_id,omitempty"`

@@ -32,7 +32,7 @@ const (
 	pingEvery = 25 * time.Second // send PINGs this often; must be < pongWait and < infra idle timeout
 )
 
-type HandleEnvelope func(context.Context, *wire.MsgEnvelope) error
+type HandleEnvelope func(context.Context, *wire.Msg) error
 
 func (c *Client) ReadPump(handle HandleEnvelope) {
 	defer c.Cleanup()
@@ -54,7 +54,7 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 		// ***** delete line
 		log.Println("Received message:", string(raw))
 		// Expect JSON envelope from frontend
-		var env wire.MsgEnvelope
+		var env wire.Msg
 		if err := json.Unmarshal(raw, &env); err != nil {
 			log.Println("❌ Failed to unmarshal envelope:", err)
 			break // ignore malformed

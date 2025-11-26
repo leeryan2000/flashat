@@ -96,7 +96,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return () => controller.abort();
   }, []);
   
-  // ***** modify
+  // Fectch messages for the most recent conversation
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
@@ -121,11 +121,32 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return () => controller.abort();
   }, [convs.order]);
 
+  // WebSocket message handler
   useEffect(() => {
     if (!lastMsg) return;
     const jsonMsg = JSON.parse(lastMsg);
     if (jsonMsg.type === "ack") {
-      
+      const { conversation_id, client_msg_id } = jsonMsg;
+      setMsgs((prev) => {
+        const prevSlice = prev[conversation_id];
+        if (!prevSlice) return prev; // no such conversation
+
+        const msgToPromote = prevSlice.pendingEntities[client_msg_id];
+        if (!msgToPromote) return prev; // no such pending message
+
+        const ackedMsg: Message = {...msgToPromote, status: "sent" };
+        // Remove from pending 
+        const { [client_msg_id]: removed, ...remainingPendingEntities } = prevSlice.pendingEntities;
+
+        const newSlice : MsgSlice = {
+          order: [...prevSlice.order, ackedMsg.seq!],
+          entities: { ...prevSlice.entities, [ackedMsg.seq!]: ackedMsg },
+          pendingOrder: prevSlice.pendingOrder.filter(id => id !== client_msg_id),
+          pendingEntities: remainingPendingEntities,
+        };
+
+        return { ...prev, [conversation_id]: newSlice }
+      });
     }
     else if (jsonMsg.type === "chat") {
       const msg = toMessage(jsonMsg);
@@ -141,7 +162,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       for (const conv of list) {
         entities[conv.id] = { ...(entities[conv.id] ?? {}), ...conv };
       }
-
+      
+      // Sort the conversation everytime received based on the last message timestamp
       const order = Object.values(entities)
         .sort((a, b) => {
           const diff = (b.lastMsgTs ?? 0) - (a.lastMsgTs ?? 0);
@@ -162,10 +184,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const convId = incoming.convId;
         const prevSlice = next[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
 
-        if (Object.hasOwn(prevSlice.entities, String(incoming.seq))) continue;
+        if (incoming.seq !== undefined && prevSlice.entities[incoming.seq]) continue;
 
         const msg: Message = { ...incoming, status: "sent" };
 
+        
         if (msg.seq) {
           const newSlice: MsgSlice = {
             order: [...prevSlice.order, msg.seq],
@@ -180,20 +203,43 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // ***** continue: implement ack of messages sent by user itself
-
   const sendMessage = useCallback((text: string, convId: string) => {
     if (text.trim() === "") return;
+
+    const clientMsgId = crypto.randomUUID();
+
+    // Match server message type
     const message = { 
       type: "chat",
       conversation_id: convId,
-      client_msg_id: crypto.randomUUID(),
+      client_msg_id: clientMsgId,
       from_uid: user?.uid,
       ts: Date.now(),
       body: {
         text: text.trim()
       }
     };
+
+    // Put the message in to the pending list
+    setMsgs((prev) => {
+      const prevSlice = prev[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
+      const newMsg : Message = {
+        convId: convId,
+        fromUid: user?.uid || "",
+        clientMsgId: clientMsgId,
+        ts: message.ts,
+        text: text.trim(),
+        status: "sending",
+      }
+      const newSlice: MsgSlice = {
+        order: prevSlice.order,
+        entities: prevSlice.entities,
+        pendingOrder: [...prevSlice.pendingOrder, clientMsgId],
+        pendingEntities: { ...prevSlice.pendingEntities, [clientMsgId]: newMsg },
+      };
+      return { ...prev, [convId]: newSlice };
+    });
+
     send(JSON.stringify(message));
   }, [send, user]);
 

@@ -18,7 +18,7 @@ type MessageService struct {
 	ConversationRepo repo.ConversationRepo
 }
 
-func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelope) error {
+func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) error {
 	// Process the envelope based on its type
 	switch env.Type {
 	case wire.Chat:
@@ -34,7 +34,7 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.MsgEnvelo
 	return nil // Processed successfully
 }
 
-func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) error {
+func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 	log.Println("Handling chat message from UID:", env.FromUID)
 	if env.ConversationID == "" {
 		return errors.New("missing conversation id")
@@ -75,7 +75,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 	}
 
 	// Ack for the sender
-	ackEnv := &wire.MsgEnvelope{
+	ackEnv := &wire.Msg{
 		Type:           wire.Ack,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
@@ -95,7 +95,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.MsgEnvelope) 
 	s.Hub.SendToUID(fromUID, ackEnvJSON)
 
 	// Pack the Envelope to broadcast to user
-	outEnv := &wire.MsgEnvelope{
+	outEnv := &wire.Msg{
 		Type:           wire.Chat,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
