@@ -58,7 +58,7 @@ func (h *MessageHandler) ListBefore(c *gin.Context) {
 	}
 
 	seqStr := c.Query("seq")
-	seq, err := strconv.ParseInt(seqStr, 10, 64)
+	seq, err := strconv.ParseInt(seqStr, 10, 64) // Parse the int as int64
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Invalid sequence number"})
 		return

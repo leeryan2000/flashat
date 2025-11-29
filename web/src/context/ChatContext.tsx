@@ -178,26 +178,36 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadMsgs = useCallback((list: Message[]) => {
+    if (list.length ===0) return;
+
+    const convId = list[0].convId;
+
     setMsgs((prev) => {
-      const next = { ...prev };
+      const prevSlice = prev[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
+      const newOrder: number[] = [];
+      const newEntities: Record<number, Message> = {}
+      let hasUpdates = false;
+
       for (const incoming of list) {
-        const convId = incoming.convId;
-        const prevSlice = next[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
+        if (!incoming.seq || prevSlice.entities[incoming.seq]) { continue;  }
+        const msg : Message= { ...incoming, status: "sent"  };
+        newOrder.push(incoming.seq);
+        newEntities[incoming.seq] = msg;
+        hasUpdates = true;
+      }
 
-        if (incoming.seq && prevSlice.entities[incoming.seq]) continue;
+      if (!hasUpdates) return prev;
 
-        const msg: Message = { ...incoming, status: "sent" };
-        if (msg.seq) {
-          const newSlice: MsgSlice = {
-            order: [...prevSlice.order, msg.seq],
-            entities: { ...prevSlice.entities, [msg.seq]: msg },
-            pendingOrder: prevSlice.pendingOrder, 
-            pendingEntities: prevSlice.pendingEntities,
-          }
-          next[convId] = newSlice;
+      const nextOrder = [...prevSlice.order, ...newOrder].sort((a,b) => a - b);
+
+      return {
+        ...prev,
+        [convId]: {
+          ...prevSlice,
+          order: nextOrder,
+          entities: { ...prevSlice.entities, ...newEntities },
         }
       }
-      return next;
     });
   }, []);
 
