@@ -8,8 +8,8 @@ import {
 } from "react";
 import { useAuth } from "./AuthContext";
 import { api } from "../api/api";
-import { toConversation, type ConversationWire } from "../wire/conversation";
-import { toMessage, type MsgWire } from "../wire/message";
+import { toConversation, type ConvDto } from "../wire/conversation";
+import { toMessage, type MsgDto } from "../wire/message";
 import { useWebSocket } from "./WebSocketContext";
 // create types that match exactly what the server passed in
 
@@ -82,11 +82,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const summaryWire = await api<ConversationWire[]>(
+        const summaryDto = await api<ConvDto[]>(
           "/conversation/summary",
           { signal } as any // to allow the controller.abort to send signal
         );
-        const summary = summaryWire.map(toConversation);
+        const summary = summaryDto.map(toConversation);
         loadConvs(summary);
       } catch (err) {
         console.error("Error fetching conversations:", err);
@@ -104,11 +104,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       if (convs.order.length > 0) {
         try {
-          const msgWire = await api<MsgWire[]>(
+          const msgDto = await api<MsgDto[]>(
             `/message/latest/${convs.order[0]}?limit=50`,
             { signal } as any
           );
-          const msgs = msgWire.map((w) => toMessage(w));
+          const msgs = msgDto.map((w) => toMessage(w));
           console.log("Fetched messages:", msgs);
           loadMsgs(msgs);
 
@@ -121,7 +121,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return () => controller.abort();
   }, [convs.order]);
 
-  // WebSocket message handler
+  // WebSocket message handler when lastMsg changes
   useEffect(() => {
     if (!lastMsg) return;
     const jsonMsg = JSON.parse(lastMsg);
@@ -184,16 +184,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const convId = incoming.convId;
         const prevSlice = next[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
 
-        if (incoming.seq !== undefined && prevSlice.entities[incoming.seq]) continue;
+        if (incoming.seq && prevSlice.entities[incoming.seq]) continue;
 
         const msg: Message = { ...incoming, status: "sent" };
-
-        
         if (msg.seq) {
           const newSlice: MsgSlice = {
             order: [...prevSlice.order, msg.seq],
             entities: { ...prevSlice.entities, [msg.seq]: msg },
-            pendingOrder: prevSlice.pendingOrder,
+            pendingOrder: prevSlice.pendingOrder, 
             pendingEntities: prevSlice.pendingEntities,
           }
           next = { ...next, [convId]: newSlice };

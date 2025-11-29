@@ -1,6 +1,6 @@
 import type { Message } from "../context/ChatContext";
 
-export type MsgWire = {
+export type MsgDto = {
   id: string;
   conversation_id: string;
   seq: number;
@@ -11,7 +11,7 @@ export type MsgWire = {
   };
 };
 
-export const toMessage = (w: MsgWire): Message => ({
+export const toMessage = (w: MsgDto): Message => ({
   id: w.id,
   convId: w.conversation_id,
   seq: w.seq,

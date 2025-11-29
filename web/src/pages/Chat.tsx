@@ -14,13 +14,13 @@ export default function Chat() {
   }, [selectedId, convs.order]);
 
   return (
-    <div className="grid md:grid-cols-[320px_1fr] min-h-screen">
+    <div className="grid md:grid-cols-[320px_1fr] h-full overflow-hidden">
       <ConversationsSidebar
         convs={convs}
         activeConvId={selectedId ?? undefined}
         onOpen={(cid) => setSelectedId(cid)} // <-- no navigate
       />
-      <section className="bg-white p-6">
+      <section className="bg-white p-6 h-full overflow-hidden">
         {selectedId ? (
           <MessagesPane
             msg={

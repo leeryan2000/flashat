@@ -17,13 +17,13 @@ func Authenticate(s *server.Server) gin.HandlerFunc {
 			// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
 			// return
 
-			// ***** test verision which read from query
+			// ***** test version which read from query to test through postman
 			tokenStr = c.Query("token")
 			if tokenStr == "" {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
 				return
 			}
-
+			// -------------------------
 		}
 
 		claims, err := utils.ParseToken(tokenStr)

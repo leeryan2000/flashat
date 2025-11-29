@@ -1,6 +1,6 @@
 import type { Conversation } from "../context/ChatContext";
 
-export type ConversationWire = {
+export type ConvDto = {
   id: string;
   type: "group" | "direct";
   title:  string;
@@ -14,7 +14,7 @@ export type ConversationWire = {
   unread_count: number;
 };
 
-export const toConversation = (w: ConversationWire): Conversation => ({
+export const toConversation = (w: ConvDto): Conversation => ({
   id: w.id,
   type: w.type,
   title: w.title,
