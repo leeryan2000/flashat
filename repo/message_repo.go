@@ -10,9 +10,9 @@ import (
 type MessageRepo interface {
 	SaveMessage(ctx context.Context, msg *models.Message) error
 
-	ListLatest(ctx context.Context, conversationID uuid.UUID, limit int, uid uuid.UUID) ([]models.Message, error)
+	ListLatest(ctx context.Context, uid uuid.UUID, conversationID uuid.UUID, limit int) ([]models.Message, error)
 
-	ListBefore(ctx context.Context, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error)
+	ListBefore(ctx context.Context, uid uuid.UUID, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error)
 
 	ListAfter(ctx context.Context, conversationID uuid.UUID, afterSeq int64, limit int) ([]models.Message, error)
 

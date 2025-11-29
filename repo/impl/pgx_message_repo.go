@@ -64,7 +64,7 @@ func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) e
 	return nil
 }
 
-func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUID, limit int, uid uuid.UUID) ([]models.Message, error) {
+func (r *PgxMessageRepo) ListLatest(ctx context.Context, uid uuid.UUID, conversationID uuid.UUID, limit int) ([]models.Message, error) {
 	limit = clampLimit(limit)
 	rows, err := r.Pool.Query(ctx, `
 		SELECT 
@@ -101,15 +101,24 @@ func (r *PgxMessageRepo) ListLatest(ctx context.Context, conversationID uuid.UUI
 	return msgs, nil
 }
 
-func (r *PgxMessageRepo) ListBefore(ctx context.Context, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error) {
+func (r *PgxMessageRepo) ListBefore(ctx context.Context, uid uuid.UUID, conversationID uuid.UUID, beforeSeq int64, limit int) ([]models.Message, error) {
 	limit = clampLimit(limit)
 	rows, err := r.Pool.Query(ctx, `
-		SELECT id, conversation_id, seq, from_uid, body, created_at
-		FROM messages
-		WHERE conversation_id = $1 AND seq < $2
-		ORDER BY seq DESC
-		LIMIT $3`,
-		conversationID, beforeSeq, limit,
+		SELECT 
+            m.id, 
+            m.conversation_id, 
+            m.seq, 
+            m.from_uid, 
+            m.body, 
+            (EXTRACT(EPOCH FROM m.created_at) * 1000)::bigint AS created_at
+        FROM messages m
+        JOIN conversation_participants p
+            ON p.conversation_id = m.conversation_id
+        AND p.uid = $2 
+        WHERE m.conversation_id = $1 AND m.seq < $3
+        ORDER BY m.seq DESC
+        LIMIT $4`,
+		conversationID, uid, beforeSeq, limit,
 	)
 	if err != nil {
 		return nil, err

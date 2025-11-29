@@ -179,7 +179,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const loadMsgs = useCallback((list: Message[]) => {
     setMsgs((prev) => {
-      let next = prev;
+      const next = { ...prev };
       for (const incoming of list) {
         const convId = incoming.convId;
         const prevSlice = next[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
@@ -194,7 +194,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             pendingOrder: prevSlice.pendingOrder, 
             pendingEntities: prevSlice.pendingEntities,
           }
-          next = { ...next, [convId]: newSlice };
+          next[convId] = newSlice;
         }
       }
       return next;

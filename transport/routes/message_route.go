@@ -13,4 +13,5 @@ func InitializeMessageRoutes(router *gin.RouterGroup, h *handlers.Handlers, s *s
 	messageRoutes.Use(middleware.Authenticate(s))
 
 	messageRoutes.GET("/latest/:conversation_id", mh.ListLatest)
+	messageRoutes.GET("/before/:conversation_id", mh.ListBefore)
 }
