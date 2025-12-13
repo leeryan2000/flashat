@@ -28,7 +28,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const [lastMsg, setLastMsg] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
-
+  // ***** implement auto reconnection to websocket when offlined
   useEffect(() => {
     const uuid = crypto.randomUUID();
     console.log(`Establishing WebSocket connection with UUID: ${uuid}`);

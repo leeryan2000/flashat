@@ -1,40 +1,60 @@
-import { useMemo, useRef, useEffect} from "react";
+import { useMemo, useRef, useState, useLayoutEffect} from "react";
 import type { MsgSlice} from "../context/ChatContext";
 import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../context/ChatContext";
 
+type MessagePaneProps = {
+  msg: MsgSlice;
+  activeConvId: string;
+  onLoadMore: () => Promise<void>; // Function to fetch older messages
+}
 
-// ***** messages in the conversation sometimes would display your message as others message
 // ---------- Messages pane ----------
-export default function MessagesPane({ msg, activeConvId }:{msg: MsgSlice, activeConvId: string}) {
-  const { user, isAuthenticated } =  useAuth();
+export default function MessagesPane({ msg, activeConvId, onLoadMore}: MessagePaneProps) {
+  const { user } =  useAuth();
   const list = useMemo(() => msg.order.map(seq => msg.entities[seq]).filter(Boolean) ?? [], [msg]);
   const boxRef = useRef<HTMLDivElement|null>(null);
+  const [isLoading, setIsLoading] =  useState(false);
+  const prevScrollHeightRef = useRef<number|null>(null);
 
-  useEffect(()=>{
-    // auto scroll to bottom on convo change or new message
-    boxRef.current?.scrollTo({ top: boxRef.current.scrollHeight })
-  }, [list.length]);
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
 
-  if (!isAuthenticated) 
-    return (
-      <div className="h-full grid grid-rows-[1fr_auto]">
-        <div className="overflow-y-auto pr-2 grid place-items-center text-slate-400">
-          Loading…
-        </div>
-        <Composer convId={activeConvId} />
-      </div>
-    );
+    // 1. Restore scroll position if we just loaded history
+    if (prevScrollHeightRef.current !== null) {
+      const newHeight = box.scrollHeight;
+      const diff = newHeight - prevScrollHeightRef.current;
+      box.scrollTop = diff;
+      prevScrollHeightRef.current = null;
+    } 
+    // 2. Otherwise, scroll to bottom (new message sent/received)
+    else {
+      box.scrollTop = box.scrollHeight;
+    }
+  }, [list]);
+  
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    // Trigger when hitting top
+    if (target.scrollTop === 0 && !isLoading && list.length > 0) {
+      setIsLoading(true);
+      prevScrollHeightRef.current = target.scrollHeight; // Snapshot height
+      onLoadMore().finally(() => setIsLoading(false));
+      console.log("Loading more messages...");
+    }
+  };
 
   const isSelf = (msg: Message) => {
     return user ? msg.fromUid === user.uid : false;
   }
+
   
   return (
     <div className="h-full grid grid-rows-[1fr_auto]">
       {/* messages list */}
-      <div ref={boxRef} className="overflow-y-auto space-y-2 pr-2">
+      <div ref={boxRef} onScroll={handleScroll} className="overflow-y-auto space-y-2 pr-2">
         {list.map(msg => (
           <div key={msg.id} className={["flex", isSelf(msg) ?"justify-end":"justify-start"].join(" ") }>
             <div className={[

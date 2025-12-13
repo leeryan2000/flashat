@@ -189,7 +189,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       let hasUpdates = false;
 
       for (const incoming of list) {
-        if (!incoming.seq || prevSlice.entities[incoming.seq]) { continue;  }
+        // if message already exists or missing seq, skip
+        if (!incoming.seq || prevSlice.entities[incoming.seq]) { continue; }
+
         const msg : Message= { ...incoming, status: "sent"  };
         newOrder.push(incoming.seq);
         newEntities[incoming.seq] = msg;
@@ -198,6 +200,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       if (!hasUpdates) return prev;
 
+      // ***** could later optimize how to merge the old and new messages
       const nextOrder = [...prevSlice.order, ...newOrder].sort((a,b) => a - b);
 
       return {
