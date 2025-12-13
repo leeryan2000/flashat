@@ -102,20 +102,28 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const { signal } = controller;
     
     (async () => {
-      if (convs.order.length > 0) {
+      if (convs.order.length === 0) return;
+
+      // Create an array of promises to fetch all concurrently
+      const fetchPromises = convs.order.map(async (convId) => {
         try {
           const msgDto = await api<MsgDto[]>(
-            `/message/latest/${convs.order[0]}?limit=50`,
+            `/message/latest/${convId}?limit=50`,
             { signal } as any
           );
           const msgs = msgDto.map((w) => toMessage(w));
-          console.log("Fetched messages:", msgs);
+          
           loadMsgs(msgs);
-
-        } catch (err) {
-          console.error("Error fetching messages:", err);
+        } catch (err: any) {
+          // Ignore abort errors, log others
+          if (err.name !== "AbortError") {
+            console.error(`Error fetching messages for ${convId}:`, err);
+          }
         }
-      }
+      });
+
+      // Wait for all to finish (optional, but good for cleanup logic if needed)
+      await Promise.all(fetchPromises);
     })();
 
     return () => controller.abort();

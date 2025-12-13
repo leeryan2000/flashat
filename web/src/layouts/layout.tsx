@@ -22,7 +22,7 @@ export default function Layout() {
         <main className="h-full flex-1 p-4 bg-white overflow-hidden">
             <div className="h-full w-full rounded-xl bg-amber-50 ring-2 ring-amber-300 overflow-hidden">
               <div className="h-full w-full flex flex-col">
-                <Outlet />g
+                <Outlet />
               </div>
             </div>
         </main>
