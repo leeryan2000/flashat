@@ -6,6 +6,7 @@ const (
 	Join      WireType = "join"
 	Leave     WireType = "leave"
 	Chat      WireType = "chat"
+	Read      WireType = "read"
 	System    WireType = "system"
 	Ack       WireType = "ack"
 	Ping      WireType = "ping"

@@ -23,6 +23,8 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) erro
 	switch env.Type {
 	case wire.Chat:
 		s.handleChat(ctx, env)
+	case wire.Read:
+		s.handleRead(ctx, env)
 	case wire.Join:
 		// Handle join message
 	case wire.Leave:
@@ -33,6 +35,13 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) erro
 
 	return nil // Processed successfully
 }
+
+func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
+	log.Println("Handling read receipt from UID:", env.FromUID)
+	
+	return nil
+}
+
 
 func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 	log.Println("Handling chat message from UID:", env.FromUID)
@@ -126,3 +135,5 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 
 	return nil
 }
+
+

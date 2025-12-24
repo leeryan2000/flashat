@@ -11,11 +11,20 @@ export type MsgDto = {
   };
 };
 
-export const toMessage = (w: MsgDto): Message => ({
+export const dtoToMessage = (w: MsgDto): Message => ({
   id: w.id,
   convId: w.conversation_id,
   seq: w.seq,
   fromUid: w.from_uid,
   ts: w.created_at,
   text: w.body?.text ?? "", // safely get text from body
+});
+
+export const jsonToMessage = (json: any): Message => ({
+  id: json.server_msg_id,
+  convId: json.conversation_id,
+  seq: json.seq,
+  fromUid: json.from_uid,
+  ts: json.ts,
+  text: json.body?.text ?? "",
 });

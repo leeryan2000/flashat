@@ -3,7 +3,6 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 
-
 export function LoginForm() {
     const {login, isLoading, isAuthenticated} = useAuth();
     const [email, setEmail] = useState<string>("");

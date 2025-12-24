@@ -9,7 +9,7 @@ import {
 import { useAuth } from "./AuthContext";
 import { api } from "../api/api";
 import { toConversation, type ConvDto } from "../wire/conversation";
-import { toMessage, type MsgDto } from "../wire/message";
+import { dtoToMessage, jsonToMessage, type MsgDto } from "../wire/message";
 import { useWebSocket } from "./WebSocketContext";
 // create types that match exactly what the server passed in
 
@@ -61,10 +61,12 @@ export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
 interface ChatContext {
   convs: ConvState;
   msgs: Record<string, MsgSlice>; // convId -> MsgSlice
+  activeConvId: string | null;
 
   loadConvs: (convs: Conversation[]) => void;
   loadMsgs: (messages: Message[]) => void;
   sendMessage: (text: string, convId: string) => void;
+  setActiveConvId: (id: string | null) => void;
 }
 
 const ChatContext = createContext<ChatContext | null>(null);
@@ -75,6 +77,28 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { lastMsg } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({}); // Messages for the client stored here
+  const [activeConvId, setActiveConvIdState] = useState<string | null>(null);
+
+  const setActiveConvId = useCallback((id: string | null) => {
+  setActiveConvIdState(id);
+  if (id) {
+    // update the conversation to mark all messages as read
+    setConvs((prev) => {
+      const conv = prev.entities[id];
+      // Only update if there are unread messages to clear
+      if (conv && conv.unreadCount > 0) {
+        return {
+          ...prev,
+          entities: {
+            ...prev.entities,
+            [id]: { ...conv, unreadCount: 0 }
+          }
+        };
+      }
+      return prev;
+    });
+  }
+}, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -111,7 +135,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             `/message/latest/${convId}?limit=50`,
             { signal } as any
           );
-          const msgs = msgDto.map((w) => toMessage(w));
+          const msgs = msgDto.map((w) => dtoToMessage(w));
           
           loadMsgs(msgs);
         } catch (err: any) {
@@ -134,7 +158,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     if (!lastMsg) return;
     const jsonMsg = JSON.parse(lastMsg);
     if (jsonMsg.type === "ack") {
-      const { conversation_id, client_msg_id } = jsonMsg;
+      const { conversation_id, client_msg_id, seq, id } = jsonMsg;
       setMsgs((prev) => {
         const prevSlice = prev[conversation_id];
         if (!prevSlice) return prev; // no such conversation
@@ -142,7 +166,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const msgToPromote = prevSlice.pendingEntities[client_msg_id];
         if (!msgToPromote) return prev; // no such pending message
 
-        const ackedMsg: Message = {...msgToPromote, status: "sent" };
+        // set the acked message with server seq and id
+        const ackedMsg: Message = {...msgToPromote, status: "sent", seq, id };
         // Remove from pending 
         const { [client_msg_id]: removed, ...remainingPendingEntities } = prevSlice.pendingEntities;
 
@@ -157,11 +182,37 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       });
     }
     else if (jsonMsg.type === "chat") {
-      const msg = toMessage(jsonMsg);
+      const msg = jsonToMessage(jsonMsg);
       loadMsgs([msg]);
+
+      setConvs((prev) => {
+        const conv = prev.entities[msg.convId];
+        if (!conv) return prev;
+
+        const isMyMsg = msg.fromUid === user?.uid;
+        const isOpen = activeConvId === msg.convId;
+        
+        // Increment unread if it's not my message and I'm not looking at it
+        const newUnread = (!isMyMsg && !isOpen) ? conv.unreadCount + 1 : conv.unreadCount;
+        const updatedConv = {
+          ...conv,
+          lastMsgText: msg.text,
+          lastMsgTs: msg.ts,
+          lastMsgFrom: msg.fromUid,
+          unreadCount: newUnread,
+          lastSeq: msg.seq ?? conv.lastSeq,
+        };
+
+        const newEntities = { ...prev.entities, [msg.convId]: updatedConv };
+        
+        // Re-sort: Move this conversation to the top
+        const newOrder = getSortedConvIds(newEntities);
+
+        return { entities: newEntities, order: newOrder };
+      });
     }
 
-  }, [lastMsg]);
+  }, [lastMsg, activeConvId, user]);
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
@@ -172,12 +223,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Sort the conversation everytime received based on the last message timestamp
-      const order = Object.values(entities)
-        .sort((a, b) => {
-          const diff = (b.lastMsgTs ?? 0) - (a.lastMsgTs ?? 0);
-          return diff !== 0 ? diff : a.id.localeCompare(b.id);
-        })
-        .map((conv) => conv.id);
+      const order = getSortedConvIds(entities);
       return {
         entities: entities,
         order: order,
@@ -185,8 +231,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  // ***** continue fix the message display problem
   const loadMsgs = useCallback((list: Message[]) => {
-    if (list.length ===0) return;
+    if (list.length === 0) return;
 
     const convId = list[0].convId;
 
@@ -197,18 +244,33 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       let hasUpdates = false;
 
       for (const incoming of list) {
-        // if message already exists or missing seq, skip
-        if (!incoming.seq || prevSlice.entities[incoming.seq]) { continue; }
+        // if missing seq, skip
+        if (!incoming.seq) { continue; }
 
-        const msg : Message= { ...incoming, status: "sent"  };
-        newOrder.push(incoming.seq);
+        // FIX: Get existing message if it exists
+        const existing = prevSlice.entities[incoming.seq];
+
+        // FIX: Merge existing data with incoming data
+        // This ensures we update timestamps/text if the server sends a correction
+        const msg : Message = { 
+            ...(existing ?? {}), 
+            ...incoming, 
+            status: "sent" 
+        };
+
+        // Only add to order if it wasn't there before
+        if (!existing) {
+            newOrder.push(incoming.seq);
+        }
+        
         newEntities[incoming.seq] = msg;
         hasUpdates = true;
       }
 
+      // if not updates detected, return previous state
       if (!hasUpdates) return prev;
 
-      // ***** could later optimize how to merge the old and new messages
+      // Sort combined order
       const nextOrder = [...prevSlice.order, ...newOrder].sort((a,b) => a - b);
 
       return {
@@ -216,7 +278,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         [convId]: {
           ...prevSlice,
           order: nextOrder,
-          entities: { ...prevSlice.entities, ...newEntities },
+          entities: { ...prevSlice.entities, ...newEntities }, // Overwrite with new/updated entities
         }
       }
     });
@@ -268,11 +330,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     () => ({
       convs,
       msgs,
+      activeConvId,
       loadConvs,
       loadMsgs,
       sendMessage,
+      setActiveConvId
     }),
-    [convs, msgs]
+    [convs, msgs, activeConvId, loadConvs, loadMsgs, sendMessage, setActiveConvId]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
@@ -286,3 +350,11 @@ export function useChat() {
   return context;
 }
 
+function getSortedConvIds(entities: Record<string, Conversation>): string[] {
+  return Object.values(entities)
+    .sort((a, b) => {
+      const diff = (b.lastMsgTs ?? 0) - (a.lastMsgTs ?? 0);
+      return diff !== 0 ? diff : a.id.localeCompare(b.id);
+    })
+    .map((c) => c.id);
+}
