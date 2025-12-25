@@ -26,8 +26,11 @@ type Msg struct {
 	Seq  int64           `json:"seq,omitempty"`
 	Ts   int64           `json:"ts,omitempty"`
 	Body json.RawMessage `json:"body,omitempty"`
+
+	LastReadSeq int64 `json:"last_read_seq,omitempty"`
 }
 
+// for sending to client
 type MsgAck struct {
 	Status string `json:"status"` // sent, failed
 }

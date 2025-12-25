@@ -37,11 +37,27 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) erro
 }
 
 func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
-	log.Println("Handling read receipt from UID:", env.FromUID)
+	conversationID, err := uuid.Parse(env.ConversationID)
+	if err != nil {
+		return err
+	}
+
+	fromUID, err := uuid.Parse(env.FromUID)
+	if err != nil {
+		return err
+	}
+
+	lastReadSeq := env.LastReadSeq
+	log.Println("Handling read receipt from UID:", fromUID, "for conversation:", conversationID, "up to seq:", lastReadSeq)
 	
+	err = s.ConversationRepo.UpdateLastReadSeq(ctx, conversationID, fromUID, lastReadSeq)
+	if err != nil {
+		log.Println("❌ Failed to update last read seq:", err)
+		return err
+	}
+
 	return nil
 }
-
 
 func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 	log.Println("Handling chat message from UID:", env.FromUID)
@@ -135,5 +151,3 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 
 	return nil
 }
-
-

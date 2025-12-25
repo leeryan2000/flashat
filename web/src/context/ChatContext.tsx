@@ -24,8 +24,11 @@ export type Conversation = {
   lastMsgFrom?: string;
   // the timestamp in database are timestampz match it
   lastMsgTs?: number;
+
+  // 0 if no messages, sequence number of the last message
   lastSeq: number;
 
+  // Last read sequence number for this conversation
   lastReadSeq: number;
   unreadCount: number;
 };
@@ -40,10 +43,10 @@ export type Message = {
   fromUid: string;
   clientMsgId?: string;
   ts: number; // used to order message when pending, updated from with server timestamp after acked
-  
+
   id?: string; // server message id
   seq?: number; // server sequence number
-  
+
   text?: string;
   status?: "sending" | "failed" | "sent"; // local only
 };
@@ -55,7 +58,7 @@ export type MsgSlice = {
   pendingEntities: Record<string, Message>;
 };
 
-// Messages stored by conversation id 
+// Messages stored by conversation id
 export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
 
 interface ChatContext {
@@ -80,25 +83,36 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [activeConvId, setActiveConvIdState] = useState<string | null>(null);
 
   const setActiveConvId = useCallback((id: string | null) => {
-  setActiveConvIdState(id);
-  if (id) {
-    // update the conversation to mark all messages as read
-    setConvs((prev) => {
-      const conv = prev.entities[id];
-      // Only update if there are unread messages to clear
-      if (conv && conv.unreadCount > 0) {
-        return {
-          ...prev,
-          entities: {
-            ...prev.entities,
-            [id]: { ...conv, unreadCount: 0 }
-          }
-        };
+    setActiveConvIdState(id);
+    if (id) {
+      const conv = convs.entities[id];
+      if (conv) {
+        // update the conversation to mark all messages as read
+        setConvs((prev) => {
+          const current = prev.entities[id];
+          if (!current) return prev;
+
+          return {
+            ...prev,
+            entities: {
+              ...prev.entities,
+              [id]: {
+                ...current,
+                unreadCount: 0, // Clear badge
+                lastReadSeq: current.lastSeq, // Mark all as read locally
+              },
+            },
+          };
+        });
+        send(JSON.stringify({
+          type: "read",
+          conversation_id: id,
+          from_uid: user?.uid,
+          last_read_seq: conv.lastSeq,
+        }));
       }
-      return prev;
-    });
-  }
-}, []);
+    }
+  }, [convs, send]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -119,12 +133,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     return () => controller.abort();
   }, []);
-  
+
   // Fectch messages for the most recent conversation
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
-    
+
     (async () => {
       if (convs.order.length === 0) return;
 
@@ -136,7 +150,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             { signal } as any
           );
           const msgs = msgDto.map((w) => dtoToMessage(w));
-          
+
           loadMsgs(msgs);
         } catch (err: any) {
           // Ignore abort errors, log others
@@ -167,33 +181,34 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         if (!msgToPromote) return prev; // no such pending message
 
         // set the acked message with server seq and id
-        const ackedMsg: Message = {...msgToPromote, status: "sent", seq, id };
-        // Remove from pending 
-        const { [client_msg_id]: removed, ...remainingPendingEntities } = prevSlice.pendingEntities;
+        const ackedMsg: Message = { ...msgToPromote, status: "sent", seq, id };
+        // Remove from pending
+        const { [client_msg_id]: removed, ...remainingPendingEntities } =
+          prevSlice.pendingEntities;
 
-        const newSlice : MsgSlice = {
+        const newSlice: MsgSlice = {
           order: [...prevSlice.order, ackedMsg.seq!],
           entities: { ...prevSlice.entities, [ackedMsg.seq!]: ackedMsg },
-          pendingOrder: prevSlice.pendingOrder.filter(id => id !== client_msg_id),
+          pendingOrder: prevSlice.pendingOrder.filter(
+            (id) => id !== client_msg_id
+          ),
           pendingEntities: remainingPendingEntities,
         };
 
-        return { ...prev, [conversation_id]: newSlice }
+        return { ...prev, [conversation_id]: newSlice };
       });
-    }
-    else if (jsonMsg.type === "chat") {
+    } else if (jsonMsg.type === "chat") {
       const msg = jsonToMessage(jsonMsg);
       loadMsgs([msg]);
 
       setConvs((prev) => {
         const conv = prev.entities[msg.convId];
         if (!conv) return prev;
-
         const isMyMsg = msg.fromUid === user?.uid;
         const isOpen = activeConvId === msg.convId;
-        
         // Increment unread if it's not my message and I'm not looking at it
-        const newUnread = (!isMyMsg && !isOpen) ? conv.unreadCount + 1 : conv.unreadCount;
+        const newUnread =
+          !isMyMsg && !isOpen ? conv.unreadCount + 1 : conv.unreadCount;
         const updatedConv = {
           ...conv,
           lastMsgText: msg.text,
@@ -204,15 +219,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         };
 
         const newEntities = { ...prev.entities, [msg.convId]: updatedConv };
-        
+
         // Re-sort: Move this conversation to the top
         const newOrder = getSortedConvIds(newEntities);
 
         return { entities: newEntities, order: newOrder };
       });
     }
-
-  }, [lastMsg, activeConvId, user]);
+  }, [lastMsg, user]);
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
@@ -221,7 +235,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       for (const conv of list) {
         entities[conv.id] = { ...(entities[conv.id] ?? {}), ...conv };
       }
-      
+
       // Sort the conversation everytime received based on the last message timestamp
       const order = getSortedConvIds(entities);
       return {
@@ -238,31 +252,38 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const convId = list[0].convId;
 
     setMsgs((prev) => {
-      const prevSlice = prev[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
+      const prevSlice = prev[convId] ?? {
+        order: [],
+        entities: {},
+        pendingOrder: [],
+        pendingEntities: {},
+      };
       const newOrder: number[] = [];
-      const newEntities: Record<number, Message> = {}
+      const newEntities: Record<number, Message> = {};
       let hasUpdates = false;
 
       for (const incoming of list) {
         // if missing seq, skip
-        if (!incoming.seq) { continue; }
+        if (!incoming.seq) {
+          continue;
+        }
 
         // FIX: Get existing message if it exists
         const existing = prevSlice.entities[incoming.seq];
 
         // FIX: Merge existing data with incoming data
         // This ensures we update timestamps/text if the server sends a correction
-        const msg : Message = { 
-            ...(existing ?? {}), 
-            ...incoming, 
-            status: "sent" 
+        const msg: Message = {
+          ...(existing ?? {}),
+          ...incoming,
+          status: "sent",
         };
 
         // Only add to order if it wasn't there before
         if (!existing) {
-            newOrder.push(incoming.seq);
+          newOrder.push(incoming.seq);
         }
-        
+
         newEntities[incoming.seq] = msg;
         hasUpdates = true;
       }
@@ -271,7 +292,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (!hasUpdates) return prev;
 
       // Sort combined order
-      const nextOrder = [...prevSlice.order, ...newOrder].sort((a,b) => a - b);
+      const nextOrder = [...prevSlice.order, ...newOrder].sort((a, b) => a - b);
 
       return {
         ...prev,
@@ -279,50 +300,61 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           ...prevSlice,
           order: nextOrder,
           entities: { ...prevSlice.entities, ...newEntities }, // Overwrite with new/updated entities
-        }
-      }
+        },
+      };
     });
   }, []);
 
-  const sendMessage = useCallback((text: string, convId: string) => {
-    if (text.trim() === "") return;
+  const sendMessage = useCallback(
+    (text: string, convId: string) => {
+      if (text.trim() === "") return;
 
-    const clientMsgId = crypto.randomUUID();
+      const clientMsgId = crypto.randomUUID();
 
-    // Match server message type
-    const message = { 
-      type: "chat",
-      conversation_id: convId,
-      client_msg_id: clientMsgId,
-      from_uid: user?.uid,
-      ts: Date.now(),
-      body: {
-        text: text.trim()
-      }
-    };
-
-    // Put the message in to the pending list
-    setMsgs((prev) => {
-      const prevSlice = prev[convId] ?? { order: [], entities: {}, pendingOrder: [], pendingEntities: {} };
-      const newMsg : Message = {
-        convId: convId,
-        fromUid: user?.uid || "",
-        clientMsgId: clientMsgId,
-        ts: message.ts,
-        text: text.trim(),
-        status: "sending",
-      }
-      const newSlice: MsgSlice = {
-        order: prevSlice.order,
-        entities: prevSlice.entities,
-        pendingOrder: [...prevSlice.pendingOrder, clientMsgId],
-        pendingEntities: { ...prevSlice.pendingEntities, [clientMsgId]: newMsg },
+      // Match server message type
+      const message = {
+        type: "chat",
+        conversation_id: convId,
+        client_msg_id: clientMsgId,
+        from_uid: user?.uid,
+        ts: Date.now(),
+        body: {
+          text: text.trim(),
+        },
       };
-      return { ...prev, [convId]: newSlice };
-    });
 
-    send(JSON.stringify(message));
-  }, [send, user]);
+      // Put the message in to the pending list
+      setMsgs((prev) => {
+        const prevSlice = prev[convId] ?? {
+          order: [],
+          entities: {},
+          pendingOrder: [],
+          pendingEntities: {},
+        };
+        const newMsg: Message = {
+          convId: convId,
+          fromUid: user?.uid || "",
+          clientMsgId: clientMsgId,
+          ts: message.ts,
+          text: text.trim(),
+          status: "sending",
+        };
+        const newSlice: MsgSlice = {
+          order: prevSlice.order,
+          entities: prevSlice.entities,
+          pendingOrder: [...prevSlice.pendingOrder, clientMsgId],
+          pendingEntities: {
+            ...prevSlice.pendingEntities,
+            [clientMsgId]: newMsg,
+          },
+        };
+        return { ...prev, [convId]: newSlice };
+      });
+
+      send(JSON.stringify(message));
+    },
+    [send, user]
+  );
 
   // Websocket Connection
 
@@ -334,9 +366,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       loadConvs,
       loadMsgs,
       sendMessage,
-      setActiveConvId
+      setActiveConvId,
     }),
-    [convs, msgs, activeConvId, loadConvs, loadMsgs, sendMessage, setActiveConvId]
+    [
+      convs,
+      msgs,
+      activeConvId,
+      loadConvs,
+      loadMsgs,
+      sendMessage,
+      setActiveConvId,
+    ]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

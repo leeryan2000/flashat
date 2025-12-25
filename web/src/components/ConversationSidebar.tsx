@@ -13,6 +13,7 @@ function timeAgo(ts: number) {
 export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ convs: ConvState; activeConvId?: string; onOpen:(id:string)=>void }) {
   // Query for the title search
   const [query, setQ] = useState("");
+  
   // filters the conversations by title
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
