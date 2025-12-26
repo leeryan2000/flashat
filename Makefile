@@ -2,7 +2,7 @@ build:
 	go build -o bin/flashat ./cmd/main.go
 
 run: tidy build 
-	bin/flashat
+	 bin/flashat
 
 test:
 	go test -v ./handlers -count=1

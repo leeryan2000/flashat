@@ -49,7 +49,7 @@ func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
 
 	lastReadSeq := env.LastReadSeq
 	log.Println("Handling read receipt from UID:", fromUID, "for conversation:", conversationID, "up to seq:", lastReadSeq)
-	
+
 	err = s.ConversationRepo.UpdateLastReadSeq(ctx, conversationID, fromUID, lastReadSeq)
 	if err != nil {
 		log.Println("❌ Failed to update last read seq:", err)

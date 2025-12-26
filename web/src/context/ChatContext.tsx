@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useAuth } from "./AuthContext";
@@ -82,6 +83,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [msgs, setMsgs] = useState<MsgState>({}); // Messages for the client stored here
   const [activeConvId, setActiveConvIdState] = useState<string | null>(null);
 
+  const hasInitialFetched = useRef(false);
+
   const setActiveConvId = useCallback((id: string | null) => {
     setActiveConvIdState(id);
     if (id) {
@@ -136,11 +139,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Fectch messages for the most recent conversation
   useEffect(() => {
+    // if conversations aren't loaded yet, skip
+    if (hasInitialFetched.current || convs.order.length === 0) return;
+
+    hasInitialFetched.current = true;
+
     const controller = new AbortController();
     const { signal } = controller;
 
     (async () => {
-      if (convs.order.length === 0) return;
 
       // Create an array of promises to fetch all concurrently
       const fetchPromises = convs.order.map(async (convId) => {
@@ -205,10 +212,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const conv = prev.entities[msg.convId];
         if (!conv) return prev;
         const isMyMsg = msg.fromUid === user?.uid;
-        const isOpen = activeConvId === msg.convId;
+        const isSelected = activeConvId === msg.convId;
         // Increment unread if it's not my message and I'm not looking at it
         const newUnread =
-          !isMyMsg && !isOpen ? conv.unreadCount + 1 : conv.unreadCount;
+          !isMyMsg && !isSelected ? conv.unreadCount + 1 : conv.unreadCount;
         const updatedConv = {
           ...conv,
           lastMsgText: msg.text,
