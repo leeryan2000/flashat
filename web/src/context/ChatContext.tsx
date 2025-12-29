@@ -214,8 +214,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const isMyMsg = msg.fromUid === user?.uid;
         const isSelected = activeConvId === msg.convId;
         // Increment unread if it's not my message and I'm not looking at it
-        const newUnread =
-          !isMyMsg && !isSelected ? conv.unreadCount + 1 : conv.unreadCount;
+        const newUnread = !isMyMsg && !isSelected ? conv.unreadCount + 1 : conv.unreadCount;
         const updatedConv = {
           ...conv,
           lastMsgText: msg.text,
@@ -252,7 +251,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // ***** continue fix the message display problem
   const loadMsgs = useCallback((list: Message[]) => {
     if (list.length === 0) return;
 
@@ -275,18 +273,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           continue;
         }
 
-        // FIX: Get existing message if it exists
         const existing = prevSlice.entities[incoming.seq];
 
-        // FIX: Merge existing data with incoming data
-        // This ensures we update timestamps/text if the server sends a correction
         const msg: Message = {
           ...(existing ?? {}),
           ...incoming,
           status: "sent",
         };
 
-        // Only add to order if it wasn't there before
+        // push seq to order only if it's new
         if (!existing) {
           newOrder.push(incoming.seq);
         }
@@ -295,7 +290,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         hasUpdates = true;
       }
 
-      // if not updates detected, return previous state
+      // if no updates detected, return previous state
       if (!hasUpdates) return prev;
 
       // Sort combined order
@@ -317,6 +312,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (text.trim() === "") return;
 
       const clientMsgId = crypto.randomUUID();
+      const localTs = Date.now();
 
       // Match server message type
       const message = {
@@ -324,7 +320,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         conversation_id: convId,
         client_msg_id: clientMsgId,
         from_uid: user?.uid,
-        ts: Date.now(),
+        ts: localTs,
         body: {
           text: text.trim(),
         },
@@ -332,12 +328,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       // Put the message in to the pending list
       setMsgs((prev) => {
-        const prevSlice = prev[convId] ?? {
-          order: [],
-          entities: {},
-          pendingOrder: [],
-          pendingEntities: {},
-        };
+        const prevSlice = prev[convId]
+        if (!prevSlice) return prev;
+
         const newMsg: Message = {
           convId: convId,
           fromUid: user?.uid || "",
@@ -359,6 +352,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       });
 
       send(JSON.stringify(message));
+      
+      // Set a timeout to mark the message as 'failed' if no ACK received
+      setTimeout(() => {
+        setMsgs((prev) => {
+          const slice = prev[convId];
+          if (!slice) return prev;
+
+          const pendingMsg = slice.pendingEntities[clientMsgId];
+
+          if (!pendingMsg) return prev;
+          return {
+            ...prev,
+            [convId]: {
+              ...slice,
+              pendingEntities: {
+                ...slice.pendingEntities,
+                [clientMsgId]: { ...pendingMsg, status: "failed" },
+              },
+            },
+          };
+        });
+      }, 10000); // 10 seconds timeout
+
     },
     [send, user]
   );
