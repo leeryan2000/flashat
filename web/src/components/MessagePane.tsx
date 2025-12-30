@@ -46,7 +46,12 @@ export default function MessagesPane({ msg, activeConvId, onLoadMore}: MessagePa
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     // Trigger when hitting top
-    if (target.scrollTop === 0 && !isLoading && msgList.length > 0) {
+    if (
+      target.scrollTop === 0 && 
+      !isLoading && 
+      msgList.length > 0 &&
+      target.scrollHeight > target.clientHeight
+    ) {
       setIsLoading(true);
       prevScrollHeightRef.current = target.scrollHeight; // Snapshot height
       onLoadMore().finally(() => setIsLoading(false));
