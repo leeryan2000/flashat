@@ -77,19 +77,19 @@ const ChatContext = createContext<ChatContext | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { send } = useWebSocket();
-  const { lastMsg } = useWebSocket();
+  const { send, lastMsg, status } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({}); // Messages for the client stored here
-  const [activeConvId, setActiveConvIdState] = useState<string | null>(null);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
   const hasInitialFetched = useRef(false);
 
-  const setActiveConvId = useCallback((id: string | null) => {
-    setActiveConvIdState(id);
+  const setActiveConvIdState = useCallback((id: string | null) => {
+    setActiveConvId(id);
     if (id) {
       const conv = convs.entities[id];
-      if (conv) {
+      // only send read if there are unread messages
+      if (conv && conv.unreadCount > 0) {
         // update the conversation to mark all messages as read
         setConvs((prev) => {
           const current = prev.entities[id];
@@ -118,6 +118,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [convs, send]);
 
   useEffect(() => {
+    if (status === "closed") return;
+
     const controller = new AbortController();
     const { signal } = controller;
 
@@ -129,13 +131,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         );
         const summary = summaryDto.map(toConversation);
         loadConvs(summary);
-      } catch (err) {
-        console.error("Error fetching conversations:", err);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Error fetching conversations:", err);
+        }
       }
     })();
 
     return () => controller.abort();
-  }, []);
+  }, [status]);
 
   // Fectch messages for the most recent conversation
   useEffect(() => {
@@ -389,7 +393,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       loadConvs,
       loadMsgs,
       sendMessage,
-      setActiveConvId,
+      setActiveConvId: setActiveConvIdState,
     }),
     [
       convs,
@@ -398,7 +402,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       loadConvs,
       loadMsgs,
       sendMessage,
-      setActiveConvId,
+      setActiveConvIdState,
     ]
   );
 

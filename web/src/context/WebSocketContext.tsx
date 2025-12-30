@@ -26,46 +26,83 @@ type WebSocketProviderProps = PropsWithChildren<{
 export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
   const [status, setStatus] = useState<WSStatus>("idle");
   const [lastMsg, setLastMsg] = useState<string | null>(null);
+  
   const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  
+  // Track if the disconnection was intentional (user clicked logout/disconnect)
+  const isIntentionalClose = useRef(false);
 
-  // ***** implement auto reconnection to websocket when offlined
-  useEffect(() => {
+  // Configuration
+  const RECONNECT_INTERVAL = 5000; // ms before attempting reconnect
+
+  const connect = useCallback(() => {
+    // Prevent multiple connections
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+
+    // Clear any existing reconnect timers
+    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+
     const uuid = crypto.randomUUID();
-    console.log(`Establishing WebSocket connection with UUID: ${uuid}`);
+    console.log(`Attempting WebSocket connection... ID: ${uuid}`);
     
     const ws = new WebSocket(url);
     socketRef.current = ws;
-
     setStatus("connecting");
+    isIntentionalClose.current = false;
 
-    ws.onopen = () => setStatus("open");
-    ws.onclose = () => {
-      setStatus("closed");
-      console.log(`WS close id=`, uuid)
-    }; 
-    // Set lastMsg when a message is received
+    ws.onopen = () => {
+      console.log("WebSocket Connected");
+      setStatus("open");
+    };
+
     ws.onmessage = (wire) => {
       setLastMsg(wire.data);
     };
 
-    return () => {
-      ws.close();
-      socketRef.current = null;
-      console.log("WebSocket closed on component unmount id:", uuid);
+    ws.onclose = (event) => {
+      console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
       setStatus("closed");
+      
+      // Only reconnect if it wasn't an intentional disconnect
+      if (!isIntentionalClose.current) {
+        console.log(`Reconnecting in ${RECONNECT_INTERVAL}ms...`);
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          connect();
+        }, RECONNECT_INTERVAL);
+      }
     };
-  }, []);
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+  }, [url]);
+
+  // Initial Connection
+  useEffect(() => {
+    connect();
+
+    // Cleanup on unmount
+    return () => {
+      isIntentionalClose.current = true;
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      socketRef.current?.close();
+    };
+  }, [connect]);
 
   const send = useCallback((data: string) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(data);
-      console.log("Sent message:", data);
     } else {
       console.warn("WebSocket not open; message dropped.");
     }
   }, []);
 
   const disconnect = useCallback(() => {
+    isIntentionalClose.current = true; // Prevent auto-reconnect
+    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+    
     socketRef.current?.close();
     setStatus("closed");
   }, []);
@@ -77,7 +114,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
       send,
       disconnect,
     }),
-    [status, lastMsg]
+    [status, lastMsg, send, disconnect]
   );
 
   return (
