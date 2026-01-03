@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect} from "react";
 import ConversationsSidebar from "../components/ConversationSidebar";
 import { useChat } from "../context/ChatContext";
 import MessagesPane from "../components/MessagePane";
@@ -9,6 +9,11 @@ import { dtoToMessage, type MsgDto } from "../wire/message";
 export default function Chat() {
   const { convs, msgs, loadMsgs, activeConvId, setActiveConvId } = useChat();
   const [hasMore, setHasMore] = useState(true);
+
+  // reset
+  useEffect(() => {
+    setHasMore(true);
+  }, [activeConvId]);
 
   useEffect(() => {
     // if no convo selected, open the most recent one by default
@@ -50,6 +55,7 @@ export default function Chat() {
       <section className="bg-white p-6 h-full overflow-hidden">
         {activeConvId ? (
           <MessagesPane
+            key={activeConvId}
             msg={
               msgs[activeConvId] ?? {
                 order: [],

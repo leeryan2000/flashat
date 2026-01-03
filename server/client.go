@@ -27,9 +27,9 @@ func (c *Client) Cleanup() {
 }
 
 const (
-	writeWait = 10 * time.Second // per-write deadline (text, ping, close)
-	pongWait  = 60 * time.Second // must receive PONG within this after last read/ping
-	pingEvery = 25 * time.Second // send PINGs this often; must be < pongWait and < infra idle timeout
+	WRITE_WAIT = 10 * time.Second // per-write deadline (text, ping, close)
+	PONG_WAIT  = 60 * time.Second // must receive PONG within this after last read/ping
+	PING_EVERY = 25 * time.Second // send PINGs this often; must be < pongWait and < infra idle timeout
 )
 
 type HandleEnvelope func(context.Context, *wire.Msg) error
@@ -38,9 +38,9 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 	defer c.Cleanup()
 
 	// add pong handler
-	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.Conn.SetReadDeadline(time.Now().Add(PONG_WAIT))
 	c.Conn.SetPongHandler(func(string) error {
-		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+		c.Conn.SetReadDeadline(time.Now().Add(PONG_WAIT))
 		log.Println("Pong received from UID:", c.UID)
 		return nil
 	})
@@ -67,7 +67,7 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 }
 
 func (c *Client) WritePump() {
-	ticker := time.NewTicker(pingEvery)
+	ticker := time.NewTicker(PING_EVERY)
 	defer func() {
 		c.Cleanup()
 		ticker.Stop()
@@ -80,18 +80,18 @@ func (c *Client) WritePump() {
 				_ = c.Conn.WriteControl(
 					websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, "hub closed"),
-					time.Now().Add(writeWait),
+					time.Now().Add(WRITE_WAIT),
 				)
 				return
 			}
 			log.Print("Sending message:", string(msg))
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			c.Conn.SetWriteDeadline(time.Now().Add(WRITE_WAIT))
 			err := c.Conn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
 				return
 			}
 		case <-ticker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			c.Conn.SetWriteDeadline(time.Now().Add(WRITE_WAIT))
 			log.Println("Sending ping to UID:", c.UID)
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Println("❌ Ping failed, closing connection:", err)

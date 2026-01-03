@@ -70,7 +70,8 @@ interface ChatContext {
   loadConvs: (convs: Conversation[]) => void;
   loadMsgs: (messages: Message[]) => void;
   sendMessage: (text: string, convId: string) => void;
-  setActiveConvId: (id: string | null) => void;
+  setActiveConvId(id: string | null): void;
+  markAsRead(convId: string): void;
 }
 
 const ChatContext = createContext<ChatContext | null>(null);
@@ -84,38 +85,42 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const hasInitialFetched = useRef(false);
 
-  const setActiveConvIdState = useCallback((id: string | null) => {
-    setActiveConvId(id);
-    if (id) {
-      const conv = convs.entities[id];
-      // only send read if there are unread messages
+  const markAsRead = useCallback(
+    (convId: string) => {
+      const conv = convs.entities[convId];
+
       if (conv && conv.unreadCount > 0) {
-        // update the conversation to mark all messages as read
+        // Optimistic Update
         setConvs((prev) => {
-          const current = prev.entities[id];
+          const current = prev.entities[convId];
           if (!current) return prev;
 
           return {
             ...prev,
             entities: {
               ...prev.entities,
-              [id]: {
+              [convId]: {
                 ...current,
-                unreadCount: 0, // Clear badge
-                lastReadSeq: current.lastSeq, // Mark all as read locally
+                unreadCount: 0,
+                lastReadSeq: current.lastSeq,
               },
             },
           };
         });
-        send(JSON.stringify({
-          type: "read",
-          conversation_id: id,
-          from_uid: user?.uid,
-          last_read_seq: conv.lastSeq,
-        }));
+
+        // Send to Server
+        send(
+          JSON.stringify({
+            type: "read",
+            conversation_id: convId,
+            from_uid: user?.uid,
+            last_read_seq: conv.lastSeq,
+          })
+        );
       }
-    }
-  }, [convs, send]);
+    },
+    [convs, send, user]
+  );
 
   useEffect(() => {
     if (status === "closed") return;
@@ -152,7 +157,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const { signal } = controller;
 
     (async () => {
-
       // Create an array of promises to fetch all concurrently
       const fetchPromises = convs.order.map(async (convId) => {
         try {
@@ -182,6 +186,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!lastMsg) return;
     const jsonMsg = JSON.parse(lastMsg);
+
     if (jsonMsg.type === "ack") {
       const { conversation_id, client_msg_id, seq, id } = jsonMsg;
       setMsgs((prev) => {
@@ -218,7 +223,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const isMyMsg = msg.fromUid === user?.uid;
         const isSelected = activeConvId === msg.convId;
         // Increment unread if it's not my message and I'm not looking at it
-        const newUnread = !isMyMsg && !isSelected ? conv.unreadCount + 1 : conv.unreadCount;
+        const newUnread =
+          !isMyMsg && !isSelected ? conv.unreadCount + 1 : conv.unreadCount;
         const updatedConv = {
           ...conv,
           lastMsgText: msg.text,
@@ -332,7 +338,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       // Put the message in to the pending list
       setMsgs((prev) => {
-        const prevSlice = prev[convId]
+        const prevSlice = prev[convId];
         if (!prevSlice) return prev;
 
         const newMsg: Message = {
@@ -356,7 +362,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       });
 
       send(JSON.stringify(message));
-      
+
       // Set a timeout to mark the message as 'failed' if no ACK received
       setTimeout(() => {
         setMsgs((prev) => {
@@ -378,7 +384,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           };
         });
       }, 10000); // 10 seconds timeout
-
     },
     [send, user]
   );
@@ -393,7 +398,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       loadConvs,
       loadMsgs,
       sendMessage,
-      setActiveConvId: setActiveConvIdState,
+      setActiveConvId,
+      markAsRead,
     }),
     [
       convs,
@@ -402,7 +408,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       loadConvs,
       loadMsgs,
       sendMessage,
-      setActiveConvIdState,
+      setActiveConvId,
+      markAsRead,
     ]
   );
 
