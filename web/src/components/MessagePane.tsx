@@ -58,7 +58,6 @@ export default function MessagesPane({msg, activeConvId, onLoadMore}: MessagePan
         const element = document.getElementById(`msg-${conv.lastReadSeq}`);
 
         if (element) {
-          console.log(`Jumping to last read message: ${conv.lastReadSeq}`);
           element.scrollIntoView({ block: "start" });
           hasScrolledToUnreadRef.current = true;
           return; // Stop here
@@ -70,13 +69,16 @@ export default function MessagesPane({msg, activeConvId, onLoadMore}: MessagePan
 
     // Check if the user is at the bottom for not flashing to bottom if scrolled up
     if (isAtBottomRef.current) {
-      console.log("Bottom");
       box.scrollTop = box.scrollHeight;
     }
   }, [msgList, activeConvId]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
+    
+    // scrollHeight: total height of the content
+    // scrollTop: how much hidden above the visible area
+    // clientHeight: height of the visible area
     const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 20;
     isAtBottomRef.current = isAtBottom;
     // Trigger when hitting top
