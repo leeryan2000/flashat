@@ -48,7 +48,7 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 		}
 	}
 
-	// set up the url of default group avatar
+	// set up the url of default group avatar, later changed by user
 	avatar_url := "Default group avatar"
 
 	conv := &models.Conversation{
@@ -64,10 +64,7 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":      "Group conversation created successfully",
-		"conversation": conv,
-	})
+	c.JSON(http.StatusOK, conv)
 }
 
 type directInput struct {
@@ -113,10 +110,7 @@ func (h *ConversationHandler) GetOrCreateDirectConversation(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":      "Direct conversation retrieved or created successfully",
-		"conversation": conv,
-	})
+	c.JSON(http.StatusOK, conv)
 }
 
 func (h *ConversationHandler) ListConversationByUID(c *gin.Context) {
@@ -133,10 +127,7 @@ func (h *ConversationHandler) ListConversationByUID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":       "Conversations retrieved successfully",
-		"conversations": conversations,
-	})
+	c.JSON(http.StatusOK, conversations)
 }
 
 func (h *ConversationHandler) GetConversationByID(c *gin.Context) {
@@ -158,10 +149,7 @@ func (h *ConversationHandler) GetConversationByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":      "Conversation retrieved successfully",
-		"conversation": conversation,
-	})
+	c.JSON(http.StatusOK, conversation)
 }
 
 func (h *ConversationHandler) ListParticipantByID(c *gin.Context) {
@@ -183,10 +171,7 @@ func (h *ConversationHandler) ListParticipantByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":     "Participant retrieved successfully",
-		"participant": participants,
-	})
+	c.JSON(http.StatusOK, participants)
 }
 
 type participantInput struct {

@@ -12,6 +12,7 @@ func InitializeServer(s *server.Server) {
 		Auth:         handlers.AuthHandler{Repo: s.UserRepo},
 		Conversation: handlers.ConversationHandler{Repo: s.ConversationRepo},
 		Message:      handlers.MessageHandler{Repo: s.MessageRepo},
+		Friendship:   handlers.FriendshipHandler{Repo: s.FriendshipRepo},
 
 		Websocket: handlers.WebsocketHandler{
 			Hub:              s.Hub,

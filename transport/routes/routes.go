@@ -37,6 +37,7 @@ func SetupRoutes(handlers *handlers.Handlers, server *server.Server) *gin.Engine
 	InitializeWebsocketRoutes(mainRouter, handlers, server)
 	InitializeConversationRoutes(mainRouter, handlers, server)
 	InitializeMessageRoutes(mainRouter, handlers, server)
+	InitializeFriendshipRoutes(mainRouter, handlers, server)
 
 	mainRouter.GET("/status", func(c *gin.Context) {
 		c.JSON(200, gin.H{

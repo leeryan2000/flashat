@@ -23,6 +23,7 @@ type Server struct {
 	UserRepo         *repo.GormUserRepo
 	ConversationRepo *repo.PgxConversationRepo
 	MessageRepo      *repo.PgxMessageRepo
+	FriendshipRepo   *repo.PgxFriendshipRepo
 }
 
 // ***** Test
@@ -74,6 +75,7 @@ func StartServer() (*Server, error) {
 	s.UserRepo = &repo.GormUserRepo{DB: s.DB}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}
 	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
+	s.FriendshipRepo = &repo.PgxFriendshipRepo{Pool: s.Pool}
 
 	RunPeriodicTask(func() {
 		checkClients(s)

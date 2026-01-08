@@ -6,4 +6,5 @@ type Handlers struct {
 	Websocket    WebsocketHandler
 	Conversation ConversationHandler
 	Message      MessageHandler
+	Friendship   FriendshipHandler
 }

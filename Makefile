@@ -20,3 +20,6 @@ migrate_up:
 
 migrate_down:
 	./migrate.sh down -all
+
+migrate:
+	migrate -path db/migrations -database "postgres://dev:dev@localhost:5432/dev?sslmode=disable" version
