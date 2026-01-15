@@ -11,11 +11,14 @@ import (
 
 type PgxFriendshipRepo struct {
 	Pool *pgxpool.Pool
+
+	convRepo *PgxConversationRepo
+	msgRepo  *PgxMessageRepo
 }
 
 func (r *PgxFriendshipRepo) RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) error {
 	// Implementation for requesting friendship using pgx
-	_, err := r.Pool.Exec(ctx, `
+	tag, err := r.Pool.Exec(ctx, `
 		INSERT INTO friendships (requester_uid, receiver_uid, status)
 		SELECT
 			$1,
@@ -23,6 +26,7 @@ func (r *PgxFriendshipRepo) RequestFriendship(ctx context.Context, requesterUID 
 			'pending'
 		FROM users u
 		WHERE u.email = $2
+		AND u.uid <> $1
 		AND NOT EXISTS (
 			SELECT 1 FROM friendships f
 			WHERE (f.requester_uid = $1 AND f.receiver_uid = u.uid)
@@ -32,32 +36,47 @@ func (r *PgxFriendshipRepo) RequestFriendship(ctx context.Context, requesterUID 
 		requesterUID, email,
 	)
 
+	if tag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
 	return err
 }
 
 // Transaction: for making sure the conversation is created only if friendship is accepted
-func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {
+func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.Conversation, msg *models.Message, requesterUID, receiverUID uuid.UUID) error {
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	_, err = tx.Exec(ctx, `
+	_, err = r.Pool.Exec(ctx, `
 		UPDATE friendships
 		SET status = 'accepted'
 		WHERE requester_uid = $1 AND receiver_uid = $2 AND status = 'pending'`,
 		requesterUID, receiverUID,
 	)
+	if err != nil {
+		return err
+	}
+
 	// ***** creation of conversation
+	err = r.convRepo.CreateDirectConversationWithTx(ctx, conv, tx, requesterUID, receiverUID)
+	if err != nil {
+		return err
+	}
 
 	// ***** create message: "I have accepted your friend request"
-
-	// ***** return the conversation info
+	err = r.msgRepo.SaveMessageWithTx(ctx, tx, msg)
+	if err != nil {
+		return err
+	}
 
 	if err = tx.Commit(ctx); err != nil {
 		return err
 	}
+
 	return nil
 }
 

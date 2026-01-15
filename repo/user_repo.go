@@ -8,6 +8,6 @@ import (
 type UserRepo interface {
 	CreateUser(user *models.User) error
 	GetAllUsers() ([]models.User, error)
-	GetUserByUid(uid uuid.UUID) (*models.User, error)
+	GetUserByUID(uid uuid.UUID) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 }

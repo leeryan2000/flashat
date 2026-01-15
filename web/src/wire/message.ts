@@ -6,6 +6,7 @@ export type MsgDto = {
   seq: number;
   from_uid: string;
   created_at: number;
+  // ***** if different type for message wanted, add Type field here
   body: {
     text: string;
   };
@@ -20,6 +21,7 @@ export const dtoToMessage = (w: MsgDto): Message => ({
   text: w.body?.text ?? "", // safely get text from body
 });
 
+// ***** if the message is not text, think about how to handle it
 export const jsonToMessage = (json: any): Message => ({
   id: json.server_msg_id,
   convId: json.conversation_id,

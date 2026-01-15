@@ -20,7 +20,7 @@ func (m *UserRepoMock) GetAllUsers() ([]models.User, error) {
 	return args.Get(0).([]models.User), args.Error(1)
 }
 
-func (m *UserRepoMock) GetUserByUid(uid uuid.UUID) (*models.User, error) {
+func (m *UserRepoMock) GetUserByUID(uid uuid.UUID) (*models.User, error) {
 	args := m.Called(uid)
 	user, ok := args.Get(0).(*models.User)
 	if !ok {

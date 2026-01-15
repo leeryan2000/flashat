@@ -136,6 +136,8 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 	if err != nil {
 		return err
 	}
+
+	// ***** cache: apply cache for the participantlist
 	// retrieve participants from conversation using convID
 	participants, err := s.ConversationRepo.ListParticipantByID(ctx, conversationID)
 	if err != nil {

@@ -20,7 +20,7 @@ func (r *GormUserRepo) GetAllUsers() ([]models.User, error) {
 	return users, err
 }
 
-func (r *GormUserRepo) GetUserByUid(uid uuid.UUID) (*models.User, error) {
+func (r *GormUserRepo) GetUserByUID(uid uuid.UUID) (*models.User, error) {
 	user := &models.User{}
 	err := r.DB.First(&user, "uid = ?", uid).Error
 	return user, err

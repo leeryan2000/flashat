@@ -11,7 +11,7 @@ type FriendshipRepo interface {
 	// Methods for managing friendships would go here
 	RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) error
 
-	AcceptFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
+	AcceptFriendship(ctx context.Context, conv *models.Conversation, msg *models.Message, requesterUID, receiverUID uuid.UUID) error
 
 	DeleteFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
 

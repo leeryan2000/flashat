@@ -1,13 +1,18 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type FriendshipHandler struct {
-	Repo repo.FriendshipRepo
+	Repo     repo.FriendshipRepo
+	UserRepo repo.UserRepo
 }
 
 func (h *FriendshipHandler) RequestFriendship(c *gin.Context) {
@@ -59,14 +64,49 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		return
 	}
 
-	err = h.Repo.AcceptFriendship(c.Request.Context(), requesterUID, uid)
+	conv := &models.Conversation{
+		ID:   uuid.New(),
+		Type: "direct",
+	}
+
+	initialText := "I have accepted your friend request."
+
+	msg := &models.Message{
+		ID:             uuid.New(),
+		ConversationID: conv.ID,
+		FromUID:        uid,
+		Body:           json.RawMessage(`{"text":"` + initialText + `"}`),
+	}
+
+	err = h.Repo.AcceptFriendship(c.Request.Context(), conv, msg, requesterUID, uid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to accept friendship"})
 		return
 	}
 
+	// Retreive friend's profile info
+	friendProfile, err := h.UserRepo.GetUserByUID(requesterUID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get friend profile"})
+		return
+	}
+
+	convSummary := &wire.Conversation{
+		ConversationID: conv.ID,
+		ConvType:       conv.Type,
+		Title:          &friendProfile.Name,
+		AvatarURL:      friendProfile.UserAvatarURL,
+		LastMsgID:      &msg.ID,
+		LastMsgText:    &initialText,
+		LastMsgFrom:    &friendProfile.UID,
+		LastMsgTs:      &msg.CreatedAt,
+		LastSeq:        msg.Seq,
+		LastReadSeq:    0,
+		UnreadCount:    1,
+	}
+
 	// ***** return the created direct conversation information to the client
-	c.JSON(200, gin.H{"message": "Friendship accepted"})
+	c.JSON(200, convSummary)
 }
 
 func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {

@@ -38,7 +38,7 @@ func Authenticate(s *server.Server) gin.HandlerFunc {
 			return
 		}
 
-		user, err := s.UserRepo.GetUserByUid(uid)
+		user, err := s.UserRepo.GetUserByUID(uid)
 		if err != nil || user == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 			return

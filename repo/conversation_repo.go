@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/wire"
 )
@@ -26,5 +27,8 @@ type ConversationRepo interface {
 	GetLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) (int64, error)
 
 	// Load conversations
-	GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error)
+	GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.Conversation, error)
+
+	// Functions
+	CreateDirectConversationWithTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error
 }

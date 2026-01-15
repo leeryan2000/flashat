@@ -126,15 +126,7 @@ func (r *PgxConversationRepo) CreateDirectConversationWithTx(ctx context.Context
 		return err
 	}
 
-	if _, err := br.Exec(); err != nil {
-		return err
-	}
-
-	if _, err := br.Exec(); err != nil {
-		return err
-	}
-
-	return nil
+	return br.Close()
 }
 
 func (r *PgxConversationRepo) ListConversationByUID(ctx context.Context, uid uuid.UUID) ([]*models.Conversation, error) {
@@ -259,7 +251,7 @@ func (r *PgxConversationRepo) GetLastReadSeq(ctx context.Context, conversationID
 	return seq, nil
 }
 
-func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error) {
+func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.Conversation, error) {
 	rows, err := r.Pool.Query(ctx, `
 		SELECT
 			c.id        AS conv_id,
@@ -316,10 +308,10 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 	}
 	defer rows.Close()
 
-	var out []*wire.ConversationSummary
+	var out []*wire.Conversation
 
 	for rows.Next() {
-		c := &wire.ConversationSummary{}
+		c := &wire.Conversation{}
 
 		if err := rows.Scan(
 			&c.ConversationID,

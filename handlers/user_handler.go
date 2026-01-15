@@ -71,7 +71,7 @@ func (h UserHandler) GetUserById(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Repo.GetUserByUid(uid)
+	user, err := h.Repo.GetUserByUID(uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
