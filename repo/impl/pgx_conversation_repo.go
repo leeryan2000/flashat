@@ -119,12 +119,6 @@ func (r *PgxConversationRepo) CreateDirectConversationWithTx(ctx context.Context
 
 	br := tx.SendBatch(ctx, batch)
 	defer br.Close()
-
-	// Scan conversation insert result
-	if err := br.QueryRow().Scan(&conv.CreatedAt); err != nil {
-		return err
-	}
-
 	return br.Close()
 }
 
