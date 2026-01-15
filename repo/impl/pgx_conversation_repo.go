@@ -80,61 +80,60 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 	return nil
 }
 
-func (r *PgxConversationRepo) GetOrCreateDirectConversation(ctx context.Context, conv *models.Conversation, uid, targetUID uuid.UUID) error {
+func (r *PgxConversationRepo) CreateDirectConversation(ctx context.Context, conv *models.Conversation, uid, targetUID uuid.UUID) error {
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	// Find if the direct conversation already exists
-	err = tx.QueryRow(ctx, `
-		SELECT id, type, direct_key, created_at
-		FROM conversations
-		WHERE direct_key = $1`,
-		conv.DirectKey,
-	).Scan(&conv.ID, &conv.Type, &conv.DirectKey, &conv.CreatedAt)
+	r.CreateDirectConvresationTx(ctx, conv, tx, uid, targetUID)
 
-	if err == pgx.ErrNoRows {
-		// Not found, create a new direct conversation
-		err = tx.QueryRow(ctx, `
-			INSERT INTO conversations (id, type, direct_key)
-			VALUES ($1, $2, $3)
-			RETURNING id, type, direct_key, created_at`,
-			conv.ID, conv.Type, conv.DirectKey,
-		).Scan(&conv.ID, &conv.Type, &conv.DirectKey, &conv.CreatedAt)
-		if err != nil {
-			return err
-		}
-
-		// add conversation counter
-		_, err = tx.Exec(ctx, `
-			INSERT INTO conversation_counters (conversation_id)
-			VALUES ($1)`,
-			conv.ID,
-		)
-		if err != nil {
-			return err
-		}
-
-		// Add participants to the conversation
-		batch := &pgx.Batch{}
-		batch.Queue(`
-			INSERT INTO conversation_participants (conversation_id, uid)
-			VALUES ($1, $2), ($1, $3)
-			ON CONFLICT (conversation_id, uid) DO NOTHING`,
-			conv.ID, uid, targetUID,
-		)
-		br := tx.SendBatch(ctx, batch)
-		if err = br.Close(); err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err // Some other error occurred
-	}
 	if err = tx.Commit(ctx); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *PgxConversationRepo) CreateDirectConvresationTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error {
+	// Implementation for creating direct conversation using pgx
+	batch := &pgx.Batch{}
+
+	batch.Queue(`
+		INSERT INTO conversations (id, type)
+		VALUES ($1, $2)
+		RETURNING created_at`,
+		conv.ID, conv.Type,
+	)
+
+	batch.Queue(`
+		INSERT INTO conversation_counters (conversation_id)
+		VALUES ($1)`,
+		conv.ID,
+	)
+
+	batch.Queue(`
+		INSERT INTO conversation_participants (conversation_id, uid)
+		VALUES ($1, $2), ($1, $3)`,
+		conv.ID, uid1, uid2,
+	)
+
+	br := tx.SendBatch(ctx, batch)
+	defer br.Close()
+
+	// Scan conversation insert result
+	if err := br.QueryRow().Scan(&conv.CreatedAt); err != nil {
+		return err
+	}
+
+	if _, err := br.Exec(); err != nil {
+		return err
+	}
+
+	if _, err := br.Exec(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

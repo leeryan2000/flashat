@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
-	"github.com/leeryan2000/flashat/utils"
 )
 
 type ConversationHandler struct {
@@ -97,18 +97,21 @@ func (h *ConversationHandler) GetOrCreateDirectConversation(c *gin.Context) {
 		return
 	}
 
-	directKey := utils.CanonDirectKey(uidStr, input.TargetUID)
+	// directKey := utils.CanonDirectKey(uidStr, input.TargetUID)
 	conv := &models.Conversation{
-		ID:        uuid.New(),
-		Type:      "direct",
-		DirectKey: &directKey,
+		ID:   uuid.New(),
+		Type: "direct",
+		// DirectKey: &directKey,
 	}
 
-	err = h.Repo.GetOrCreateDirectConversation(c.Request.Context(), conv, uid, targetUID)
+	err = h.Repo.CreateDirectConversation(c.Request.Context(), conv, uid, targetUID)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to get or create direct conversation"})
+		log.Println(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create direct conversation"})
 		return
 	}
+
+	log.Println(conv.CreatedAt, " Conversation Created")
 
 	c.JSON(http.StatusOK, conv)
 }
