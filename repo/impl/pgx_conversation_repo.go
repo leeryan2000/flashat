@@ -87,7 +87,7 @@ func (r *PgxConversationRepo) CreateDirectConversation(ctx context.Context, conv
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	r.CreateDirectConvresationTx(ctx, conv, tx, uid, targetUID)
+	err = r.CreateDirectConversationWithTx(ctx, conv, tx, uid, targetUID)
 
 	if err = tx.Commit(ctx); err != nil {
 		return err
@@ -95,7 +95,7 @@ func (r *PgxConversationRepo) CreateDirectConversation(ctx context.Context, conv
 	return nil
 }
 
-func (r *PgxConversationRepo) CreateDirectConvresationTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error {
+func (r *PgxConversationRepo) CreateDirectConversationWithTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error {
 	// Implementation for creating direct conversation using pgx
 	batch := &pgx.Batch{}
 
