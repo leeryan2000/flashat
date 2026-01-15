@@ -22,7 +22,6 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	// conversations: id, type, direct_key(NULL), created_at (default)
 	err = tx.QueryRow(ctx, `
 		INSERT INTO conversations (id, type, group_name, group_avatar_url)
 		VALUES ($1, $2, $3, $4)
@@ -131,7 +130,7 @@ func (r *PgxConversationRepo) CreateDirectConversationWithTx(ctx context.Context
 
 func (r *PgxConversationRepo) ListConversationByUID(ctx context.Context, uid uuid.UUID) ([]*models.Conversation, error) {
 	rows, err := r.Pool.Query(ctx, `
-		SELECT c.id, c.type, c.direct_key, c.group_name, c.created_at
+		SELECT c.id, c.type, c.group_name, c.created_at
 		FROM conversations c
 		JOIN conversation_participants cp ON c.id = cp.conversation_id
 		WHERE cp.uid = $1`,
@@ -146,7 +145,7 @@ func (r *PgxConversationRepo) ListConversationByUID(ctx context.Context, uid uui
 	var convs []*models.Conversation
 	for rows.Next() {
 		conv := &models.Conversation{}
-		if err := rows.Scan(&conv.ID, &conv.Type, &conv.DirectKey, &conv.GroupName, &conv.CreatedAt); err != nil {
+		if err := rows.Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.CreatedAt); err != nil {
 			return nil, err
 		}
 		convs = append(convs, conv)
@@ -158,11 +157,11 @@ func (r *PgxConversationRepo) ListConversationByUID(ctx context.Context, uid uui
 func (r *PgxConversationRepo) GetConversationByID(ctx context.Context, conversationID uuid.UUID) (*models.Conversation, error) {
 	conv := &models.Conversation{}
 	err := r.Pool.QueryRow(ctx, `
-		SELECT id, type, direct_key, group_name, created_at
+		SELECT id, type, group_name, created_at
 		FROM conversations
 		WHERE id = $1`,
 		conversationID,
-	).Scan(&conv.ID, &conv.Type, &conv.DirectKey, &conv.GroupName, &conv.CreatedAt)
+	).Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.CreatedAt)
 
 	if err != nil {
 		return nil, err
