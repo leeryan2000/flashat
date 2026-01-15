@@ -71,7 +71,7 @@ type directInput struct {
 	TargetUID string `json:"target_uid"` // UID of the target user
 }
 
-func (h *ConversationHandler) GetOrCreateDirectConversation(c *gin.Context) {
+func (h *ConversationHandler) CreateDirectConversation(c *gin.Context) {
 	// get the uid saved from auth
 	uidStr := c.GetString("uid")
 	uid, err := uuid.Parse(uidStr)
@@ -97,11 +97,9 @@ func (h *ConversationHandler) GetOrCreateDirectConversation(c *gin.Context) {
 		return
 	}
 
-	// directKey := utils.CanonDirectKey(uidStr, input.TargetUID)
 	conv := &models.Conversation{
 		ID:   uuid.New(),
 		Type: "direct",
-		// DirectKey: &directKey,
 	}
 
 	err = h.Repo.CreateDirectConversation(c.Request.Context(), conv, uid, targetUID)

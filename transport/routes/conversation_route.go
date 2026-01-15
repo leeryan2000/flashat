@@ -13,7 +13,7 @@ func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers,
 	conversationRoutes.Use(middleware.Authenticate(s))
 
 	conversationRoutes.POST("/group", ch.CreateGroupConversation)
-	conversationRoutes.POST("/direct", ch.GetOrCreateDirectConversation)
+	conversationRoutes.POST("/direct", ch.CreateDirectConversation)
 
 	conversationRoutes.GET("/", ch.ListConversationByUID)
 	conversationRoutes.GET("/:conversation_id", ch.GetConversationByID)
