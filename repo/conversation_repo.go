@@ -31,4 +31,5 @@ type ConversationRepo interface {
 
 	// Functions
 	CreateDirectConversationWithTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error
+	RemoveConversationWithTx(ctx context.Context, tx pgx.Tx, uid1, uid2 uuid.UUID) error
 }

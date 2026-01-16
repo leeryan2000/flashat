@@ -61,13 +61,11 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 		return err
 	}
 
-	// ***** creation of conversation
 	err = r.convRepo.CreateDirectConversationWithTx(ctx, conv, tx, requesterUID, receiverUID)
 	if err != nil {
 		return err
 	}
 
-	// ***** create message: "I have accepted your friend request"
 	err = r.msgRepo.SaveMessageWithTx(ctx, tx, msg)
 	if err != nil {
 		return err
@@ -80,15 +78,32 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 	return nil
 }
 
+// ***** continue: remove the conversation after deletion of friendship
 func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {
 	// Implementation for deleting friendship using pgx
-	_, err := r.Pool.Exec(ctx, `
+	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	_, err = tx.Exec(ctx, `
 		DELETE FROM friendships
 		WHERE (requester_uid = $1 AND receiver_uid = $2)
 		   OR (requester_uid = $2 AND receiver_uid = $1)`,
 		requesterUID, receiverUID,
 	)
-	return err
+
+	err = r.convRepo.RemoveConversationWithTx(ctx, tx, requesterUID, receiverUID)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *PgxFriendshipRepo) BlockUser(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {

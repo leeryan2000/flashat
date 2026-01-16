@@ -330,3 +330,21 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 	}
 	return out, nil
 }
+
+func (r *PgxConversationRepo) RemoveConversationWithTx(ctx context.Context, tx pgx.Tx, uid1, uid2 uuid.UUID) error {
+	_, err := tx.Exec(ctx, `
+		DELETE FROM conversations 
+		WHERE id IN(
+			SELECT p1.conversation_id
+			FROM conversation_participants p1
+			JOIN conversation_participants p2 ON p1.conversation_id = p2.conversation_id
+			JOIN conversations c ON p1.conversation_id = c.id
+			WHERE p1.uid = $1        -- User 1 is in it
+			AND p2.uid = $2         -- User 2 is in it
+			AND c.type = 'direct'   -- It is a 1-on-1 chat
+			LIMIT 1
+		);`,
+		uid1, uid2,
+	)
+	return err
+}
