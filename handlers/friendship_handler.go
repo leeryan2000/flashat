@@ -133,6 +133,30 @@ func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Friendship deleted"})
 }
 
+func (h *FriendshipHandler) RejectFriendship(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Parse UID failed"})
+		return
+	}
+
+	friendUIDstr := c.Param("friend_uid")
+	friendUID, err := uuid.Parse(friendUIDstr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid friend UID"})
+		return
+	}
+
+	err = h.Repo.RejectFriendship(c.Request.Context(), friendUID, uid)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to reject friendship"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Friendship request rejected"})
+}
+
 func (h *FriendshipHandler) BlockUser(c *gin.Context) {
 }
 

@@ -79,7 +79,7 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 }
 
 // ***** continue: remove the conversation after deletion of friendship
-func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {
+func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, uid1, uid2 uuid.UUID) error {
 	// Implementation for deleting friendship using pgx
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -91,10 +91,10 @@ func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, requesterUID, 
 		DELETE FROM friendships
 		WHERE (requester_uid = $1 AND receiver_uid = $2)
 		   OR (requester_uid = $2 AND receiver_uid = $1)`,
-		requesterUID, receiverUID,
+		uid1, uid2,
 	)
 
-	err = r.convRepo.RemoveConversationWithTx(ctx, tx, requesterUID, receiverUID)
+	err = r.convRepo.RemoveConversationWithTx(ctx, tx, uid1, uid2)
 	if err != nil {
 		return err
 	}
@@ -104,6 +104,16 @@ func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, requesterUID, 
 	}
 
 	return nil
+}
+
+func (r *PgxFriendshipRepo) RejectFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {
+	// Implementation for rejecting friendship using pgx
+	_, err := r.Pool.Exec(ctx, `
+		DELETE FROM friendships
+		WHERE requester_uid = $1 AND receiver_uid = $2 AND status = 'pending'`,
+		requesterUID, receiverUID,
+	)
+	return err
 }
 
 func (r *PgxFriendshipRepo) BlockUser(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {

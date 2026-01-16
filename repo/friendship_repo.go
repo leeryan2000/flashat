@@ -13,13 +13,15 @@ type FriendshipRepo interface {
 
 	AcceptFriendship(ctx context.Context, conv *models.Conversation, msg *models.Message, requesterUID, receiverUID uuid.UUID) error
 
-	DeleteFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
+	DeleteFriendship(ctx context.Context, uid1, uid2 uuid.UUID) error
 
-	BlockUser(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
+	RejectFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
+
+	BlockUser(ctx context.Context, uid1, uid2 uuid.UUID) error
 
 	ListFriendships(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error)
 
 	ListFriendshipRequests(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error)
 
-	GetFriendshipStatus(ctx context.Context, userAUID, userBUID uuid.UUID) (string, error)
+	GetFriendshipStatus(ctx context.Context, uid1, uid2 uuid.UUID) (string, error)
 }
