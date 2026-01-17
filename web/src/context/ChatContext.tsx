@@ -12,6 +12,7 @@ import { api } from "../api/api";
 import { toConversation, type ConvDto, type Conversation } from "../wire/conversation";
 import { dtoToMessage, jsonToMessage, type Message, type MsgDto } from "../wire/message";
 import { useWebSocket } from "./WebSocketContext";
+import { applyAckedMsgToMsgState, applyMsgToConvState, getSortedConvIds, } from "../utils/chatHelpers";
 // create types that match exactly what the server passed in
 
 export type ConvState = {
@@ -155,61 +156,22 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const jsonMsg = JSON.parse(lastMsg);
 
     if (jsonMsg.type === "ack") {
+
       const { conversation_id, client_msg_id, seq, id } = jsonMsg;
       setMsgs((prev) => {
-        const prevSlice = prev[conversation_id];
-        if (!prevSlice) return prev; // no such conversation
-
-        const msgToPromote = prevSlice.pendingEntities[client_msg_id];
-        if (!msgToPromote) return prev; // no such pending message
-
-        // set the acked message with server seq and id
-        const ackedMsg: Message = { ...msgToPromote, status: "sent", seq, id };
-        // Remove from pending
-        const { [client_msg_id]: removed, ...remainingPendingEntities } =
-          prevSlice.pendingEntities;
-
-        const newSlice: MsgSlice = {
-          order: [...prevSlice.order, ackedMsg.seq!],
-          entities: { ...prevSlice.entities, [ackedMsg.seq!]: ackedMsg },
-          pendingOrder: prevSlice.pendingOrder.filter(
-            (id) => id !== client_msg_id
-          ),
-          pendingEntities: remainingPendingEntities,
-        };
-
-        return { ...prev, [conversation_id]: newSlice };
+        return applyAckedMsgToMsgState(prev, conversation_id, client_msg_id, seq, id);
       });
+
     } else if (jsonMsg.type === "chat") {
       const msg = jsonToMessage(jsonMsg);
       loadMsgs([msg]);
-
       setConvs((prev) => {
-        const conv = prev.entities[msg.convId];
-        if (!conv) return prev;
-        const isMyMsg = msg.fromUid === user?.uid;
-        const isSelected = activeConvId === msg.convId;
-        // Increment unread if it's not my message and I'm not looking at it
-        const newUnread =
-          !isMyMsg && !isSelected ? conv.unreadCount + 1 : conv.unreadCount;
-        const updatedConv = {
-          ...conv,
-          lastMsgText: msg.text,
-          lastMsgTs: msg.ts,
-          lastMsgFrom: msg.fromUid,
-          unreadCount: newUnread,
-          lastSeq: msg.seq ?? conv.lastSeq,
-        };
-
-        const newEntities = { ...prev.entities, [msg.convId]: updatedConv };
-
-        // Re-sort: Move this conversation to the top
-        const newOrder = getSortedConvIds(newEntities);
-
-        return { entities: newEntities, order: newOrder };
+        return applyMsgToConvState(prev, msg, user?.uid || "", activeConvId || "");
       });
     }
   }, [lastMsg, user]);
+
+  
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
@@ -391,11 +353,3 @@ export function useChat() {
   return context;
 }
 
-function getSortedConvIds(entities: Record<string, Conversation>): string[] {
-  return Object.values(entities)
-    .sort((a, b) => {
-      const diff = (b.lastMsgTs ?? 0) - (a.lastMsgTs ?? 0);
-      return diff !== 0 ? diff : a.id.localeCompare(b.id);
-    })
-    .map((c) => c.id);
-}

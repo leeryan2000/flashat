@@ -7,9 +7,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
+	"github.com/leeryan2000/flashat/server"
 )
 
 type FriendshipHandler struct {
+	Hub      server.Hub
 	Repo     repo.FriendshipRepo
 	UserRepo repo.UserRepo
 }
