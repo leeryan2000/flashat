@@ -20,5 +20,4 @@ func InitializeFriendshipRoutes(router *gin.RouterGroup, h *handlers.Handlers, s
 	friendshipRoutes.POST("/block/:uid", frh.BlockUser)
 
 	friendshipRoutes.GET("/", frh.ListFriendships)
-	friendshipRoutes.GET("/requests", frh.ListFriendshipRequests)
 }
