@@ -1,4 +1,15 @@
-import type { Message } from "../context/ChatContext";
+export type Message = {
+  convId: string;
+  fromUid: string;
+  clientMsgId?: string;
+  ts: number; // used to order message when pending, updated from with server timestamp after acked
+
+  id?: string; // server message id
+  seq?: number; // server sequence number
+
+  text?: string;
+  status?: "sending" | "failed" | "sent"; // local only
+};
 
 export type MsgDto = {
   id: string;

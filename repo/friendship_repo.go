@@ -21,7 +21,5 @@ type FriendshipRepo interface {
 
 	ListFriendships(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error)
 
-	ListFriendshipRequests(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error)
-
 	GetFriendshipStatus(ctx context.Context, uid1, uid2 uuid.UUID) (string, error)
 }

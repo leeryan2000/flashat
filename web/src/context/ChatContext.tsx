@@ -9,48 +9,18 @@ import {
 } from "react";
 import { useAuth } from "./AuthContext";
 import { api } from "../api/api";
-import { toConversation, type ConvDto } from "../wire/conversation";
-import { dtoToMessage, jsonToMessage, type MsgDto } from "../wire/message";
+import { toConversation, type ConvDto, type Conversation } from "../wire/conversation";
+import { dtoToMessage, jsonToMessage, type Message, type MsgDto } from "../wire/message";
 import { useWebSocket } from "./WebSocketContext";
 // create types that match exactly what the server passed in
-
-export type Conversation = {
-  id: string;
-  type: "group" | "direct";
-
-  title: string;
-  avatarUrl?: string | null;
-  lastMsgId?: string;
-  lastMsgText?: string;
-  lastMsgFrom?: string;
-  // the timestamp in database are timestampz match it
-  lastMsgTs?: number;
-
-  // 0 if no messages, sequence number of the last message
-  lastSeq: number;
-
-  // Last read sequence number for this conversation
-  lastReadSeq: number;
-  unreadCount: number;
-};
 
 export type ConvState = {
   order: string[]; // the order of conversation ids, sorted by timestamp of last message
   entities: Record<string, Conversation>;
 };
 
-export type Message = {
-  convId: string;
-  fromUid: string;
-  clientMsgId?: string;
-  ts: number; // used to order message when pending, updated from with server timestamp after acked
-
-  id?: string; // server message id
-  seq?: number; // server sequence number
-
-  text?: string;
-  status?: "sending" | "failed" | "sent"; // local only
-};
+// Messages stored by conversation id
+export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
 
 export type MsgSlice = {
   order: number[]; // ordered message seq
@@ -58,9 +28,6 @@ export type MsgSlice = {
   pendingOrder: string[]; // ordered client message ids
   pendingEntities: Record<string, Message>;
 };
-
-// Messages stored by conversation id
-export type MsgState = Record<string, MsgSlice>; // convId -> MsgSlice
 
 interface ChatContext {
   convs: ConvState;

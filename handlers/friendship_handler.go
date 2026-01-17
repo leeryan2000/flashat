@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
-	"github.com/leeryan2000/flashat/wire"
 )
 
 type FriendshipHandler struct {
@@ -91,7 +90,7 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		return
 	}
 
-	convSummary := &wire.Conversation{
+	convSummary := &models.ConversationSummary{
 		ConversationID: conv.ID,
 		ConvType:       conv.Type,
 		Title:          &friendProfile.Name,
@@ -175,23 +174,6 @@ func (h *FriendshipHandler) ListFriendships(c *gin.Context) {
 	}
 
 	c.JSON(200, friendUIDs)
-}
-
-func (h *FriendshipHandler) ListFriendshipRequests(c *gin.Context) {
-	uidStr := c.GetString("uid")
-	uid, err := uuid.Parse(uidStr)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Parse UID failed"})
-		return
-	}
-
-	requests, err := h.Repo.ListFriendshipRequests(c.Request.Context(), uid)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to list friendship requests"})
-		return
-	}
-
-	c.JSON(200, requests)
 }
 
 func (h *FriendshipHandler) GetFriendshipStatus(c *gin.Context) {

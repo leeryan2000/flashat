@@ -1,4 +1,22 @@
-import type { Conversation } from "../context/ChatContext";
+export type Conversation = {
+  id: string;
+  type: "group" | "direct";
+
+  title: string;
+  avatarUrl?: string | null;
+  lastMsgId?: string;
+  lastMsgText?: string;
+  lastMsgFrom?: string;
+  // the timestamp in database are timestampz match it
+  lastMsgTs?: number;
+
+  // 0 if no messages, sequence number of the last message
+  lastSeq: number;
+
+  // Last read sequence number for this conversation
+  lastReadSeq: number;
+  unreadCount: number;
+};
 
 export type ConvDto = {
   id: string;

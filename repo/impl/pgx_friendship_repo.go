@@ -146,15 +146,13 @@ func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) 
 				AND p2.uid = u.uid     -- Friend is in it
 				AND c.type = 'direct'      -- It is a 1-on-1 chat (Important!)
 				LIMIT 1
-			) AS conversation_id
-
+			) AS conversation_id,
+			f.status
 		FROM users u
 		JOIN friendships f ON 
 			(f.requester_uid = $1 AND f.receiver_uid = u.uid)
 			OR 
-			(f.receiver_uid = $1 AND f.requester_uid = u.uid)
-		WHERE 
-			f.status = 'accepted';`,
+			(f.receiver_uid = $1 AND f.requester_uid = u.uid);`,
 		uid,
 	)
 	if err != nil {
@@ -165,41 +163,12 @@ func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) 
 	var friends []models.Friendship
 	for rows.Next() {
 		var friend models.Friendship
-		if err := rows.Scan(&friend.UID, &friend.Name, &friend.AvatarURL, &friend.Email, &friend.DirectConversationID); err != nil {
+		if err := rows.Scan(&friend.UID, &friend.Name, &friend.AvatarURL, &friend.Email, &friend.DirectConversationID, &friend.Status); err != nil {
 			return nil, err
 		}
 		friends = append(friends, friend)
 	}
 	return friends, nil
-}
-
-func (r *PgxFriendshipRepo) ListFriendshipRequests(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error) {
-	rows, err := r.Pool.Query(ctx, `
-		SELECT 
-			u.uid,
-			u.name AS name,
-			u.user_avatar_url,
-			u.email
-		FROM users u
-		JOIN friendships f ON f.requester_uid = u.uid
-		WHERE 
-			f.receiver_uid = $1 AND f.status = 'pending';`,
-		uid,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var requests []models.Friendship
-	for rows.Next() {
-		var requester models.Friendship
-		if err := rows.Scan(&requester.UID, &requester.Name, &requester.AvatarURL, &requester.Email); err != nil {
-			return nil, err
-		}
-		requests = append(requests, requester)
-	}
-	return requests, nil
 }
 
 func (r *PgxFriendshipRepo) GetFriendshipStatus(ctx context.Context, userAUID, userBUID uuid.UUID) (string, error) {

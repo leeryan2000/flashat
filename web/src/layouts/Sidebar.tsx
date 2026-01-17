@@ -12,6 +12,12 @@ export default function Sidebar() {
           Chat
         </Link>
         <Link
+          to="friends"
+          className="block rounded-lg px-3 py-2 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] transition"
+        >
+          friends
+        </Link>
+        <Link
           to="profile"
           className="block rounded-lg px-3 py-2 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] transition"
         >

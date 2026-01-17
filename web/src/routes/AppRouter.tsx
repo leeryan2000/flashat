@@ -9,6 +9,7 @@ import Layout from "../layouts/Layout";
 import { PATHS } from "./paths";
 import { ChatProvider } from "../context/ChatContext";
 import { WebSocketProvider } from "../context/WebSocketContext";
+import Friends from "../pages/Friends";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,6 +36,7 @@ export default function AppRouter() {
           }
         >
           <Route index element={<Chat />} />
+          <Route path="friends" element={<Friends />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
         </Route>
