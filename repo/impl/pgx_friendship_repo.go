@@ -144,10 +144,14 @@ func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) 
 				JOIN conversations c ON p1.conversation_id = c.id
 				WHERE p1.uid = $1        -- You are in it
 				AND p2.uid = u.uid     -- Friend is in it
-				AND c.type = 'direct'      -- It is a 1-on-1 chat (Important!)
+				AND c.type = 'direct'      -- It is a 1-on-1 chat
 				LIMIT 1
 			) AS conversation_id,
-			f.status
+			f.status,
+			CASE
+				WHEN f.requester_uid = $1 THEN 'outgoing'
+				ELSE 'incoming'
+			END AS direction
 		FROM users u
 		JOIN friendships f ON 
 			(f.requester_uid = $1 AND f.receiver_uid = u.uid)
@@ -163,7 +167,7 @@ func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) 
 	var friends []models.Friendship
 	for rows.Next() {
 		var friend models.Friendship
-		if err := rows.Scan(&friend.UID, &friend.Name, &friend.AvatarURL, &friend.Email, &friend.DirectConversationID, &friend.Status); err != nil {
+		if err := rows.Scan(&friend.UID, &friend.Name, &friend.AvatarURL, &friend.Email, &friend.DirectConversationID, &friend.Status, &friend.Direction); err != nil {
 			return nil, err
 		}
 		friends = append(friends, friend)
