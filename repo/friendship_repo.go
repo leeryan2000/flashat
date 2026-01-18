@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type FriendshipRepo interface {
@@ -19,7 +20,7 @@ type FriendshipRepo interface {
 
 	BlockUser(ctx context.Context, uid1, uid2 uuid.UUID) error
 
-	ListFriendships(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error)
+	ListFriendships(ctx context.Context, uid uuid.UUID) ([]wire.Friendship, error)
 
 	GetFriendshipStatus(ctx context.Context, uid1, uid2 uuid.UUID) (string, error)
 }

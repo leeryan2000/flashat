@@ -8,6 +8,7 @@ import (
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/server"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type FriendshipHandler struct {
@@ -92,7 +93,7 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		return
 	}
 
-	convSummary := &models.ConversationSummary{
+	convSummary := &wire.Conversation{
 		ConversationID: conv.ID,
 		ConvType:       conv.Type,
 		Title:          &friendProfile.Name,

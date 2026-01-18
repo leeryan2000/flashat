@@ -1,4 +1,4 @@
-package models
+package wire
 
 import "github.com/google/uuid"
 

@@ -1,11 +1,11 @@
-package models
+package wire
 
 import (
 	"github.com/google/uuid"
 )
 
 // conversation summary
-type ConversationSummary struct {
+type Conversation struct {
 	ConversationID uuid.UUID `json:"id"`
 	ConvType       string    `json:"type"` // group | direct
 	// fields that are possible being null

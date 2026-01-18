@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type PgxConversationRepo struct {
@@ -243,7 +244,7 @@ func (r *PgxConversationRepo) GetLastReadSeq(ctx context.Context, conversationID
 	return seq, nil
 }
 
-func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*models.ConversationSummary, error) {
+func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.Conversation, error) {
 	rows, err := r.Pool.Query(ctx, `
 		SELECT
 			c.id        AS conv_id,
@@ -300,10 +301,10 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 	}
 	defer rows.Close()
 
-	var out []*models.ConversationSummary
+	var out []*wire.Conversation
 
 	for rows.Next() {
-		c := &models.ConversationSummary{}
+		c := &wire.Conversation{}
 
 		if err := rows.Scan(
 			&c.ConversationID,

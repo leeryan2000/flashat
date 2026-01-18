@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type PgxFriendshipRepo struct {
@@ -128,7 +129,7 @@ func (r *PgxFriendshipRepo) BlockUser(ctx context.Context, requesterUID, receive
 	return err
 }
 
-func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) ([]models.Friendship, error) {
+func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) ([]wire.Friendship, error) {
 	// Implementation for listing friendships using pgx
 	rows, err := r.Pool.Query(ctx, `
 		SELECT 
@@ -164,9 +165,9 @@ func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) 
 	}
 	defer rows.Close()
 
-	var friends []models.Friendship
+	var friends []wire.Friendship
 	for rows.Next() {
-		var friend models.Friendship
+		var friend wire.Friendship
 		if err := rows.Scan(&friend.UID, &friend.Name, &friend.AvatarURL, &friend.Email, &friend.DirectConversationID, &friend.Status, &friend.Direction); err != nil {
 			return nil, err
 		}

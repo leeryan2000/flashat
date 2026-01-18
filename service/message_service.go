@@ -114,8 +114,8 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		Type:           wire.Chat,
 		ConversationID: env.ConversationID,
 		ClientMsgID:    env.ClientMsgID,
-		FromUID:        env.FromUID,
 		ServerMsgID:    msg.ID.String(),
+		FromUID:        env.FromUID,
 		Seq:            msg.Seq, // client seq would be updated with server seq
 		Ts:             msg.CreatedAt,
 		// ***** could create wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
