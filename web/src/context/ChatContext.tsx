@@ -168,7 +168,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       setConvs((prev) => {
         return applyMsgToConvState(prev, msg, user?.uid || "", activeConvId || "");
       });
-    }
+    } 
   }, [lastMsg, user]);
 
   

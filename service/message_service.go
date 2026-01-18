@@ -85,17 +85,8 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 
 	err = s.MessageRepo.SaveMessage(ctx, msg)
 
-	ack := &wire.MsgAck{
-		Status: "sent",
-	}
 	if err != nil {
-		ack.Status = "failed"
 		log.Println("❌ Failed to save message:", err)
-		return err
-	}
-	// make ack json.rawMessage
-	ackJSON, err := json.Marshal(ack)
-	if err != nil {
 		return err
 	}
 
@@ -108,7 +99,6 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq,
 		Ts:             msg.CreatedAt,
-		Body:           ackJSON,
 	}
 
 	ackEnvJSON, err := json.Marshal(ackEnv)
