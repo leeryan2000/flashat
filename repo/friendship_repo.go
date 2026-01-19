@@ -16,7 +16,7 @@ type FriendshipRepo interface {
 
 	DeleteFriendship(ctx context.Context, uid1, uid2 uuid.UUID) error
 
-	RejectFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
+	RemovePendingFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error
 
 	BlockUser(ctx context.Context, uid1, uid2 uuid.UUID) error
 

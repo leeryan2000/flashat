@@ -8,12 +8,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
-	"github.com/leeryan2000/flashat/server"
 	"github.com/leeryan2000/flashat/wire"
 )
 
 type FriendshipHandler struct {
-	Hub      server.Hub
 	Repo     repo.FriendshipRepo
 	UserRepo repo.UserRepo
 }
@@ -157,13 +155,37 @@ func (h *FriendshipHandler) RejectFriendship(c *gin.Context) {
 		return
 	}
 
-	err = h.Repo.RejectFriendship(c.Request.Context(), friendUID, uid)
+	err = h.Repo.RemovePendingFriendship(c.Request.Context(), friendUID, uid)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to reject friendship"})
 		return
 	}
 
 	c.JSON(200, gin.H{"message": "Friendship request rejected"})
+}
+
+func (h *FriendshipHandler) CancelFriendshipRequest(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Parse UID failed"})
+		return
+	}
+
+	friendUIDstr := c.Param("friend_uid")
+	friendUID, err := uuid.Parse(friendUIDstr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid friend UID"})
+		return
+	}
+
+	err = h.Repo.RemovePendingFriendship(c.Request.Context(), uid, friendUID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to cancel friendship request"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Friendship request canceled"})
 }
 
 func (h *FriendshipHandler) BlockUser(c *gin.Context) {
