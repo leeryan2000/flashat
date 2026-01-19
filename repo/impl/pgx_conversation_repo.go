@@ -244,7 +244,7 @@ func (r *PgxConversationRepo) GetLastReadSeq(ctx context.Context, conversationID
 	return seq, nil
 }
 
-func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.Conversation, error) {
+func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error) {
 	rows, err := r.Pool.Query(ctx, `
 		SELECT
 			c.id        AS conv_id,
@@ -301,10 +301,10 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 	}
 	defer rows.Close()
 
-	var out []*wire.Conversation
+	var out []*wire.ConversationSummary
 
 	for rows.Next() {
-		c := &wire.Conversation{}
+		c := &wire.ConversationSummary{}
 
 		if err := rows.Scan(
 			&c.ConversationID,

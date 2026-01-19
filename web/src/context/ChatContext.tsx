@@ -13,6 +13,7 @@ import { toConversation, type ConvDto, type Conversation } from "../wire/convers
 import { dtoToMessage, jsonToMessage, type Message, type MsgDto } from "../wire/message";
 import { useWebSocket } from "./WebSocketContext";
 import { applyAckedMsgToMsgState, applyMsgToConvState, getSortedConvIds, } from "../utils/chatHelpers";
+import { toFriendship, type Friendship, type FriendshipDto } from "../wire/friendship";
 // create types that match exactly what the server passed in
 
 export type ConvState = {
@@ -34,6 +35,7 @@ interface ChatContext {
   convs: ConvState;
   msgs: Record<string, MsgSlice>; // convId -> MsgSlice
   activeConvId: string | null;
+  friendships: Friendship[];
 
   loadConvs: (convs: Conversation[]) => void;
   loadMsgs: (messages: Message[]) => void;
@@ -49,6 +51,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { send, lastMsg, status } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({}); // Messages for the client stored here
+  const [friendships, setFriendships] = useState<Friendship[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
   const hasInitialFetched = useRef(false);
@@ -98,12 +101,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const summaryDto = await api<ConvDto[]>(
-          "/conversation/summary",
-          { signal } as any // to allow the controller.abort to send signal
-        );
+        const [summaryDto, friendshipDto] = await Promise.all([
+          api<ConvDto[]>("/conversation/summary", { signal } as any),
+          api<FriendshipDto[]>("/friendship/", { signal } as any),
+        ]);
         const summary = summaryDto.map(toConversation);
+        const friendships = friendshipDto.map(toFriendship);
         loadConvs(summary);
+        setFriendships(friendships);
+
+
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("Error fetching conversations:", err);
@@ -323,6 +330,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     () => ({
       convs,
       msgs,
+      friendships,
       activeConvId,
       loadConvs,
       loadMsgs,
@@ -333,6 +341,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     [
       convs,
       msgs,
+      friendships,
       activeConvId,
       loadConvs,
       loadMsgs,

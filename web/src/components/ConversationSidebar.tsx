@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import type { Conversation, ConvState } from "../context/ChatContext";
+import type { ConvState } from "../context/ChatContext";
+import type { Conversation } from "../wire/conversation";
 
 
 function timeAgo(ts: number) {

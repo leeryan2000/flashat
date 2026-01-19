@@ -1,7 +1,7 @@
 export type Message = {
   convId: string;
   fromUid: string;
-  clientMsgId?: string;
+  clientMsgId?: string; // Not presersisted on server, only for local pending messages
   ts: number; // used to order message when pending, updated from with server timestamp after acked
 
   id?: string; // server message id

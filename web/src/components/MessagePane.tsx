@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, useLayoutEffect, useEffect } from "react";
 import { useChat, type MsgSlice } from "../context/ChatContext";
 import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
-import type { Message } from "../context/ChatContext";
+import type { Message } from "../wire/message";
 
 type MessagePaneProps = {
   msg: MsgSlice;

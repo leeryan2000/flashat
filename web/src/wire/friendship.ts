@@ -5,6 +5,7 @@ export type Friendship = {
     avatarUrl?: string | null,
     directConversationId?: string,
     status: "pending" | "accepted" | "blocked",
+    direction: "incoming" | "outgoing",
 }
 
 export type FriendshipDto = {
@@ -14,6 +15,7 @@ export type FriendshipDto = {
     avatar_url?: string | null,
     direct_conversation_id?: string,
     status: "pending" | "accepted" | "blocked",
+    direction: "incoming" | "outgoing",
 }
 
 
@@ -24,5 +26,6 @@ export const toFriendship = (w: FriendshipDto): Friendship => ({
     avatarUrl: w.avatar_url ?? null,
     directConversationId: w.direct_conversation_id,
     status: w.status,
+    direction: w.direction,
 }); 
 

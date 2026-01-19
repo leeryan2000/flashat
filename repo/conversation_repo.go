@@ -27,7 +27,7 @@ type ConversationRepo interface {
 	GetLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) (int64, error)
 
 	// Load conversations
-	GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.Conversation, error)
+	GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error)
 
 	// Functions
 	CreateDirectConversationWithTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error
