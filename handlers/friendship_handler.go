@@ -42,9 +42,14 @@ func (h *FriendshipHandler) RequestFriendship(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Friendship request sent"})
 }
 
+type AcceptResponse struct {
+	Conversation wire.ConversationSummary `json:"conversation"`
+	Message      models.Message           `json:"message"`
+}
+
 func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	var input struct {
-		RequesterUID string `json:"requester_uid" binding:"required"`
+		RequesterUIDstr string `json:"uid" binding:"required"`
 	}
 
 	uidStr := c.GetString("uid")
@@ -59,7 +64,7 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		return
 	}
 
-	requesterUID, err := uuid.Parse(input.RequesterUID)
+	requesterUID, err := uuid.Parse(input.RequesterUIDstr)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Invalid requester UID"})
 		return
@@ -112,8 +117,12 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		UnreadCount:    1,
 	}
 
-	// ***** return the created direct conversation information to the client
-	c.JSON(200, convSummary)
+	resp := &AcceptResponse{
+		Conversation: *convSummary,
+		Message:      *msg,
+	}
+
+	c.JSON(200, resp)
 }
 
 func (h *FriendshipHandler) DeleteFriendship(c *gin.Context) {

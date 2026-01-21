@@ -8,6 +8,7 @@ import {
   UserX 
 } from 'lucide-react'; // Assuming you use lucide-react for icons
 import type { Friendship } from '../wire/friendship';
+import { FriendshipOptions } from './FriendshipOptions';
 
 // 1. Define the Data Shape
 
@@ -17,6 +18,7 @@ type FriendsListProps = {
   onAccept: (uid: string) => void;
   onDecline: (uid: string) => void;
   onCancel: (uid: string) => void;
+  onUnfriend: (uid: string) => void;
 }
 
 export default function FriendshipList({ 
@@ -24,7 +26,8 @@ export default function FriendshipList({
   onChatClick, 
   onAccept, 
   onDecline, 
-  onCancel 
+  onCancel,
+  onUnfriend
 }: FriendsListProps) {
   const [query, setQuery] = useState("");
 
@@ -172,12 +175,7 @@ export default function FriendshipList({
                       <MessageSquare size={18} />
                     </button>
                     {/* Optional: Unfriend Button */}
-                    <button 
-                       className="p-2 rounded-lg text-slate-500 hover:bg-slate-600 hover:text-slate-300 transition"
-                       title="More Options"
-                    >
-                       <UserX size={18} />
-                    </button>
+                    <FriendshipOptions onUnfriend={() => onUnfriend(user.uid)} />
                   </div>
                 </div>
               ))}

@@ -42,6 +42,7 @@ interface ChatContext {
   sendMessage: (text: string, convId: string) => void;
   setActiveConvId(id: string | null): void;
   markAsRead(convId: string): void;
+  setFriendships: (friendships: Friendship[]) => void;
 }
 
 const ChatContext = createContext<ChatContext | null>(null);
@@ -337,6 +338,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       setActiveConvId,
       markAsRead,
+      setFriendships
     }),
     [
       convs,
@@ -348,6 +350,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       setActiveConvId,
       markAsRead,
+      setFriendships
     ]
   );
 

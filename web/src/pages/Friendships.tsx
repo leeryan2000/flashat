@@ -1,29 +1,82 @@
 import { useChat } from "../context/ChatContext";
 import FriendshipList from "../components/FriendshipList";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "../routes/paths";
+import { api } from "../api/api";
+import { toConversation as dtoToConversation, type ConvDto } from "../wire/conversation";
+import { dtoToMessage, type MsgDto } from "../wire/message";
+import type { Friendship } from "../wire/friendship";
+
+type AcceptFriendship = {
+  conversation: ConvDto;
+  message: MsgDto;
+};
 
 export default function Friendships() {
-    const { friendships } = useChat();
-    const handleChat = (convId: string) => {
+  const { friendships, setFriendships, setActiveConvId, loadConvs, loadMsgs } =
+    useChat();
+  const navigate = useNavigate();
+
+  const handleChat = (convId: string) => {
+    console.log("Navigating to chat with convId:", convId);
+    setActiveConvId(convId);
+    navigate(PATHS.chat);
+  };
+
+  const handleAccept = async (uid: string) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    (async () => {
+      try {
+        const resp = await api<AcceptFriendship>(`/friendship/accept`, {
+          method: "POST",
+          body: JSON.stringify({
+            uid,
+          }),
+          signal,
+        });
+
+        const newDirectConv = dtoToConversation(resp.conversation);
+        loadConvs([newDirectConv]);
+        const welcomeMsg = dtoToMessage(resp.message);
+        loadMsgs([welcomeMsg]);
         
-    }
+        const updatedList: Friendship[] = friendships.map((friend) => {
+          if (friend.uid === uid) {
+            return { ...friend, status: "accepted" };
+          }
+          return friend;
+        });
+        setFriendships(updatedList);
 
-    const handleAccept = async (uid: string) => {
-    }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Error accepting friendship:", err);
+        }
+      }
+    })();
+  };
 
-    const onDecline = async (uid: string) => {
-    }
+  const onDecline = async (uid: string) => {};
 
-    const onCancel = async (uid: string) => {
-    }
-    return <div className="flex h-screen bg-black">
+  const onCancel = async (uid: string) => {};
+
+  const onUnfriend = async (uid: string) => {
+  };
+
+  return (
+    <div className="flex h-screen bg-black">
       <main className="flex-1 h-full">
-        <FriendshipList 
-           data={friendships}
-           onChatClick={handleChat}
-           onAccept={handleAccept}
-           onDecline={(uid) => console.log("Declined", uid)}
-           onCancel={(uid) => console.log("Cancelled", uid)}
+        <FriendshipList
+          data={friendships}
+          onChatClick={handleChat}
+          onAccept={handleAccept}
+          onDecline={onDecline}
+          onCancel={onCancel}
+          onUnfriend={onUnfriend}
         />
       </main>
     </div>
+  );
 }

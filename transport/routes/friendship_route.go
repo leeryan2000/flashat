@@ -14,6 +14,7 @@ func InitializeFriendshipRoutes(router *gin.RouterGroup, h *handlers.Handlers, s
 
 	friendshipRoutes.POST("/request", frh.RequestFriendship)
 	friendshipRoutes.POST("/accept", frh.AcceptFriendship)
+
 	friendshipRoutes.DELETE("/delete/:friend_uid", frh.DeleteFriendship)
 	friendshipRoutes.DELETE("/reject/:friend_uid", frh.RejectFriendship)
 	friendshipRoutes.DELETE("/cancel/:friend_uid", frh.CancelFriendshipRequest)
