@@ -9,7 +9,7 @@ import Layout from "../layouts/Layout";
 import { PATHS } from "./paths";
 import { ChatProvider } from "../context/ChatContext";
 import { WebSocketProvider } from "../context/WebSocketContext";
-import Friendships from "../pages/Friends";
+import Friendships from "../pages/Friendships";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();

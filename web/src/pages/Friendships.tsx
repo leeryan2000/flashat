@@ -1,5 +1,5 @@
 import { useChat } from "../context/ChatContext";
-import FriendsList from "../components/FriendsList";
+import FriendshipList from "../components/FriendshipList";
 
 export default function Friendships() {
     const { friendships } = useChat();
@@ -17,7 +17,7 @@ export default function Friendships() {
     }
     return <div className="flex h-screen bg-black">
       <main className="flex-1 h-full">
-        <FriendsList 
+        <FriendshipList 
            data={friendships}
            onChatClick={handleChat}
            onAccept={handleAccept}

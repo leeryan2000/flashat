@@ -19,7 +19,7 @@ type FriendsListProps = {
   onCancel: (uid: string) => void;
 }
 
-export default function FriendsList({ 
+export default function FriendshipList({ 
   data, 
   onChatClick, 
   onAccept, 
