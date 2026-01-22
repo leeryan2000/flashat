@@ -1,4 +1,4 @@
-import { MoreVertical, UserX, Trash2 } from 'lucide-react';
+import { MoreVertical, UserX} from 'lucide-react';
 import { useState } from 'react';
 
 // 🛠️ Helper Component for the Dropdown

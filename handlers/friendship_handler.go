@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -106,12 +105,12 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	convSummary := &wire.ConversationSummary{
 		ConversationID: conv.ID,
 		ConvType:       conv.Type,
-		Title:          &friendProfile.Name,
+		Title:          friendProfile.Name,
 		AvatarURL:      friendProfile.UserAvatarURL,
-		LastMsgID:      &msg.ID,
-		LastMsgText:    &initialText,
-		LastMsgFrom:    &friendUID,
-		LastMsgTs:      &msg.CreatedAt,
+		LastMsgID:      msg.ID,
+		LastMsgText:    initialText,
+		LastMsgFrom:    friendUID,
+		LastMsgTs:      msg.CreatedAt,
 		LastSeq:        msg.Seq,
 		LastReadSeq:    0,
 		UnreadCount:    1,
@@ -213,8 +212,6 @@ func (h *FriendshipHandler) ListFriendships(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Failed to list friendships"})
 		return
 	}
-
-	log.Println("Friend UIDs:", friendUIDs)
 
 	c.JSON(200, friendUIDs)
 }

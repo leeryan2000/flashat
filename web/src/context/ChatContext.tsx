@@ -43,6 +43,7 @@ interface ChatContext {
   setActiveConvId(id: string | null): void;
   markAsRead(convId: string): void;
   setFriendships: (friendships: Friendship[]) => void;
+  removeConv: (convId: string) => void;
 }
 
 const ChatContext = createContext<ChatContext | null>(null);
@@ -103,11 +104,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const [summaryDto, friendshipDto] = await Promise.all([
-          api<ConvDto[]>("/conversation/summary", { signal } as any),
-          api<FriendshipDto[]>("/friendship/", { signal } as any),
+          api<ConvDto[]>("/conversation/summary", { signal }),
+          api<FriendshipDto[]>("/friendship/", { signal }),
         ]);
-        const summary = summaryDto.map(toConversation);
-        const friendships = friendshipDto.map(toFriendship);
+        const summary = (summaryDto || []).map(toConversation);
+        const friendships = (friendshipDto || []).map(toFriendship);
         loadConvs(summary);
         setFriendships(friendships);
 
@@ -138,7 +139,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         try {
           const msgDto = await api<MsgDto[]>(
             `/message/latest/${convId}?limit=50`,
-            { signal } as any
+            { signal }
           );
           const msgs = msgDto.map((w) => dtoToMessage(w));
 
@@ -196,6 +197,26 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         order: order,
       };
     });
+  }, []);
+
+  const removeConv = useCallback((convId: string) => {
+    setConvs((prev) => {
+      // 1. Remove from entities map
+      const { [convId]: removed, ...remainingEntities } = prev.entities;
+      
+      // 2. Remove from order array
+      const newOrder = prev.order.filter((id) => id !== convId);
+      return {
+        entities: remainingEntities,
+        order: newOrder,
+      };
+    });
+
+    setMsgs((prev) => {
+        const { [convId]: dropped, ...rest } = prev;
+        return rest;
+    });
+
   }, []);
 
   const loadMsgs = useCallback((list: Message[]) => {
@@ -338,7 +359,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       setActiveConvId,
       markAsRead,
-      setFriendships
+      setFriendships,
+      removeConv
     }),
     [
       convs,
@@ -350,7 +372,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       setActiveConvId,
       markAsRead,
-      setFriendships
+      setFriendships,
+      removeConv
     ]
   );
 

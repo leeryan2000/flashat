@@ -3,7 +3,10 @@ import FriendshipList from "../components/FriendshipList";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 import { api } from "../api/api";
-import { toConversation as dtoToConversation, type ConvDto } from "../wire/conversation";
+import {
+  toConversation as dtoToConversation,
+  type ConvDto,
+} from "../wire/conversation";
 import { dtoToMessage, type MsgDto } from "../wire/message";
 import type { Friendship } from "../wire/friendship";
 
@@ -13,8 +16,14 @@ type AcceptFriendship = {
 };
 
 export default function Friendships() {
-  const { friendships, setFriendships, setActiveConvId, loadConvs, loadMsgs } =
-    useChat();
+  const {
+    friendships,
+    setFriendships,
+    setActiveConvId,
+    loadConvs,
+    loadMsgs,
+    removeConv,
+  } = useChat();
   const navigate = useNavigate();
 
   const handleChat = (convId: string) => {
@@ -41,15 +50,15 @@ export default function Friendships() {
         loadConvs([newDirectConv]);
         const welcomeMsg = dtoToMessage(resp.message);
         loadMsgs([welcomeMsg]);
-        
+
+        // update status for friendship list
         const updatedList: Friendship[] = friendships.map((friend) => {
           if (friend.uid === uid) {
-            return { ...friend, status: "accepted" };
+            return { ...friend, directConversationId: newDirectConv.id, status: "accepted" };
           }
           return friend;
         });
         setFriendships(updatedList);
-
       } catch (err: any) {
         if (err.name !== "AbortError") {
           console.error("Error accepting friendship:", err);
@@ -62,7 +71,31 @@ export default function Friendships() {
 
   const onCancel = async (uid: string) => {};
 
-  const onUnfriend = async (uid: string) => {
+  const onUnfriend = async (uid: string, convId: string | null) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    (async () => {
+      try {
+        await api(`/friendship/delete/${uid}`, {
+          method: "DELETE",
+          signal,
+        });
+
+        if (convId) {
+          removeConv(convId);
+        }
+        const updatedList: Friendship[] = friendships.filter(
+          (friend) => friend.uid !== uid
+        );
+        setFriendships(updatedList);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Error unfriending user:", err);
+        }
+      }
+    })();
+    
   };
 
   return (

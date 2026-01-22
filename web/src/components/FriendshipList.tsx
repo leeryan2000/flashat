@@ -18,7 +18,7 @@ type FriendsListProps = {
   onAccept: (uid: string) => void;
   onDecline: (uid: string) => void;
   onCancel: (uid: string) => void;
-  onUnfriend: (uid: string) => void;
+  onUnfriend: (uid: string, convId: string | null) => void;
 }
 
 export default function FriendshipList({ 
@@ -175,7 +175,7 @@ export default function FriendshipList({
                       <MessageSquare size={18} />
                     </button>
                     {/* Optional: Unfriend Button */}
-                    <FriendshipOptions onUnfriend={() => onUnfriend(user.uid)} />
+                    <FriendshipOptions onUnfriend={() => onUnfriend(user.uid, user.directConversationId)} />
                   </div>
                 </div>
               ))}

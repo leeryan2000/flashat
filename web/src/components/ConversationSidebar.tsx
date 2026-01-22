@@ -23,7 +23,7 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
     .filter((c): c is Conversation => !!c) 
     .filter(conv => conv.title?.toLowerCase().includes(needle));
 
-  }, [convs.order, convs.entities, query]);
+  }, [convs, query]);
 
   return (
     <div className="h-full bg-slate-900 text-slate-100 w-80 flex-shrink-0 grid grid-rows-[auto_1fr]">
