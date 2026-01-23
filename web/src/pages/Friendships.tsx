@@ -81,7 +81,21 @@ export default function Friendships() {
     }
   };
 
-  const onCancel = async (uid: string) => {};
+  const onCancel = async (uid: string) => {
+    try {
+      const resp = await api<CustomResponse>(`/friendship/cancel/${uid}`, {
+        method: "DELETE",
+      });
+
+      const updatedList: Friendship[] = friendships.filter(
+        (friend) => friend.uid !== uid
+      );
+      setFriendships(updatedList);
+      console.log(resp.message);
+    } catch (err: any) {
+      console.error("Error canceling friendship:", err);
+    }
+  };
 
   const onUnfriend = async (uid: string, convId: string | null) => {
     try {
@@ -103,6 +117,19 @@ export default function Friendships() {
     }
   };
 
+  const onAddFriend = async (email: string) => {
+    try {
+      const resp = await api<CustomResponse>(`/friendship/request`, {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      
+      console.log(resp.message);
+    } catch (err: any) {
+      console.error("Error sending friend request:", err);
+    }
+  }
+
   return (
     <div className="flex h-screen bg-black">
       <main className="flex-1 h-full">
@@ -113,6 +140,7 @@ export default function Friendships() {
           onDecline={onDecline}
           onCancel={onCancel}
           onUnfriend={onUnfriend}
+          onAddFriend={onAddFriend}
         />
       </main>
     </div>

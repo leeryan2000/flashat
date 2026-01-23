@@ -105,7 +105,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       try {
         const [summaryDto, friendshipDto] = await Promise.all([
           api<ConvDto[]>("/conversation/summary", { signal }),
-          api<FriendshipDto[]>("/friendship/", { signal }),
+          api<FriendshipDto[]>("/friendship", { signal }),
         ]);
         const summary = (summaryDto || []).map(toConversation);
         const friendships = (friendshipDto || []).map(toFriendship);

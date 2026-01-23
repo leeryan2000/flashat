@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -52,7 +53,7 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	_, err = r.Pool.Exec(ctx, `
+	tag, err := r.Pool.Exec(ctx, `
 		UPDATE friendships
 		SET status = 'accepted'
 		WHERE requester_uid = $1 AND receiver_uid = $2 AND status = 'pending'`,
@@ -60,6 +61,11 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 	)
 	if err != nil {
 		return err
+	}
+
+	if tag.RowsAffected() == 0 {
+		log.Println("No pending friendship found to accept")
+		return pgx.ErrNoRows
 	}
 
 	err = r.convRepo.CreateDirectConversationWithTx(ctx, conv, tx, requesterUID, receiverUID)
