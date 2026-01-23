@@ -9,6 +9,7 @@ import {
 } from "../wire/conversation";
 import { dtoToMessage, type MsgDto } from "../wire/message";
 import type { Friendship } from "../wire/friendship";
+import type { CustomResponse } from "../wire/resp";
 
 type AcceptFriendship = {
   conversation: ConvDto;
@@ -33,69 +34,73 @@ export default function Friendships() {
   };
 
   const handleAccept = async (uid: string) => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    try {
+      const resp = await api<AcceptFriendship>(`/friendship/accept`, {
+        method: "POST",
+        body: JSON.stringify({
+          uid,
+        }),
+      });
 
-    (async () => {
-      try {
-        const resp = await api<AcceptFriendship>(`/friendship/accept`, {
-          method: "POST",
-          body: JSON.stringify({
-            uid,
-          }),
-          signal,
-        });
+      const newDirectConv = dtoToConversation(resp.conversation);
+      loadConvs([newDirectConv]);
+      const welcomeMsg = dtoToMessage(resp.message);
+      loadMsgs([welcomeMsg]);
 
-        const newDirectConv = dtoToConversation(resp.conversation);
-        loadConvs([newDirectConv]);
-        const welcomeMsg = dtoToMessage(resp.message);
-        loadMsgs([welcomeMsg]);
-
-        // update status for friendship list
-        const updatedList: Friendship[] = friendships.map((friend) => {
-          if (friend.uid === uid) {
-            return { ...friend, directConversationId: newDirectConv.id, status: "accepted" };
-          }
-          return friend;
-        });
-        setFriendships(updatedList);
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          console.error("Error accepting friendship:", err);
+      // update status for friendship list
+      const updatedList: Friendship[] = friendships.map((friend) => {
+        if (friend.uid === uid) {
+          return {
+            ...friend,
+            directConversationId: newDirectConv.id,
+            status: "accepted",
+          };
         }
-      }
-    })();
+        return friend;
+      });
+      setFriendships(updatedList);
+    } catch (err: any) {
+      console.error("Error accepting friendship:", err);
+    }
   };
 
-  const onDecline = async (uid: string) => {};
+  const onDecline = async (uid: string) => {
+    try {
+        const resp = await api<CustomResponse>(`/friendship/decline/${uid}`, {
+          method: "DELETE" 
+        });
+      
+        const updatedList: Friendship[] = friendships.filter(
+          (friend) => friend.uid !== uid
+        );
+        setFriendships(updatedList)
+
+        console.log(resp.message)
+    } catch (err: any) {
+      console.error("Error declining friendship:", err);
+    }
+  };
 
   const onCancel = async (uid: string) => {};
 
   const onUnfriend = async (uid: string, convId: string | null) => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    try {
+      const resp = await api<CustomResponse>(`/friendship/delete/${uid}`, {
+        method: "DELETE",
+      });
 
-    (async () => {
-      try {
-        await api(`/friendship/delete/${uid}`, {
-          method: "DELETE",
-          signal,
-        });
-
-        if (convId) {
-          removeConv(convId);
-        }
-        const updatedList: Friendship[] = friendships.filter(
-          (friend) => friend.uid !== uid
-        );
-        setFriendships(updatedList);
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          console.error("Error unfriending user:", err);
-        }
+      if (convId) {
+        removeConv(convId);
       }
-    })();
-    
+      const updatedList: Friendship[] = friendships.filter(
+        (friend) => friend.uid !== uid
+      );
+      setFriendships(updatedList);
+
+      console.log(resp.message)
+    } catch (err: any) {
+      console.error("Error unfriending user:", err);
+    }
   };
 
   return (

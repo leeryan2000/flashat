@@ -108,7 +108,6 @@ func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, uid1, uid2 uui
 }
 
 func (r *PgxFriendshipRepo) RemovePendingFriendship(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {
-	// Implementation for rejecting friendship using pgx
 	_, err := r.Pool.Exec(ctx, `
 		DELETE FROM friendships
 		WHERE requester_uid = $1 AND receiver_uid = $2 AND status = 'pending'`,
