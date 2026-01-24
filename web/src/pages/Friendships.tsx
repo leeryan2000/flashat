@@ -27,13 +27,13 @@ export default function Friendships() {
   } = useChat();
   const navigate = useNavigate();
 
-  const handleChat = (convId: string) => {
+  const onChatClick = (convId: string) => {
     console.log("Navigating to chat with convId:", convId);
     setActiveConvId(convId);
     navigate(PATHS.chat);
   };
 
-  const handleAccept = async (uid: string) => {
+  const onAccept = async (uid: string) => {
     try {
       const resp = await api<AcceptFriendship>(`/friendship/accept`, {
         method: "POST",
@@ -123,11 +123,15 @@ export default function Friendships() {
         method: "POST",
         body: JSON.stringify({ email }),
       });
-      
+
       console.log(resp.message);
     } catch (err: any) {
       console.error("Error sending friend request:", err);
     }
+  }
+
+  const onCreateGroup = async (name: string, participantIds: string[]) => {
+    // Implementation for creating a group conversation
   }
 
   return (
@@ -135,12 +139,13 @@ export default function Friendships() {
       <main className="flex-1 h-full">
         <FriendshipList
           data={friendships}
-          onChatClick={handleChat}
-          onAccept={handleAccept}
+          onChatClick={onChatClick}
+          onAccept={onAccept}
           onDecline={onDecline}
           onCancel={onCancel}
           onUnfriend={onUnfriend}
           onAddFriend={onAddFriend}
+          onCreateGroup={onCreateGroup}
         />
       </main>
     </div>

@@ -22,6 +22,7 @@ type FriendsListProps = {
   onCancel: (uid: string) => void;
   onUnfriend: (uid: string, convId: string | null) => void;
   onAddFriend: (email: string) => void;
+  onCreateGroup: (name: string, participantIds: string[]) => Promise<void>;
 }
 
 export default function FriendshipList({ 
@@ -31,7 +32,8 @@ export default function FriendshipList({
   onDecline, 
   onCancel,
   onUnfriend,
-  onAddFriend
+  onAddFriend,
+  onCreateGroup
 }: FriendsListProps) {
   const [query, setQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -60,6 +62,24 @@ export default function FriendshipList({
       {name.slice(0, 2).toUpperCase()}
     </div>
   );
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addEmail.trim()) return;
+    
+    setIsAdding(true);
+    setAddError("");
+    
+    try {
+      await onAddFriend(addEmail);
+      setAddEmail("");
+      setIsAddModalOpen(false); // Close on success
+    } catch (err) {
+      setAddError("Failed to send request. Check the email.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <div className="h-full w-full bg-slate-900 text-slate-100 flex flex-col">
@@ -214,7 +234,7 @@ export default function FriendshipList({
               </button>
             </div>
             
-            <form onSubmit={() => onAddFriend(addEmail)}>
+            <form onSubmit={(e) => handleAddSubmit(e)}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-slate-400 mb-1">
                   Friend's Email Address
