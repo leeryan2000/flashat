@@ -4,13 +4,12 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/wire"
 )
 
 type ConversationRepo interface {
-	CreateGroupConversation(ctx context.Context, conv *models.Conversation, creatorUID uuid.UUID, participantsUID []uuid.UUID) error
+	CreateGroupConversation(ctx context.Context, conv *models.Conversation, msg *models.Message, creatorUID uuid.UUID, participantsUID []uuid.UUID) error
 	// For direct chats: get existing or create with a canonical direct_key.
 	CreateDirectConversation(ctx context.Context, conv *models.Conversation, uidA, uidB uuid.UUID) error
 
@@ -28,8 +27,4 @@ type ConversationRepo interface {
 
 	// Load conversations
 	GetSummary(ctx context.Context, uid uuid.UUID) ([]*wire.ConversationSummary, error)
-
-	// Functions
-	CreateDirectConversationWithTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error
-	RemoveConversationWithTx(ctx context.Context, tx pgx.Tx, uid1, uid2 uuid.UUID) error
 }

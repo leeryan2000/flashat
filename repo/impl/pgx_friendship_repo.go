@@ -8,14 +8,12 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/utils"
 	"github.com/leeryan2000/flashat/wire"
 )
 
 type PgxFriendshipRepo struct {
 	Pool *pgxpool.Pool
-
-	convRepo *PgxConversationRepo
-	msgRepo  *PgxMessageRepo
 }
 
 func (r *PgxFriendshipRepo) RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) error {
@@ -68,12 +66,12 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 		return pgx.ErrNoRows
 	}
 
-	err = r.convRepo.CreateDirectConversationWithTx(ctx, conv, tx, requesterUID, receiverUID)
+	err = utils.CreateDirectConversationWithTx(ctx, conv, tx, requesterUID, receiverUID)
 	if err != nil {
 		return err
 	}
 
-	err = r.msgRepo.SaveMessageWithTx(ctx, tx, msg)
+	err = utils.SaveMessageWithTx(ctx, tx, msg)
 	if err != nil {
 		return err
 	}
@@ -101,7 +99,7 @@ func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, uid1, uid2 uui
 		uid1, uid2,
 	)
 
-	err = r.convRepo.RemoveConversationWithTx(ctx, tx, uid1, uid2)
+	err = utils.RemoveConversationWithTx(ctx, tx, uid1, uid2)
 	if err != nil {
 		return err
 	}

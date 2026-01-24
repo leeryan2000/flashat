@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type ConversationHandler struct {
@@ -15,7 +17,7 @@ type ConversationHandler struct {
 }
 
 type groupInput struct {
-	GroupName    string   `json:"group_name"`
+	GroupName    string   `json:"name"`
 	Participants []string `json:"participants"` // UIDs of participants
 }
 
@@ -58,13 +60,50 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 		GroupAvatarUrl: &avatar_url,
 	}
 
-	err = h.Repo.CreateGroupConversation(c.Request.Context(), conv, creatorUID, participantsUID)
+	initialText := "Group Conversation created, you can start chatting now!"
+
+	msg := &models.Message{
+		ID:             uuid.New(),
+		ConversationID: conv.ID,
+		FromUID:        creatorUID,
+		Body:           json.RawMessage(`{"text":"` + initialText + `"}`),
+	}
+
+	err = h.Repo.CreateGroupConversation(c.Request.Context(), conv, msg, creatorUID, participantsUID)
 	if err != nil {
+		log.Println(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create group conversation"})
 		return
 	}
 
-	c.JSON(http.StatusOK, conv)
+	log.Println(conv.CreatedAt, " Group Conversation Created")
+	log.Println(msg.CreatedAt, " Message Created")
+
+	convSummary := &wire.ConversationSummary{
+		ConversationID: conv.ID,
+		ConvType:       conv.Type,
+		Title:          *conv.GroupName,
+		AvatarURL:      *conv.GroupAvatarUrl,
+		LastMsgID:      msg.ID,
+		LastMsgText:    initialText,
+		LastMsgFrom:    creatorUID,
+		LastMsgTs:      msg.CreatedAt,
+		LastSeq:        msg.Seq,
+		LastReadSeq:    0,
+		UnreadCount:    1,
+	}
+
+	type response struct {
+		Conversation wire.ConversationSummary `json:"conversation"`
+		Message      models.Message           `json:"message"`
+	}
+
+	resp := &response{
+		Conversation: *convSummary,
+		Message:      *msg,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 type directInput struct {

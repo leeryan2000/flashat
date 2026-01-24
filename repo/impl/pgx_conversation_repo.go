@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
+	"github.com/leeryan2000/flashat/utils"
 	"github.com/leeryan2000/flashat/wire"
 )
 
@@ -15,7 +16,7 @@ type PgxConversationRepo struct {
 	Pool *pgxpool.Pool
 }
 
-func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv *models.Conversation, creatorUID uuid.UUID, participantsUID []uuid.UUID) error {
+func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv *models.Conversation, msg *models.Message, creatorUID uuid.UUID, participantsUID []uuid.UUID) error {
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
@@ -67,8 +68,15 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 			set[puid] = struct{}{}
 		}
 	}
+
 	br := tx.SendBatch(ctx, batch)
 	if err = br.Close(); err != nil {
+		return err
+	}
+
+	err = utils.SaveMessageWithTx(ctx, tx, msg)
+	if err != nil {
+		log.Println("Save message failed ", err)
 		return err
 	}
 
@@ -86,40 +94,12 @@ func (r *PgxConversationRepo) CreateDirectConversation(ctx context.Context, conv
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	err = r.CreateDirectConversationWithTx(ctx, conv, tx, uid, targetUID)
+	err = utils.CreateDirectConversationWithTx(ctx, conv, tx, uid, targetUID)
 
 	if err = tx.Commit(ctx); err != nil {
 		return err
 	}
 	return nil
-}
-
-func (r *PgxConversationRepo) CreateDirectConversationWithTx(ctx context.Context, conv *models.Conversation, tx pgx.Tx, uid1, uid2 uuid.UUID) error {
-	// Implementation for creating direct conversation using pgx
-	batch := &pgx.Batch{}
-
-	batch.Queue(`
-		INSERT INTO conversations (id, type)
-		VALUES ($1, $2)
-		RETURNING created_at`,
-		conv.ID, conv.Type,
-	)
-
-	batch.Queue(`
-		INSERT INTO conversation_counters (conversation_id)
-		VALUES ($1)`,
-		conv.ID,
-	)
-
-	batch.Queue(`
-		INSERT INTO conversation_participants (conversation_id, uid)
-		VALUES ($1, $2), ($1, $3)`,
-		conv.ID, uid1, uid2,
-	)
-
-	br := tx.SendBatch(ctx, batch)
-	defer br.Close()
-	return br.Close()
 }
 
 func (r *PgxConversationRepo) ListConversationByUID(ctx context.Context, uid uuid.UUID) ([]*models.Conversation, error) {
@@ -329,22 +309,4 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 		return nil, err
 	}
 	return out, nil
-}
-
-func (r *PgxConversationRepo) RemoveConversationWithTx(ctx context.Context, tx pgx.Tx, uid1, uid2 uuid.UUID) error {
-	_, err := tx.Exec(ctx, `
-		DELETE FROM conversations 
-		WHERE id IN(
-			SELECT p1.conversation_id
-			FROM conversation_participants p1
-			JOIN conversation_participants p2 ON p1.conversation_id = p2.conversation_id
-			JOIN conversations c ON p1.conversation_id = c.id
-			WHERE p1.uid = $1        -- User 1 is in it
-			AND p2.uid = $2         -- User 2 is in it
-			AND c.type = 'direct'   -- It is a 1-on-1 chat
-			LIMIT 1
-		);`,
-		uid1, uid2,
-	)
-	return err
 }

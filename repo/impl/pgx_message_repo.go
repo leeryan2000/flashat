@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/models"
 )
@@ -41,32 +40,6 @@ func reverse(ms []models.Message) {
 func (r *PgxMessageRepo) SaveMessage(ctx context.Context, msg *models.Message) error {
 	// Implementation for saving a message using pgx
 	err := r.Pool.QueryRow(ctx, `
-		WITH s AS (
-			Update conversation_counters
-			SET last_seq = last_seq + 1
-			WHERE conversation_id = $2
-				AND EXISTS (
-					SELECT 1
-					FROM conversation_participants p
-					WHERE p.conversation_id = $2
-						AND p.uid = $3
-					)
-			RETURNING last_seq
-		)
-		INSERT INTO messages (id, conversation_id, seq, from_uid, body)
-		SELECT $1, $2, s.last_seq, $3, $4
-		FROM s
-		RETURNING id, conversation_id, seq, from_uid, body, (EXTRACT(EPOCH FROM created_at) * 1000)::bigint AS created_at`,
-		msg.ID, msg.ConversationID, msg.FromUID, msg.Body,
-	).Scan(&msg.ID, &msg.ConversationID, &msg.Seq, &msg.FromUID, &msg.Body, &msg.CreatedAt)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *PgxMessageRepo) SaveMessageWithTx(ctx context.Context, tx pgx.Tx, msg *models.Message) error {
-	err := tx.QueryRow(ctx, `
 		WITH s AS (
 			Update conversation_counters
 			SET last_seq = last_seq + 1

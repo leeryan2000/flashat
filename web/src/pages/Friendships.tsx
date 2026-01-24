@@ -11,7 +11,7 @@ import { dtoToMessage, type MsgDto } from "../wire/message";
 import type { Friendship } from "../wire/friendship";
 import type { CustomResponse } from "../wire/resp";
 
-type AcceptFriendship = {
+type CreateConvResponse = {
   conversation: ConvDto;
   message: MsgDto;
 };
@@ -35,7 +35,7 @@ export default function Friendships() {
 
   const onAccept = async (uid: string) => {
     try {
-      const resp = await api<AcceptFriendship>(`/friendship/accept`, {
+      const resp = await api<CreateConvResponse>(`/friendship/accept`, {
         method: "POST",
         body: JSON.stringify({
           uid,
@@ -130,8 +130,21 @@ export default function Friendships() {
     }
   }
 
-  const onCreateGroup = async (name: string, participantIds: string[]) => {
-    // Implementation for creating a group conversation
+  const onCreateGroup = async (name: string, participants: string[]) => {
+    try {
+      const resp = await api<CreateConvResponse>(`/conversation/group`, {
+        method : "POST",
+        body: JSON.stringify({ name, participants }),
+      });
+
+      const newDirectConv = dtoToConversation(resp.conversation);
+      loadConvs([newDirectConv]);
+      const welcomeMsg = dtoToMessage(resp.message);
+      loadMsgs([welcomeMsg]);
+
+    } catch (err: any) {
+      console.error("Error creating group conversation:", err);
+    }
   }
 
   return (

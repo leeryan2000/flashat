@@ -41,11 +41,6 @@ func (h *FriendshipHandler) RequestFriendship(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Friendship request sent"})
 }
 
-type AcceptResponse struct {
-	Conversation wire.ConversationSummary `json:"conversation"`
-	Message      models.Message           `json:"message"`
-}
-
 func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	var input struct {
 		RequesterUIDstr string `json:"uid" binding:"required"`
@@ -116,7 +111,12 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		UnreadCount:    1,
 	}
 
-	resp := &AcceptResponse{
+	type response struct {
+		Conversation wire.ConversationSummary `json:"conversation"`
+		Message      models.Message           `json:"message"`
+	}
+
+	resp := &response{
 		Conversation: *convSummary,
 		Message:      *msg,
 	}
