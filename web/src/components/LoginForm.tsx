@@ -93,7 +93,7 @@ export function LoginForm() {
         {/* Footer Link */}
         <div className="text-center text-sm text-slate-500">
           Don't have an account?{" "}
-          <Link to="register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+          <Link to={PATHS.register} className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
             Sign up
           </Link>
         </div>

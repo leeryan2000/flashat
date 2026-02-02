@@ -40,7 +40,7 @@ export default function LoginPage() {
 
       {/* Footer / Copyright */}
       <p className="mt-8 text-slate-600 text-sm relative z-10">
-        © 2024 Your Chat App. Secure & Encrypted.
+        © 2026 Flashat
       </p>
     </div>
   );

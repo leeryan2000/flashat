@@ -11,7 +11,7 @@ func InitializeUserRoutes(router *gin.RouterGroup, h *handlers.Handlers, s *serv
 	uh := h.User
 
 	userRoutes := router.Group("/user")
-	userRoutes.POST("/", uh.CreateUser)
+	userRoutes.POST("/register", uh.CreateUser)
 
 	// User authentication setup here
 	userAuthRoutes := router.Group("/user/auth")

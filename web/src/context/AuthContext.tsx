@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => void;
   logout: () => void;
+  register: (username: string, email: string, password: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -72,6 +73,20 @@ export function AuthProvider({
     }
   };
 
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      await api<User>("/user/register", 
+        {
+          method: "POST",
+          body: JSON.stringify({ name, email, password }),
+        }
+      );  
+    } catch (error) {
+      console.error("Registration failed:", error);
+      throw error;
+    }
+  }
+
   // Memoize the context value
   const value = useMemo(
     () => ({
@@ -80,9 +95,10 @@ export function AuthProvider({
       isAuthenticated: !isLoading && !!user,
       login,
       logout,
+      register,
       isLoading,
     }),
-    [user, isLoading]
+    [user, isLoading, login, logout, register]
   );
 
   if (blockUntilReady && isLoading) {

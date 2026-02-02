@@ -10,6 +10,7 @@ import { PATHS } from "./paths";
 import { ChatProvider } from "../context/ChatContext";
 import { WebSocketProvider } from "../context/WebSocketContext";
 import Friendships from "../pages/Friendships";
+import RegisterPage from "../pages/RegisterPage";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,6 +42,7 @@ export default function AppRouter() {
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path={PATHS.login} element={<LoginPage />} />
+        <Route path={PATHS.register} element={<RegisterPage />} />
         {/* 404, etc. */}
       </Routes>
     </BrowserRouter>

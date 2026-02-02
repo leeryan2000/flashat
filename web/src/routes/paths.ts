@@ -5,4 +5,5 @@ export const PATHS = {
   friends: "/friends",
   profile: "/profile",
   settings: "/settings",
+  register: "/register",
 };
