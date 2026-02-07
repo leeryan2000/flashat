@@ -159,46 +159,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return () => controller.abort();
   }, [convs.order]);
 
-  // WebSocket message handler when lastMsg changes
-  // useEffect(() => {
-  //   if (!lastMsg) return;
-  //   const jsonMsg = JSON.parse(lastMsg);
-  //   console.log("Received WS message:", jsonMsg);
-  //   const { convId } = jsonMsg;
-  //   const conv = convs.entities[convId];
-
-  //   if (jsonMsg.type === "ack") {
-  //     const { conversation_id, client_msg_id, seq, id } = jsonMsg;
-  //     setMsgs((prev) => {
-  //       return applyAckedMsgToMsgState(prev, conversation_id, client_msg_id, seq, id);
-  //     });
-
-  //   } else if (jsonMsg.type === "chat") {
-  //     const msg = jsonToMessage(jsonMsg);
-  //     loadMsgs([msg]);
-  //     setConvs((prev) => {
-  //       return applyMsgToConvState(prev, msg, user?.uid || "", activeConvId || "");
-  //     });
-  //   } 
-
-  //   if (activeConvId === convId) {
-  //     send(
-  //         JSON.stringify({
-  //           type: "read",
-  //           conversation_id: convId,
-  //           from_uid: user?.uid,
-  //           last_read_seq: conv.lastSeq,
-  //         })
-  //       );
-  //   }
-
-  // }, [lastMsg, user]);
-
   useEffect(() => {
     if (!lastMsg) return;
     onMessageReceived(lastMsg);
   }, [lastMsg]);
 
+  // Message hanlder
   const onMessageReceived = useEffectEvent((lastMsg: string) => {
     const jsonMsg = JSON.parse(lastMsg);
     const { conversation_id, seq } = jsonMsg;

@@ -41,6 +41,7 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 		HashedPassword: hashedPassword,
 	}
 
+	// ***** after redis implemented, turn this into storing in redis first, then after verification store in main db through another handler function
 	if err := h.Repo.CreateUser(&user); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to server"})
 		return
@@ -79,3 +80,10 @@ func (h UserHandler) GetUserById(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+func (h UserHandler) SendVerification(c *gin.Context) {
+	// otp := utils.SendVerification()
+	// ***** store otp in redis with expiration associated with user email
+	c.JSON(http.StatusOK, gin.H{"message": "Verification sent"})
+}
+
