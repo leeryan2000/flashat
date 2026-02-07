@@ -46,6 +46,7 @@ func (hub *Hub) SendToUID(uid uuid.UUID, payload []byte) {
 func (hub *Hub) BroadcastToParticipant(uids []uuid.UUID, fromUID uuid.UUID, payload []byte) {
 	// check if the participants are online and send the payload
 	for _, uid := range uids {
+		// message blocked from the sender
 		if client, ok := hub.ClientsByUID[uid.String()]; ok && uid != fromUID {
 			log.Println("Broadcasting to UID:", uid)
 			client.Send <- payload

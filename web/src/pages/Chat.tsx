@@ -14,11 +14,6 @@ export default function Chat() {
   useEffect(() => {
     setHasMore(true);
   }, [activeConvId]);
-
-  useEffect(() => {
-    // if no convo selected, open the most recent one by default
-    if (!activeConvId && convs.order.length) setActiveConvId(convs.order[0]);
-  }, [activeConvId, convs.order]);
   
   const loadMore = async () => {
     if (!activeConvId || !hasMore) return;

@@ -52,7 +52,7 @@ export const applyMsgToConvState = (
   // Logic: Only increment unread if it's NOT my message AND I'm NOT looking at it
   const newUnread =
     !isMyMsg && !isSelected ? (conv.unreadCount || 0) + 1 : conv.unreadCount;
-
+    
   const updatedConv = {
     ...conv,
     lastMsgText: msg.text,

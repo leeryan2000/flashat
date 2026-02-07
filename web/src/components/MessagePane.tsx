@@ -34,7 +34,7 @@ export default function MessagesPane({msg, activeConvId, onLoadMore}: MessagePan
   
   useEffect(() => {
     markAsRead(activeConvId);
-  }, [activeConvId, markAsRead]);
+  }, [activeConvId, markAsRead, msg]);
 
   // Uses useLayoutEffect to adjust scroll position after DOM updates
   useLayoutEffect(() => {

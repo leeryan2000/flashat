@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -61,7 +62,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const markAsRead = useCallback(
     (convId: string) => {
       const conv = convs.entities[convId];
-
       if (conv && conv.unreadCount > 0) {
         // Optimistic Update
         setConvs((prev) => {
@@ -160,12 +160,60 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [convs.order]);
 
   // WebSocket message handler when lastMsg changes
+  // useEffect(() => {
+  //   if (!lastMsg) return;
+  //   const jsonMsg = JSON.parse(lastMsg);
+  //   console.log("Received WS message:", jsonMsg);
+  //   const { convId } = jsonMsg;
+  //   const conv = convs.entities[convId];
+
+  //   if (jsonMsg.type === "ack") {
+  //     const { conversation_id, client_msg_id, seq, id } = jsonMsg;
+  //     setMsgs((prev) => {
+  //       return applyAckedMsgToMsgState(prev, conversation_id, client_msg_id, seq, id);
+  //     });
+
+  //   } else if (jsonMsg.type === "chat") {
+  //     const msg = jsonToMessage(jsonMsg);
+  //     loadMsgs([msg]);
+  //     setConvs((prev) => {
+  //       return applyMsgToConvState(prev, msg, user?.uid || "", activeConvId || "");
+  //     });
+  //   } 
+
+  //   if (activeConvId === convId) {
+  //     send(
+  //         JSON.stringify({
+  //           type: "read",
+  //           conversation_id: convId,
+  //           from_uid: user?.uid,
+  //           last_read_seq: conv.lastSeq,
+  //         })
+  //       );
+  //   }
+
+  // }, [lastMsg, user]);
+
   useEffect(() => {
     if (!lastMsg) return;
+    onMessageReceived(lastMsg);
+  }, [lastMsg]);
+
+  const onMessageReceived = useEffectEvent((lastMsg: string) => {
     const jsonMsg = JSON.parse(lastMsg);
+    const { conversation_id, seq } = jsonMsg;
+    if (activeConvId === conversation_id) {
+      send(
+          JSON.stringify({
+            type: "read",
+            conversation_id: conversation_id,
+            from_uid: user?.uid,
+            last_read_seq: seq,
+          })
+        );
+    }
 
     if (jsonMsg.type === "ack") {
-
       const { conversation_id, client_msg_id, seq, id } = jsonMsg;
       setMsgs((prev) => {
         return applyAckedMsgToMsgState(prev, conversation_id, client_msg_id, seq, id);
@@ -178,9 +226,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return applyMsgToConvState(prev, msg, user?.uid || "", activeConvId || "");
       });
     } 
-  }, [lastMsg, user]);
-
-  
+  });
 
   const loadConvs = useCallback((list: Conversation[]) => {
     setConvs((prev) => {
@@ -387,4 +433,6 @@ export function useChat() {
   }
   return context;
 }
+
+
 

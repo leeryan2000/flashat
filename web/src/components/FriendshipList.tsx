@@ -6,7 +6,6 @@ import {
   X, 
   Check, 
   Search, 
-  UserX,
   Loader2,
   MessageSquarePlus,
 } from 'lucide-react'; // Assuming you use lucide-react for icons
