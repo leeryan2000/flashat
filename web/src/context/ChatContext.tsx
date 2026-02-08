@@ -166,31 +166,28 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Message hanlder
   const onMessageReceived = useEffectEvent((lastMsg: string) => {
+    if (!user || user?.uid === "") return;
     const jsonMsg = JSON.parse(lastMsg);
-    const { conversation_id, seq } = jsonMsg;
-    if (activeConvId === conversation_id) {
+    const msg = jsonToMessage(jsonMsg);
+    const { convId, clientMsgId, id, seq } = msg;
+    if (activeConvId === msg.convId) {
       send(
           JSON.stringify({
             type: "read",
-            conversation_id: conversation_id,
-            from_uid: user?.uid,
+            conversation_id: convId,
+            from_uid: user.uid,
             last_read_seq: seq,
           })
         );
     }
 
-    if (jsonMsg.type === "ack") {
-      const { conversation_id, client_msg_id, seq, id } = jsonMsg;
-      setMsgs((prev) => {
-        return applyAckedMsgToMsgState(prev, conversation_id, client_msg_id, seq, id);
-      });
+    if (jsonMsg.type === "ack" && clientMsgId && id && seq) {
+      setMsgs(prev => applyAckedMsgToMsgState(prev, convId, clientMsgId, seq, id));
+      setConvs(prev => applyMsgToConvState(prev, msg, user.uid, activeConvId || ""));
 
     } else if (jsonMsg.type === "chat") {
-      const msg = jsonToMessage(jsonMsg);
       loadMsgs([msg]);
-      setConvs((prev) => {
-        return applyMsgToConvState(prev, msg, user?.uid || "", activeConvId || "");
-      });
+      setConvs(prev=>  applyMsgToConvState(prev, msg, user.uid, activeConvId || ""));
     } 
   });
 

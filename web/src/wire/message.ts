@@ -36,8 +36,9 @@ export const dtoToMessage = (w: MsgDto): Message => ({
 export const jsonToMessage = (json: any): Message => ({
   id: json.server_msg_id,
   convId: json.conversation_id,
-  seq: json.seq,
   fromUid: json.from_uid,
+  clientMsgId: json.client_msg_id || null,
+  seq: json.seq,
   ts: json.ts,
   text: json.body?.text ?? "",
 });

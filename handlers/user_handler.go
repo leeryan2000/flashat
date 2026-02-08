@@ -86,4 +86,3 @@ func (h UserHandler) SendVerification(c *gin.Context) {
 	// ***** store otp in redis with expiration associated with user email
 	c.JSON(http.StatusOK, gin.H{"message": "Verification sent"})
 }
-

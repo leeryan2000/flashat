@@ -99,6 +99,7 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq,
 		Ts:             msg.CreatedAt,
+		Body:           env.Body,
 	}
 
 	ackEnvJSON, err := json.Marshal(ackEnv)
@@ -113,7 +114,6 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 	outEnv := &wire.Msg{
 		Type:           wire.Chat,
 		ConversationID: env.ConversationID,
-		ClientMsgID:    env.ClientMsgID,
 		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
 		Seq:            msg.Seq, // client seq would be updated with server seq
