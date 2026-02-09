@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -10,17 +11,16 @@ import (
 	"gorm.io/gorm"
 )
 
-var configuration = config.GetConfig()
-
-var dsn = "host=" + configuration.DB_DBHOST + " " +
-	"user=" + configuration.DB_USER + " " +
-	"password=" + configuration.DB_PASS + " " +
-	"dbname=" + configuration.DB_DBNAME + " " +
-	"port=" + configuration.DB_PORT + " " +
-	"sslmode=disable"
+func getDSN() string {
+	c := config.GetConfig() // Load config right when we need it
+	return fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		c.DB_HOST, c.DB_USER, c.DB_PASS, c.DB_NAME, c.DB_PORT)
+}
 
 func InitDB() (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	db, err := gorm.Open(postgres.Open(getDSN()), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func NewPgxPool() (*pgxpool.Pool, error) {
 	defer cancel()
 
 	// set the config of pgx here
-	config, err := pgxpool.ParseConfig(dsn)
+	config, err := pgxpool.ParseConfig(getDSN())
 	if err != nil {
 		return nil, err
 	}
