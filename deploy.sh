@@ -1,15 +1,11 @@
 #!/bin/bash
 
-# 1. Set variables
-APP_NAME="flashat-backend"
-PEM_FILE="leeryan.pem"
-SERVER_USER="ec2-user"
-SERVER_IP="18.140.243.27"
-DEST_PATH="/home/ec2-user/flashat/backend/"
 
+# 1. Set variables
+source .env
 echo "Starting deployment for $APP_NAME..."
 
-# 2. Compile for Linux (The Go standard way)
+# 2. Compile for Linux
 echo "Building binary for Linux/amd64..."
 GOOS=linux GOARCH=amd64 go build -o $APP_NAME main.go
 
@@ -23,5 +19,9 @@ if [ $? -eq 0 ]; then
     echo "Deployment complete!"
 else
     echo "Build failed. Deployment aborted."
+    read -p "Press [Enter] key to exit..."
+
     exit 1
 fi
+
+read -p "Press [Enter] key to exit..."
