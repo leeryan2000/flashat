@@ -1,3 +1,5 @@
+SHELL := bash.exe
+
 build:
 	go build -o bin/flashat main.go
 
@@ -23,7 +25,3 @@ migrate_down:
 
 migrate:
 	migrate -path db/migrations -database "postgres://dev:dev@localhost:5432/dev?sslmode=disable" version
-
-send:
-	$env:GOOS="linux"; $env:GOARCH="amd64"; go build -o flashat-backend main.go
-	scp -i leeryan.pem flashat-backend ec2-user@18.140.243.27:/home/ec2-user/flashat/backend/

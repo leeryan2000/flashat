@@ -8,6 +8,7 @@ import (
 )
 
 type Configuration struct {
+	GO_ENV string
 	// database fields
 	DB_USER string
 	DB_PASS string
@@ -26,6 +27,7 @@ func GetConfig() Configuration {
 	}
 
 	configuration := Configuration{}
+	configuration.GO_ENV = os.Getenv("GO_ENV")
 	configuration.DB_USER = os.Getenv("DB_USER")
 	configuration.DB_PASS = os.Getenv("DB_PASS")
 	configuration.DB_NAME = os.Getenv("DB_NAME")

@@ -45,6 +45,12 @@ func checkClients(s *Server) {
 func StartServer() (*Server, error) {
 	s := &Server{}
 
+	// Run DB migrations
+	err := db.RunMigrations()
+	if err != nil {
+		return nil, err
+	}
+
 	// Database connection
 	dbConnection, err := db.InitDB()
 	if err != nil {
