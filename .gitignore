@@ -3,3 +3,5 @@ demo.go
 setup_db.sh
 .env
 test/
+flashat-backend
+bin/
