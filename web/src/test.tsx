@@ -1,7 +1,7 @@
 // i want to write a react function that export hello world in frontend
 
-import React, { useCallback } from "react";
-import { useState, useEffect, useRef, useMemo } from "react";
+import React from "react";
+import { useState, useEffect, useMemo } from "react";
 
 
 export default function Test() {
@@ -89,16 +89,16 @@ export function AutoFocusInput() {
   return <input value={inputRef} placeholder="I get focus on mount" />;
 }
 
-function Timer() {
-  const countRef = useRef(0);
+// function Timer() {
+//   const countRef = React.useRef(0);
 
-  function increment() {
-    countRef.current += 1;
-    console.log("Count:", countRef.current);
-  }
+//   function increment() {
+//     countRef.current += 1;
+//     console.log("Count:", countRef.current);
+//   }
 
-  return <button onClick={increment}>Add</button>;
-}
+//   return <button onClick={increment}>Add</button>;
+// }
 
 const fibCache: { [key: number]: number } = {};
 

@@ -1,6 +1,6 @@
 // src/routes/paths.ts
 export const PATHS = {
-  chat: "/chat",
+  chat: "/",
   login: "/login",
   friends: "/friends",
   profile: "/profile",

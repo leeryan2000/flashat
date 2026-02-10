@@ -28,7 +28,7 @@ export default function AppRouter() {
           path={PATHS.chat}
           element={
             <AuthCheck>
-              <WebSocketProvider url={import.meta.env.VITE_WS_URL}>
+              <WebSocketProvider>
                 <ChatProvider>
                   <Layout />
                 </ChatProvider>

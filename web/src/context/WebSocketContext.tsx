@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type PropsWithChildren,
 } from "react";
 
 type WSStatus = "idle" | "connecting" | "open" | "closed" | "error";
@@ -19,11 +18,20 @@ type WebSocketContextType = {
 };
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
-type WebSocketProviderProps = PropsWithChildren<{
-  url: string;
-}>;
 
-export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
+const getWebSocketURL = () => {
+  const envUrl = import.meta.env.VITE_WS_URL;
+
+  // 1. Use the .env value if it exists (for local development)
+  if (envUrl) return envUrl;
+
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const host = window.location.host; 
+  
+  return `${protocol}//${host}/api/websocket/ws`;
+};
+
+export function WebSocketProvider({ children }: {children: React.ReactNode}) {
   const [status, setStatus] = useState<WSStatus>("idle");
   const [lastMsg, setLastMsg] = useState<string | null>(null);
   
@@ -46,7 +54,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
     const uuid = crypto.randomUUID();
     console.log(`Attempting WebSocket connection... ID: ${uuid}`);
     
-    const ws = new WebSocket(url);
+    const ws = new WebSocket(getWebSocketURL());
     socketRef.current = ws;
     setStatus("connecting");
     isIntentionalClose.current = false;
@@ -77,7 +85,7 @@ export function WebSocketProvider({ url, children }: WebSocketProviderProps) {
       console.error("WebSocket error:", error);
     };
 
-  }, [url]);
+  }, [getWebSocketURL]);
 
   // Initial Connection
   useEffect(() => {
