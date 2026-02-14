@@ -32,10 +32,13 @@ jobs:
             echo "Pulling latest code..."
             git pull origin main
 
-            # 4. Build the binary /usr/local/go/bin/
+            # 4. Build the binary
             # We use the full path to 'go' just in case it's not in the system PATH
             echo "Building binary..."
             go build -o flashat main.go
+
+            # Make the binary executable
+            chmod +x flashat
 
             # 5. Restart the service
             echo "Restarting Flashat service..."
