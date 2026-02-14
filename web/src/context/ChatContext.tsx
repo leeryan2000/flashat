@@ -15,6 +15,7 @@ import { dtoToMessage, jsonToMessage, type Message, type MsgDto } from "../wire/
 import { useWebSocket } from "./WebSocketContext";
 import { applyAckedMsgToMsgState, applyMsgToConvState, getSortedConvIds, } from "../utils/chatHelpers";
 import { toFriendship, type Friendship, type FriendshipDto } from "../wire/friendship";
+import { generateUUID } from "../utils/uuid";
 // create types that match exactly what the server passed in
 
 export type ConvState = {
@@ -288,7 +289,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     (text: string, convId: string) => {
       if (text.trim() === "") return;
 
-      const clientMsgId = crypto.randomUUID();
+      const clientMsgId = generateUUID();
       const localTs = Date.now();
 
       // Match server message type

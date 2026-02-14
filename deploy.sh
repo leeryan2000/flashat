@@ -14,7 +14,6 @@ deploy_frontend() {
         scp -i ../$PEM_FILE -r dist/* $SERVER_USER@$SERVER_IP:$FRONTEND_DEST
     else
         echo "Frontend build failed!"
-        exit 1
     fi
     cd ..
 }
@@ -28,7 +27,6 @@ deploy_backend() {
         scp -i $PEM_FILE bin/$APP_NAME $SERVER_USER@$SERVER_IP:$BACKEND_DEST
     else
         echo "Backend build failed!"
-        exit 1
     fi
 }
 
@@ -47,7 +45,6 @@ case "$1" in
         ;;
     *)
         echo "Usage: $0 {all|frontend|backend}"
-        exit 1
         ;;
 esac
 

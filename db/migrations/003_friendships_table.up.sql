@@ -1,4 +1,4 @@
-CREATE TABLE friendships (
+CREATE TABLE IF NOT EXISTS friendships (
     requester_uid uuid NOT NULL,
     receiver_uid  uuid NOT NULL,
     status        text NOT NULL CHECK (status IN ('pending', 'accepted', 'blocked')),

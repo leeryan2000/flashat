@@ -50,9 +50,6 @@ export function WebSocketProvider({ children }: {children: React.ReactNode}) {
 
     // Clear any existing reconnect timers
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-
-    const uuid = crypto.randomUUID();
-    console.log(`Attempting WebSocket connection... ID: ${uuid}`);
     
     const ws = new WebSocket(getWebSocketURL());
     socketRef.current = ws;

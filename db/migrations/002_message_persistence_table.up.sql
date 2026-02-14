@@ -1,4 +1,4 @@
-CREATE TABLE conversations (
+CREATE TABLE IF NOT EXISTS conversations (
   id           uuid PRIMARY KEY NOT NULL,
   type         text NOT NULL CHECK (type IN ('direct','group')),
   direct_key   text UNIQUE, -- only for direct, and the key should be canonical
@@ -8,7 +8,7 @@ CREATE TABLE conversations (
 );
 
 
-CREATE TABLE conversation_participants (
+CREATE TABLE IF NOT EXISTS conversation_participants (
   conversation_id uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   uid             uuid NOT NULL,
   role            text NOT NULL DEFAULT 'member', -- Role: 'creator', 'admin', 'member'
@@ -18,12 +18,12 @@ CREATE TABLE conversation_participants (
 );
 
 
-CREATE TABLE conversation_counters (
+CREATE TABLE IF NOT EXISTS conversation_counters (
   conversation_id uuid PRIMARY KEY REFERENCES conversations(id) ON DELETE CASCADE,
   last_seq        bigint NOT NULL DEFAULT 0 -- last message sequence number
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   id              uuid PRIMARY KEY,
   conversation_id uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
   seq             bigint NOT NULL,

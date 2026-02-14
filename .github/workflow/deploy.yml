@@ -1,0 +1,46 @@
+name: Deploy to Amazon Linux
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Stop the service to release file locks
+            echo "Stopping Flashat service..."
+            sudo systemctl stop flashat
+
+            # 2. Go to your project folder (Amazon Linux default)
+            cd /home/ec2-user/flashat
+
+            # 3. Pull the latest code from GitHub
+            echo "Pulling latest code..."
+            git pull origin main
+
+            # 4. Build the binary /usr/local/go/bin/
+            # We use the full path to 'go' just in case it's not in the system PATH
+            echo "Building binary..."
+            go build -o flashat main.go
+
+            # 5. Restart the service
+            echo "Restarting Flashat service..."
+            sudo systemctl start flashat
+            
+            # 6. Verify it is running
+            echo "Checking status..."
+            sudo systemctl status flashat --no-pager
