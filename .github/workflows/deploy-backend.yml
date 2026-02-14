@@ -1,4 +1,4 @@
-name: Pro Build & Deploy
+name: Deploy Backend (Go)
 
 on:
   push:
