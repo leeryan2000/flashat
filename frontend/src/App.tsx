@@ -8,8 +8,6 @@ function App() {
     <AuthProvider> 
       <AppRouter />
     </AuthProvider>
-    // ***** delete
-    // <Test/>
   )
 }
 

@@ -5,14 +5,14 @@ on:
     branches: [ "main" ]
     paths:
       - '**'          # Run on any change
-      - '!frontend/**' # IGNORE frontend changes (save time!)
+      - '!frontend/**' 
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # --- STEP 1: PREPARE & BUILD (Happens on GitHub) ---
+      # --- Build Binary on Github ---
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -27,7 +27,7 @@ jobs:
           # GOOS=linux ensures it runs on EC2 even if you build on Mac/Windows
           GOOS=linux GOARCH=amd64 go build -o flashat main.go
 
-      # --- STEP 2: UPLOAD (Send file to EC2) ---
+      # --- Upload Binary to EC2 ---
       - name: Copy Binary to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -37,7 +37,7 @@ jobs:
           source: "flashat"      
           target: "/home/ec2-user/flashat/temp_artifacts" # Temporary folder
 
-      # --- STEP 3: RESTART (Happens on EC2) ---
+      # --- Restart Application on EC2 ---
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:

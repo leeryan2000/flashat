@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'frontend/**'   # <--- Updated folder name
+      - 'frontend/**'
 
 jobs:
   build-and-deploy:
@@ -28,7 +28,6 @@ jobs:
       - name: Build Project
         working-directory: ./frontend
         run: npm run build
-        # This creates 'frontend/dist'
 
       - name: Deploy to Nginx
         uses: appleboy/scp-action@v0.1.7
