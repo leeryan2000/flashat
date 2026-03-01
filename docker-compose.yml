@@ -1,0 +1,48 @@
+services:
+  backend:
+    build: ./backend
+    restart: always
+    env_file: .env
+    networks:
+      - flashat-net
+
+  frontend:
+    build: ./frontend
+    restart: always
+    networks:
+      - flashat-net
+
+  db:
+  image: postgres:17-alpine
+  ports:
+    - "5432:5432"
+  restart: always
+  environment:
+    POSTGRES_USER: ${DB_USER}         
+    POSTGRES_PASSWORD: ${DB_PASSWORD} 
+    POSTGRES_DB: ${DB_NAME}           
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+  networks:
+    - flashat-net
+  # Optional: Expose port if you want to connect via DBeaver/pgAdmin from your host
+
+  redis:
+    image: redis:alpine
+    networks:
+      - flashat-net
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/flashat.conf:/etc/nginx/conf.d/flashat.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - flashat-net
+
+networks:
+  flashat-net:
+    driver: bridge
