@@ -19,7 +19,7 @@ services:
   restart: always
   environment:
     POSTGRES_USER: ${DB_USER}         
-    POSTGRES_PASSWORD: ${DB_PASSWORD} 
+    POSTGRES_PASSWORD: ${DB_PASS} 
     POSTGRES_DB: ${DB_NAME}           
   volumes:
     - postgres_data:/var/lib/postgresql/data
@@ -38,7 +38,10 @@ services:
       - "80:80"
     volumes:
       - ./nginx/flashat.conf:/etc/nginx/conf.d/flashat.conf:ro
+      - ./frontend/dist:/user/share/nginx/html:ro
+    restart: always
     depends_on:
+      - frontend
       - backend
     networks:
       - flashat-net
