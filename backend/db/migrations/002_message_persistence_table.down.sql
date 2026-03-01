@@ -1,0 +1,5 @@
+
+DROP TABLE IF EXISTS conversations CASCADE;
+DROP TABLE IF EXISTS conversation_participants CASCADE;
+DROP TABLE IF EXISTS conversation_counters CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
