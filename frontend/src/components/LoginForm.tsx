@@ -26,7 +26,7 @@ export function LoginForm() {
     <div className="w-full max-w-md">
       {/* Header Section */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Updated Version</h2>
+        <h2 className="text-3xl font-bold text-white mb-2">Updated</h2>
         <p className="text-slate-400">Enter your credentials to access your chats</p>
       </div>
 

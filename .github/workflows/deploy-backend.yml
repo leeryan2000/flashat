@@ -4,12 +4,14 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - '**'          # Run on any change
-      - '!frontend/**' 
+      - 'backend/**'        
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
 
     steps:
       # --- Build Binary on Github ---
