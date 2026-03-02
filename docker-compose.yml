@@ -1,13 +1,13 @@
 services:
   backend:
-    image: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-backend:latest  # ← pulled from hub
+    image: leeryan2000/flashat-backend:latest  # ← pulled from hub
     restart: always
     env_file: .env
     networks:
       - flashat-net
 
   frontend:
-    image: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-frontend:latest  # ← pulled from hub
+    image: leeryan2000/flashat-frontend:latest  # ← pulled from hub
     restart: always
     networks:
       - flashat-net
