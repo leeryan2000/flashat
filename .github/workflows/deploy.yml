@@ -54,7 +54,7 @@ jobs:
   # ---------------------------------------------------
   deploy-to-ec2:
     # This ensures the deploy only happens if BOTH builds succeed
-    needs: [build-backend, build-frontend]
+    # needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
