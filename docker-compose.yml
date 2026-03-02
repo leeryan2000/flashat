@@ -39,7 +39,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/flashat.conf:/etc/nginx/conf.d/flashat.conf:ro
-      - ./frontend/dist:/usr/share/nginx/html:ro
+      - frontend_dist:/usr/share/nginx/html:ro
     restart: always
     depends_on:
       - frontend
