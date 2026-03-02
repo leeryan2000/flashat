@@ -1,13 +1,13 @@
 services:
   backend:
-    build: ./backend
+    image: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-backend:latest  # ← pulled from hub
     restart: always
     env_file: .env
     networks:
       - flashat-net
 
   frontend:
-    build: ./frontend
+    image: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-frontend:latest  # ← pulled from hub
     restart: always
     networks:
       - flashat-net
@@ -37,7 +37,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/flashat.conf:/etc/nginx/conf.d/flashat.conf:ro
-      - ./frontend/dist:/user/share/nginx/html:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
     restart: always
     depends_on:
       - frontend
