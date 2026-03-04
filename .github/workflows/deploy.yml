@@ -81,6 +81,8 @@ jobs:
             
             # Pull the fresh images from Docker Hub
             docker-compose pull
+
+            docker-compose down 
             
             # Restart the containers with the new images/configs
             docker-compose up -d
