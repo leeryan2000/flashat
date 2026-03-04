@@ -4,4 +4,3 @@ demo.go
 test/
 flashat-backend
 bin/
-*.conf
