@@ -8,53 +8,53 @@ jobs:
   # ---------------------------------------------------
   # JOB 1: Build and Push the Go Backend Image
   # ---------------------------------------------------
-#   build-backend:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v4
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-#       - name: Login to Docker Hub
-#         uses: docker/login-action@v3
-#         with:
-#           username: ${{ secrets.DOCKERHUB_USERNAME }}
-#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#       - name: Build & Push Backend
-#         uses: docker/build-push-action@v5
-#         with:
-#           context: ./backend
-#           push: true
-#           tags: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-backend:latest
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-backend:latest
 
-# # ---------------------------------------------------
-#   # JOB 2: Build and Push the React Frontend Image
-#   # ---------------------------------------------------
-#   build-frontend:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v4
+# ---------------------------------------------------
+  # JOB 2: Build and Push the React Frontend Image
+  # ---------------------------------------------------
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-#       - name: Login to Docker Hub
-#         uses: docker/login-action@v3
-#         with:
-#           username: ${{ secrets.DOCKERHUB_USERNAME }}
-#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#       - name: Build & Push Frontend
-#         uses: docker/build-push-action@v5
-#         with:
-#           context: ./frontend
-#           push: true
-#           tags: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-frontend:latest
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-frontend:latest
 
 # ---------------------------------------------------
   # JOB 3: Ship Configs and Restart EC2 Containers
   # ---------------------------------------------------
   deploy-to-ec2:
     # This ensures the deploy only happens if BOTH builds succeed
-    # needs: [build-backend, build-frontend]
+    needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
