@@ -19,4 +19,5 @@ func InitializeUserRoutes(router *gin.RouterGroup, h *handlers.Handlers, s *serv
 
 	userAuthRoutes.GET("/all", uh.GetAllUsers)
 	userAuthRoutes.GET("/:id", uh.GetUserById)
+	userAuthRoutes.PUT("/name", uh.UpdateName)
 }

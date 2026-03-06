@@ -10,4 +10,5 @@ type UserRepo interface {
 	GetAllUsers() ([]models.User, error)
 	GetUserByUID(uid uuid.UUID) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
+	UpdateName(uid uuid.UUID, name string) error
 }

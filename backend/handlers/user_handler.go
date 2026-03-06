@@ -81,6 +81,37 @@ func (h UserHandler) GetUserById(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+func (h UserHandler) UpdateName(c *gin.Context) {
+	uidStr := c.Param("uid")
+
+	if uidStr == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+		return
+	}
+
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	var input struct {
+		Name string `json:"name"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Failed to bind input"})
+		return
+	}
+
+	user, err := h.Repo.GetUserByUID(uid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
 func (h UserHandler) SendVerification(c *gin.Context) {
 	// otp := utils.SendVerification()
 	// ***** store otp in redis with expiration associated with user email

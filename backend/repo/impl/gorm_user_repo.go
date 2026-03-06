@@ -34,3 +34,7 @@ func (r *GormUserRepo) GetUserByEmail(email string) (*models.User, error) {
 	}
 	return user, nil
 }
+
+func (r *GormUserRepo) UpdateName(uid uuid.UUID, name string) error {
+	return r.DB.Model(&models.User{}).Where("uid = ?", uid).Update("name", name).Error
+}

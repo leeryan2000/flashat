@@ -37,3 +37,8 @@ func (m *UserRepoMock) GetUserByEmail(email string) (*models.User, error) {
 	}
 	return user, args.Error(1)
 }
+
+func (m *UserRepoMock) UpdateName(uid uuid.UUID, name string) error {
+	args := m.Called(uid, name)
+	return args.Error(0)
+}
