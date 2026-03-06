@@ -6,14 +6,6 @@ services:
     networks:
       - flashat-net
 
-  frontend:
-    image: leeryan2000/flashat-frontend:latest  # ← pulled from hub
-    restart: no
-    volumes:
-      - frontend_dist:/app/dist
-    networks:
-      - flashat-net
-
   db:
     image: postgres:17-alpine
     ports:
@@ -39,10 +31,9 @@ services:
       - "80:80"
     volumes:
       - ./nginx/flashat.conf:/etc/nginx/conf.d/default.conf:ro
-      - frontend_dist:/usr/share/nginx/html:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
     restart: always
     depends_on:
-      - frontend
       - backend
     networks:
       - flashat-net
@@ -53,4 +44,3 @@ networks:
 
 volumes:
   postgres_data:
-  frontend_dist:
