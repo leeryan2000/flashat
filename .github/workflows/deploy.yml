@@ -85,4 +85,4 @@ jobs:
             # Restart the containers with the new images/configs
             docker-compose up -d
 
-            # docker exec nginx nginx -s reload
+            docker exec nginx nginx -s reload
