@@ -3,8 +3,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import { useAuth } from "../context/AuthContext";
 import Chat from "../pages/Chat";
-import Profile from "../pages/Profile";
-import Settings from "../pages/Settings";
+import Profile from "../pages/ProfilePage";
+import SettingsPage from "../pages/SettingsPage";
 import Layout from "../layouts/Layout";
 import { PATHS } from "./paths";
 import { ChatProvider } from "../context/ChatContext";
@@ -39,7 +39,7 @@ export default function AppRouter() {
           <Route index element={<Chat />} />
           <Route path="friends" element={<Friendships />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path={PATHS.login} element={<LoginPage />} />
         <Route path={PATHS.register} element={<RegisterPage />} />

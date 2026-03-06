@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string) => void;
   logout: () => void;
   register: (username: string, email: string, password: string) => void;
+  updateProfile: (updatedData: {name: string}) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -87,6 +88,19 @@ export function AuthProvider({
     }
   }
 
+  const updateProfile = async (updatedData: {name: string}) => {
+    try {
+      const updatedUser = await api<User>("/user/auth/name", {
+        method: "PUT",
+        body: JSON.stringify(updatedData),
+      });
+      setUser(updatedUser);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      throw error;
+    }
+  };
+
   // Memoize the context value
   const value = useMemo(
     () => ({
@@ -97,6 +111,7 @@ export function AuthProvider({
       logout,
       register,
       isLoading,
+      updateProfile
     }),
     [user, isLoading, login, logout, register]
   );
