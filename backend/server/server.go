@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/leeryan2000/flashat/config"
 	"github.com/leeryan2000/flashat/db"
 	repo "github.com/leeryan2000/flashat/repo/impl"
 	"github.com/leeryan2000/flashat/service"
@@ -12,9 +13,10 @@ import (
 )
 
 type Server struct {
-	DB   *gorm.DB
-	Hub  *Hub
-	Pool *pgxpool.Pool
+	DB          *gorm.DB
+	Hub         *Hub
+	Pool        *pgxpool.Pool
+	RedisClient *db.RedisClient
 
 	// Service
 	MessageService *service.MessageService
@@ -45,39 +47,40 @@ func checkClients(s *Server) {
 func StartServer() (*Server, error) {
 	s := &Server{}
 
-	// Run DB migrations
-	err := db.RunMigrations()
+	cfg := config.LoadConfig()
+
+	err := db.RunMigrations(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	// Database connection
-	dbConnection, err := db.InitDB()
+	dbConnection, err := db.InitDB(cfg)
 	if err != nil {
 		return nil, err
 	}
 	s.DB = dbConnection
 
-	// Pgxpool setup
-	pgx, err := db.NewPgxPool()
+	pgx, err := db.NewPgxPool(cfg)
 	if err != nil {
 		return nil, err
 	}
 	s.Pool = pgx
 
-	// Hub creation
+	redisClient, err := db.NewClient(cfg)
+	if err != nil {
+		return nil, err
+	}
+	s.RedisClient = redisClient
+
 	s.Hub = NewHub()
 	go s.Hub.Run()
 
-	// Service
-	// Message service creation
 	s.MessageService = &service.MessageService{
 		Hub:              s.Hub,
 		MessageRepo:      &repo.PgxMessageRepo{Pool: s.Pool},
 		ConversationRepo: &repo.PgxConversationRepo{Pool: s.Pool},
 	}
 
-	// Repo
 	s.UserRepo = &repo.GormUserRepo{DB: s.DB}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}
 	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}

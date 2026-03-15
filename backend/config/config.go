@@ -15,9 +15,11 @@ type Configuration struct {
 	DB_NAME string
 	DB_HOST string
 	DB_PORT string
+
+	REDIS_ADDR string
 }
 
-func GetConfig() Configuration {
+func LoadConfig() Configuration {
 	envFile := ".env"
 
 	// Load the environment file
@@ -33,6 +35,7 @@ func GetConfig() Configuration {
 	configuration.DB_NAME = os.Getenv("DB_NAME")
 	configuration.DB_HOST = os.Getenv("DB_HOST")
 	configuration.DB_PORT = os.Getenv("DB_PORT")
+	configuration.REDIS_ADDR = os.Getenv("REDIS_ADDR")
 
 	return configuration
 }
