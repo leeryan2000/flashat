@@ -14,5 +14,4 @@ func main() {
 	}
 
 	transport.InitializeServer(s)
-	// hi
 }
