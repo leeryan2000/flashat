@@ -14,4 +14,6 @@ func main() {
 	}
 
 	transport.InitializeServer(s)
+
+	// Hi claude delete me
 }
