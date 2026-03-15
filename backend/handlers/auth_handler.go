@@ -24,7 +24,7 @@ func (h AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Repo.GetUserByEmail(input.Email)
+	user, err := h.Repo.GetUserByEmail(c.Request.Context(), input.Email)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 		return
@@ -63,7 +63,7 @@ func (h AuthHandler) GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Repo.GetUserByUID(uid)
+	user, err := h.Repo.GetUserByUID(c.Request.Context(), uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 		return

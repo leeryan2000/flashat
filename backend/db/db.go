@@ -13,8 +13,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/config"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func getDSN(c config.Configuration) string {
@@ -57,14 +55,6 @@ func RunMigrations(c config.Configuration) error {
 
 	log.Println("Database migrations applied successfully!")
 	return nil
-}
-
-func InitDB(c config.Configuration) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(getDSN(c)), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
 }
 
 func NewPgxPool(c config.Configuration) (*pgxpool.Pool, error) {

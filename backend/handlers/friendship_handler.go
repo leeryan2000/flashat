@@ -85,7 +85,7 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 	}
 
 	// Retreive friend's profile info
-	friendProfile, err := h.UserRepo.GetUserByUID(requesterUID)
+	friendProfile, err := h.UserRepo.GetUserByUID(c.Request.Context(), requesterUID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to get friend profile"})
 		return

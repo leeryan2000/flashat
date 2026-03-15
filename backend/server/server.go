@@ -9,11 +9,9 @@ import (
 	"github.com/leeryan2000/flashat/db"
 	repo "github.com/leeryan2000/flashat/repo/impl"
 	"github.com/leeryan2000/flashat/service"
-	"gorm.io/gorm"
 )
 
 type Server struct {
-	DB          *gorm.DB
 	Hub         *Hub
 	Pool        *pgxpool.Pool
 	RedisClient *db.RedisClient
@@ -22,7 +20,7 @@ type Server struct {
 	MessageService *service.MessageService
 
 	// Repo
-	UserRepo         *repo.GormUserRepo
+	UserRepo         *repo.PgxUserRepo
 	ConversationRepo *repo.PgxConversationRepo
 	MessageRepo      *repo.PgxMessageRepo
 	FriendshipRepo   *repo.PgxFriendshipRepo
@@ -54,12 +52,6 @@ func StartServer() (*Server, error) {
 		return nil, err
 	}
 
-	dbConnection, err := db.InitDB(cfg)
-	if err != nil {
-		return nil, err
-	}
-	s.DB = dbConnection
-
 	pgx, err := db.NewPgxPool(cfg)
 	if err != nil {
 		return nil, err
@@ -81,7 +73,7 @@ func StartServer() (*Server, error) {
 		ConversationRepo: &repo.PgxConversationRepo{Pool: s.Pool},
 	}
 
-	s.UserRepo = &repo.GormUserRepo{DB: s.DB}
+	s.UserRepo = &repo.PgxUserRepo{Pool: s.Pool}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}
 	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
 	s.FriendshipRepo = &repo.PgxFriendshipRepo{Pool: s.Pool}

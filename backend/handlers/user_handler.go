@@ -42,7 +42,7 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 	}
 
 	// ***** after redis implemented, turn this into storing in redis first, then after verification store in main db through another handler function
-	if err := h.Repo.CreateUser(&user); err != nil {
+	if err := h.Repo.CreateUser(c.Request.Context(), &user); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to server"})
 		return
 	}
@@ -50,7 +50,7 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (h UserHandler) GetAllUsers(c *gin.Context) {
-	users, err := h.Repo.GetAllUsers()
+	users, err := h.Repo.GetAllUsers(c.Request.Context())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -72,7 +72,7 @@ func (h UserHandler) GetUserById(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Repo.GetUserByUID(uid)
+	user, err := h.Repo.GetUserByUID(c.Request.Context(), uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -103,7 +103,7 @@ func (h UserHandler) UpdateName(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Repo.GetUserByUID(uid)
+	user, err := h.Repo.GetUserByUID(c.Request.Context(), uid)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
