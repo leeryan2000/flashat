@@ -4,48 +4,29 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/server"
-	"github.com/leeryan2000/flashat/utils"
 )
 
-// In front end set the "token" value in localstorage, send request and set header with key: Authorization, value: <token>
 func Authenticate(s *server.Server) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenStr, err := c.Cookie("token")
-		if err != nil {
-			// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
-			// return
-
-			// ***** test version which read from query to test through postman
-			tokenStr = c.Query("token")
-			if tokenStr == "" {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session token"})
+		sessionID, err := c.Cookie("session_id")
+		if err != nil || sessionID == "" {
+			// ***** test version which reads from query to test through postman
+			sessionID = c.Query("session_id")
+			if sessionID == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid session"})
 				return
 			}
-			// -------------------------
 		}
 
-		claims, err := utils.ParseToken(tokenStr)
+		uid, err := s.RedisClient.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			return
-		}
-		// Store UID in context for downstream handlers
-		uid, err := uuid.Parse(claims.UID)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid UID in token"})
+			// err is redis.Nil when session expired or not found
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired session"})
 			return
 		}
 
-		user, err := s.UserRepo.GetUserByUID(c.Request.Context(), uid)
-		if err != nil || user == nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-			return
-		}
-
-		c.Set("uid", claims.UID)
-
+		c.Set("uid", uid)
 		c.Next()
 	}
 }

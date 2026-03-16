@@ -9,6 +9,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const sessionPrefix = "session:"
+const sessionTTL = 3 * 24 * time.Hour
+
 type RedisClient struct {
 	Conn *redis.Client
 }
@@ -42,4 +45,16 @@ func (c *RedisClient) Close() error {
 		return nil
 	}
 	return c.Conn.Close()
+}
+
+func (c *RedisClient) SetSession(ctx context.Context, sessionID string, uid string) error {
+	return c.Conn.Set(ctx, sessionPrefix+sessionID, uid, sessionTTL).Err()
+}
+
+func (c *RedisClient) GetSession(ctx context.Context, sessionID string) (string, error) {
+	return c.Conn.Get(ctx, sessionPrefix+sessionID).Result()
+}
+
+func (c *RedisClient) DeleteSession(ctx context.Context, sessionID string) error {
+	return c.Conn.Del(ctx, sessionPrefix+sessionID).Err()
 }

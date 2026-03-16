@@ -5,11 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/leeryan2000/flashat/db"
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/utils"
 )
 
-type AuthHandler struct{ Repo repo.UserRepo }
+type AuthHandler struct {
+	Repo        repo.UserRepo
+	RedisClient *db.RedisClient
+}
 
 // `json:"email"` tells json encode/decoder how to map go struct fields to json key
 type loginInput struct {
@@ -35,22 +39,24 @@ func (h AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.UID)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+	sessionID := uuid.NewString()
+	if err := h.RedisClient.SetSession(c.Request.Context(), sessionID, user.UID); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
 		return
 	}
-	// ***** should later implement session
 	// ***** change the SameSite option for the cookie
-	c.SetCookie("token", token, 3*24*60*60, "", "", false, true)
+	c.SetCookie("session_id", sessionID, int(3*24*60*60), "", "", false, true)
 
 	c.JSON(http.StatusOK, user)
 
 }
 
 func (h AuthHandler) Logout(c *gin.Context) {
-	// ***** see if there is a way to invalidate the JWT token
-	c.SetCookie("token", "", -1, "", "", false, true)
+	sessionID, err := c.Cookie("session_id")
+	if err == nil && sessionID != "" {
+		h.RedisClient.DeleteSession(c.Request.Context(), sessionID)
+	}
+	c.SetCookie("session_id", "", -1, "", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
 

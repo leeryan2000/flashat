@@ -9,7 +9,7 @@ import (
 func InitializeServer(s *server.Server) {
 	handlers := handlers.Handlers{
 		User:         handlers.UserHandler{Repo: s.UserRepo},
-		Auth:         handlers.AuthHandler{Repo: s.UserRepo},
+		Auth:         handlers.AuthHandler{Repo: s.UserRepo, RedisClient: s.RedisClient},
 		Conversation: handlers.ConversationHandler{Repo: s.ConversationRepo},
 		Message:      handlers.MessageHandler{Repo: s.MessageRepo},
 		Friendship: handlers.FriendshipHandler{
