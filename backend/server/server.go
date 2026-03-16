@@ -67,11 +67,11 @@ func StartServer() (*Server, error) {
 	s.Hub = NewHub()
 	go s.Hub.Run()
 
-	s.MessageService = &service.MessageService{
-		Hub:              s.Hub,
-		MessageRepo:      &repo.PgxMessageRepo{Pool: s.Pool},
-		ConversationRepo: &repo.PgxConversationRepo{Pool: s.Pool},
-	}
+	s.MessageService = service.NewMessageService(
+		s.Hub,
+		&repo.PgxMessageRepo{Pool: s.Pool},
+		&repo.PgxConversationRepo{Pool: s.Pool},
+	)
 
 	s.UserRepo = &repo.PgxUserRepo{Pool: s.Pool}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}

@@ -12,28 +12,36 @@ import (
 	"github.com/leeryan2000/flashat/wire"
 )
 
+type MsgHandlerFunc func(ctx context.Context, env *wire.Msg) error
+
 type MessageService struct {
 	Hub              Hub
 	MessageRepo      repo.MessageRepo
 	ConversationRepo repo.ConversationRepo
+
+	handlers map[wire.WireType]MsgHandlerFunc
+}
+
+func NewMessageService(hub Hub, msgRepo repo.MessageRepo, convRepo repo.ConversationRepo) *MessageService {
+	s := &MessageService{
+		Hub:              hub,
+		MessageRepo:      msgRepo,
+		ConversationRepo: convRepo,
+		handlers:         make(map[wire.WireType]MsgHandlerFunc),
+	}
+
+	s.handlers[wire.Chat] = s.handleChat
+	s.handlers[wire.Read] = s.handleRead
+
+	return s
 }
 
 func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) error {
-	// Process the envelope based on its type
-	switch env.Type {
-	case wire.Chat:
-		s.handleChat(ctx, env)
-	case wire.Read:
-		s.handleRead(ctx, env)
-	case wire.Join:
-		// Handle join message
-	case wire.Leave:
-		// Handle leave message
-	default:
+	handler, ok := s.handlers[env.Type]
+	if !ok {
 		return nil // Unknown type, ignore
 	}
-
-	return nil // Processed successfully
+	return handler(ctx, env)
 }
 
 func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
