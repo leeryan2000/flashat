@@ -1,5 +1,6 @@
 demo.go
 *.pem
+*.key
 .env
 test/
 flashat-backend
