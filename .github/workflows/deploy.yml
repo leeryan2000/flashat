@@ -38,6 +38,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Check if Nginx Config Changed
+        id: nginx-changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            nginx:
+              - 'nginx/**'
+
       - name: Setup Node and Build Frontend
         run: |
           cd frontend
@@ -68,4 +76,9 @@ jobs:
 
             # Restart the containers with the new images/configs
             docker-compose up -d
+
+            # Only reload nginx if its config changed
+            if [ "${{ steps.nginx-changes.outputs.nginx }}" = "true" ]; then
+              docker-compose restart nginx
+            fi
 
