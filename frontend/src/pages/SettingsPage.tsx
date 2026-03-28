@@ -30,8 +30,8 @@ export default function SettingsPage() {
       title: "Account Actions",
       items: [
         {
-          id: "signout",
-          label: "Sign Out",
+          id: "logout",
+          label: "Log Out",
           icon: LogOut,
           onClick: handleLogout,
           isDanger: true, // 👈 This flag tells the UI to make it red

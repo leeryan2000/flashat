@@ -18,7 +18,7 @@ export function LoginForm() {
             await login(email, password);
             navigate(PATHS.chat);
         } catch (error) {
-            setError("Login failed");
+            setError(error instanceof Error ? error.message : "Login failed");
         }
     };
 
@@ -26,8 +26,8 @@ export function LoginForm() {
     <div className="w-full max-w-md">
       {/* Header Section */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Updated</h2>
-        <p className="text-slate-400">Enter your credentials to access your chats</p>
+        <h2 className="text-3xl font-bold text-white mb-2">Flashat</h2>
+        <p className="text-slate-400"></p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

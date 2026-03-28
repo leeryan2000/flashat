@@ -8,8 +8,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     ...init,
   });
 
-  if (res.status === 401) throw new Error("unauthorized");
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `HTTP ${res.status}`);
+  }
 
   return res.status === 204 ? (undefined as T) : res.json();
 }
