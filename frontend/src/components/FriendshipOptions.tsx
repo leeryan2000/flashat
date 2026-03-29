@@ -1,8 +1,8 @@
-import { MoreVertical, UserX} from 'lucide-react';
+import { MoreVertical, UserX, Ban } from 'lucide-react';
 import { useState } from 'react';
 
 // 🛠️ Helper Component for the Dropdown
-export function FriendshipOptions({ onUnfriend }: { onUnfriend: () => void }) {
+export function FriendshipOptions({ onUnfriend, onBlock }: { onUnfriend: () => void; onBlock: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -40,11 +40,17 @@ export function FriendshipOptions({ onUnfriend }: { onUnfriend: () => void }) {
               Unfriend User
             </button>
 
-            {/* Additional Buttons add here */}
-            {/* <button className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 flex items-center gap-3">
-               <AnotherIcon size={16} /> Another Option
-            </button> 
-            */}
+            {/* Option: Block */}
+            <button
+              onClick={() => {
+                onBlock();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-3 text-sm text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 flex items-center gap-3 transition"
+            >
+              <Ban size={16} />
+              Block User
+            </button>
           </div>
         </>
       )}

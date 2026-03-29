@@ -3,15 +3,19 @@ import { useChat, type MsgSlice } from "../context/ChatContext";
 import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../wire/message";
+import type { Conversation } from "../wire/conversation";
+import { MoreVertical, Ban } from "lucide-react";
 
 type MessagePaneProps = {
+  conv?: Conversation;
   msg: MsgSlice;
   activeConvId: string;
-  onLoadMore: () => Promise<void>; // Function to fetch older messages
+  onLoadMore: () => Promise<void>;
+  onBlock?: () => void;
 };
 
 // ---------- Messages pane ----------
-export default function MessagesPane({msg, activeConvId, onLoadMore}: MessagePaneProps) {
+export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBlock }: MessagePaneProps) {
   const { user } = useAuth();
   const { convs, markAsRead } = useChat();
 
@@ -99,13 +103,46 @@ export default function MessagesPane({msg, activeConvId, onLoadMore}: MessagePan
     return user ? msg.fromUid === user.uid : false;
   };
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <div className="h-full grid grid-rows-[1fr_auto]">
+    <div className={`h-full grid ${conv ? "grid-rows-[auto_1fr_auto]" : "grid-rows-[1fr_auto]"}`}>
+      {/* header */}
+      {conv && (
+        <div className="relative flex items-center justify-center px-4 py-3 border-b border-slate-200 bg-white">
+          <span className="font-semibold text-slate-800">{conv.title}</span>
+          {conv.type === "direct" && onBlock && (
+            <div className="absolute right-4">
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+              >
+                <MoreVertical size={18} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+                    <button
+                      onClick={() => { setMenuOpen(false); onBlock(); }}
+                      className="w-full text-left px-4 py-3 text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-3 transition"
+                    >
+                      <Ban size={16} />
+                      Block User
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* messages list */}
       <div
         ref={boxRef}
         onScroll={handleScroll}
-        className="overflow-y-auto space-y-2 pr-2"
+        className="overflow-y-auto space-y-2 px-4 py-2"
       >
         {msgList.map((msg) => (
           <div

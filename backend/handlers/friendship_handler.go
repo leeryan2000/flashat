@@ -197,6 +197,27 @@ func (h *FriendshipHandler) CancelFriendshipRequest(c *gin.Context) {
 }
 
 func (h *FriendshipHandler) BlockUser(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Parse UID failed"})
+		return
+	}
+
+	targetUIDstr := c.Param("uid")
+	targetUID, err := uuid.Parse(targetUIDstr)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid target UID"})
+		return
+	}
+
+	err = h.Repo.BlockUser(c.Request.Context(), uid, targetUID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to block user"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "User blocked"})
 }
 
 func (h *FriendshipHandler) ListFriendships(c *gin.Context) {

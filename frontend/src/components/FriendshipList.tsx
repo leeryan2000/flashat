@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  MessageSquare, 
+import {
+  MessageSquare,
   UserPlus,
-  Users, 
-  X, 
-  Check, 
-  Search, 
+  Users,
+  X,
+  Check,
+  Search,
   Loader2,
   MessageSquarePlus,
+  Ban,
 } from 'lucide-react'; // Assuming you use lucide-react for icons
 import type { Friendship } from '../wire/friendship';
 import { FriendshipOptions } from './FriendshipOptions';
@@ -21,19 +22,21 @@ type FriendsListProps = {
   onDecline: (uid: string) => void;
   onCancel: (uid: string) => void;
   onUnfriend: (uid: string, convId: string | null) => void;
+  onBlock: (uid: string, convId: string | null) => void;
   onAddFriend: (email: string) => void;
   onCreateGroup: (name: string, participantIds: string[]) => Promise<void>;
 }
 
-export default function FriendshipList({ 
-  data, 
-  onChatClick, 
-  onAccept, 
-  onDecline, 
+export default function FriendshipList({
+  data,
+  onChatClick,
+  onAccept,
+  onDecline,
   onCancel,
   onUnfriend,
+  onBlock,
   onAddFriend,
-  onCreateGroup
+  onCreateGroup,
 }: FriendsListProps) {
   const [query, setQuery] = useState("");
 
@@ -181,19 +184,26 @@ export default function FriendshipList({
                     <p className="text-xs text-slate-400 truncate">{user.email}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => onAccept(user.uid)}
                       className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition"
                       title="Accept"
                     >
                       <Check size={18} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => onDecline(user.uid)}
                       className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
                       title="Decline"
                     >
                       <X size={18} />
+                    </button>
+                    <button
+                      onClick={() => onBlock(user.uid, null)}
+                      className="p-2 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition"
+                      title="Block"
+                    >
+                      <Ban size={18} />
                     </button>
                   </div>
                 </div>
@@ -264,7 +274,10 @@ export default function FriendshipList({
                       <MessageSquare size={18} />
                     </button>
                     {/* Optional: Unfriend Button */}
-                    <FriendshipOptions onUnfriend={() => onUnfriend(user.uid, user.directConversationId)} />
+                    <FriendshipOptions
+                      onUnfriend={() => onUnfriend(user.uid, user.directConversationId)}
+                      onBlock={() => onBlock(user.uid, user.directConversationId)}
+                    />
                   </div>
                 </div>
               ))}

@@ -120,16 +120,40 @@ func (r *PgxFriendshipRepo) RemovePendingFriendship(ctx context.Context, request
 	return err
 }
 
-func (r *PgxFriendshipRepo) BlockUser(ctx context.Context, requesterUID, receiverUID uuid.UUID) error {
-	// Implementation for blocking user using pgx
-	_, err := r.Pool.Exec(ctx, `
-		UPDATE friendships
-		SET status = 'blocked'
-		WHERE requester_uid = $1 AND receiver_uid = $2`,
-		requesterUID, receiverUID,
-	)
+func (r *PgxFriendshipRepo) BlockUser(ctx context.Context, blockerUID, targetUID uuid.UUID) error {
+	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
 
-	return err
+	// Remove any existing friendship row
+	_, err = tx.Exec(ctx, `
+		DELETE FROM friendships
+		WHERE (requester_uid = $1 AND receiver_uid = $2)
+		   OR (requester_uid = $2 AND receiver_uid = $1)`,
+		blockerUID, targetUID,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Insert blocked row with blocker as requester so direction is clear
+	_, err = tx.Exec(ctx, `
+		INSERT INTO friendships (requester_uid, receiver_uid, status)
+		VALUES ($1, $2, 'blocked')`,
+		blockerUID, targetUID,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Remove the shared direct conversation if one exists
+	if err = utils.RemoveConversationWithTx(ctx, tx, blockerUID, targetUID); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *PgxFriendshipRepo) ListFriendships(ctx context.Context, uid uuid.UUID) ([]wire.Friendship, error) {

@@ -3,13 +3,9 @@ import FriendshipList from "../components/FriendshipList";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 import { api } from "../api/api";
-import {
-  toConversation as dtoToConversation,
-  type ConvDto,
-} from "../wire/conversation";
+import { toConversation, type ConvDto } from "../wire/conversation";
 import { dtoToMessage, type MsgDto } from "../wire/message";
-import type { Friendship } from "../wire/friendship";
-import type { CustomResponse } from "../wire/resp";
+import { useFriendshipActions } from "../hooks/useFriendshipActions";
 
 type CreateConvResponse = {
   conversation: ConvDto;
@@ -17,135 +13,28 @@ type CreateConvResponse = {
 };
 
 export default function Friendships() {
-  const {
-    friendships,
-    setFriendships,
-    setActiveConvId,
-    loadConvs,
-    loadMsgs,
-    removeConv,
-  } = useChat();
+  const { friendships, setActiveConvId, loadConvs, loadMsgs } = useChat();
+  const { acceptFriendship, declineFriendship, cancelRequest, unfriend, blockUser, addFriend } =
+    useFriendshipActions();
   const navigate = useNavigate();
 
   const onChatClick = (convId: string) => {
-    console.log("Navigating to chat with convId:", convId);
     setActiveConvId(convId);
     navigate(PATHS.chat);
   };
 
-  const onAccept = async (uid: string) => {
-    try {
-      const resp = await api<CreateConvResponse>(`/friendship/accept`, {
-        method: "POST",
-        body: JSON.stringify({
-          uid,
-        }),
-      });
-
-      const newDirectConv = dtoToConversation(resp.conversation);
-      loadConvs([newDirectConv]);
-      const welcomeMsg = dtoToMessage(resp.message);
-      loadMsgs([welcomeMsg]);
-
-      // update status for friendship list
-      const updatedList: Friendship[] = friendships.map((friend) => {
-        if (friend.uid === uid) {
-          return {
-            ...friend,
-            directConversationId: newDirectConv.id,
-            status: "accepted",
-          };
-        }
-        return friend;
-      });
-      setFriendships(updatedList);
-    } catch (err: any) {
-      console.error("Error accepting friendship:", err);
-    }
-  };
-
-  const onDecline = async (uid: string) => {
-    try {
-        const resp = await api<CustomResponse>(`/friendship/decline/${uid}`, {
-          method: "DELETE" 
-        });
-      
-        const updatedList: Friendship[] = friendships.filter(
-          (friend) => friend.uid !== uid
-        );
-        setFriendships(updatedList)
-
-        console.log(resp.message)
-    } catch (err: any) {
-      console.error("Error declining friendship:", err);
-    }
-  };
-
-  const onCancel = async (uid: string) => {
-    try {
-      const resp = await api<CustomResponse>(`/friendship/cancel/${uid}`, {
-        method: "DELETE",
-      });
-
-      const updatedList: Friendship[] = friendships.filter(
-        (friend) => friend.uid !== uid
-      );
-      setFriendships(updatedList);
-      console.log(resp.message);
-    } catch (err: any) {
-      console.error("Error canceling friendship:", err);
-    }
-  };
-
-  const onUnfriend = async (uid: string, convId: string | null) => {
-    try {
-      const resp = await api<CustomResponse>(`/friendship/delete/${uid}`, {
-        method: "DELETE",
-      });
-
-      if (convId) {
-        removeConv(convId);
-      }
-      const updatedList: Friendship[] = friendships.filter(
-        (friend) => friend.uid !== uid
-      );
-      setFriendships(updatedList);
-
-      console.log(resp.message)
-    } catch (err: any) {
-      console.error("Error unfriending user:", err);
-    }
-  };
-
-  const onAddFriend = async (email: string) => {
-    try {
-      const resp = await api<CustomResponse>(`/friendship/request`, {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-
-      console.log(resp.message);
-    } catch (err: any) {
-      console.error("Error sending friend request:", err);
-    }
-  }
-
   const onCreateGroup = async (name: string, participants: string[]) => {
     try {
       const resp = await api<CreateConvResponse>(`/conversation/group`, {
-        method : "POST",
+        method: "POST",
         body: JSON.stringify({ name, participants }),
       });
-
-      const newDirectConv = dtoToConversation(resp.conversation);
-      loadConvs([newDirectConv]);
-      const welcomeMsg = dtoToMessage(resp.message);
-      loadMsgs([welcomeMsg]);
-
-    } catch (err: any) {
+      loadConvs([toConversation(resp.conversation)]);
+      loadMsgs([dtoToMessage(resp.message)]);
+    } catch (err) {
       console.error("Error creating group conversation:", err);
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-black">
@@ -153,11 +42,12 @@ export default function Friendships() {
         <FriendshipList
           data={friendships}
           onChatClick={onChatClick}
-          onAccept={onAccept}
-          onDecline={onDecline}
-          onCancel={onCancel}
-          onUnfriend={onUnfriend}
-          onAddFriend={onAddFriend}
+          onAccept={acceptFriendship}
+          onDecline={declineFriendship}
+          onCancel={cancelRequest}
+          onUnfriend={unfriend}
+          onBlock={blockUser}
+          onAddFriend={addFriend}
           onCreateGroup={onCreateGroup}
         />
       </main>
