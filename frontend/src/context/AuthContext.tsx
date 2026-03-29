@@ -19,17 +19,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({
-  children,
-  blockUntilReady = true,          // <-- optional opt-out
-  Fallback = DefaultAuthFallback,  // <-- optional custom loading UI
-}: {
-  children: React.ReactNode;
-  blockUntilReady?: boolean;
-  Fallback?: React.ComponentType;
-}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,11 +33,11 @@ export function AuthProvider({
         console.error("Failed to fetch user:", error);
         setUser(null);
       } finally {
-        setIsLoading(false);
+        setIsInitialLoading(false);
       }
     })();
   }, []);
-  
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -76,12 +69,12 @@ export function AuthProvider({
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      await api<User>("/user/register", 
+      await api<User>("/user/register",
         {
           method: "POST",
           body: JSON.stringify({ name, email, password }),
         }
-      );  
+      );
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;
@@ -106,32 +99,20 @@ export function AuthProvider({
     () => ({
       user,
       // see if user is truthy, if not then its not authenticated
-      isAuthenticated: !isLoading && !!user,
+      isAuthenticated: !isInitialLoading && !!user,
       login,
       logout,
       register,
       isLoading,
       updateProfile
     }),
-    [user, isLoading, login, logout, register]
+    [user, isInitialLoading, isLoading, login, logout, register]
   );
-
-  if (blockUntilReady && isLoading) {
-    return <Fallback />;
-  } 
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
-}
-
-function DefaultAuthFallback() {
-  return (
-    <div className="grid min-h-screen place-items-center text-slate-500">
-      Loading…
-    </div>
   );
 }
 

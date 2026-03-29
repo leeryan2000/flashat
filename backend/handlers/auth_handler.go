@@ -30,18 +30,18 @@ func (h AuthHandler) Login(c *gin.Context) {
 
 	user, err := h.Repo.GetUserByEmail(c.Request.Context(), input.Email)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
 		return
 	}
 
 	if !utils.CheckPasswordHash(input.Password, user.HashedPassword) {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Login failed"})
 		return
 	}
 
 	sessionID := uuid.NewString()
 	if err := h.RedisClient.SetSession(c.Request.Context(), sessionID, user.UID); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
 		return
 	}
 	// ***** change the SameSite option for the cookie
