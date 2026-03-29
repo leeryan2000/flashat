@@ -3,18 +3,13 @@ import FriendshipList from "../components/FriendshipList";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 import { api } from "../api/api";
-import { toConversation, type ConvDto } from "../wire/conversation";
-import { dtoToMessage, type MsgDto } from "../wire/message";
+import { toConversation, type CreateConvResponse } from "../wire/conversation";
+import { dtoToMessage } from "../wire/message";
 import { useFriendshipActions } from "../hooks/useFriendshipActions";
-
-type CreateConvResponse = {
-  conversation: ConvDto;
-  message: MsgDto;
-};
 
 export default function Friendships() {
   const { friendships, setActiveConvId, loadConvs, loadMsgs } = useChat();
-  const { acceptFriendship, declineFriendship, cancelRequest, unfriend, blockUser, addFriend } =
+  const { acceptFriendship, declineFriendship, cancelRequest, unfriend, blockUser, unblockUser, addFriend } =
     useFriendshipActions();
   const navigate = useNavigate();
 
@@ -47,6 +42,7 @@ export default function Friendships() {
           onCancel={cancelRequest}
           onUnfriend={unfriend}
           onBlock={blockUser}
+          onUnblock={unblockUser}
           onAddFriend={addFriend}
           onCreateGroup={onCreateGroup}
         />

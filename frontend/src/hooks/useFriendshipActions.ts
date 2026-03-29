@@ -1,13 +1,8 @@
 import { useChat } from "../context/ChatContext";
 import { api } from "../api/api";
-import { toConversation, type ConvDto } from "../wire/conversation";
-import { dtoToMessage, type MsgDto } from "../wire/message";
+import { toConversation, type CreateConvResponse } from "../wire/conversation";
+import { dtoToMessage } from "../wire/message";
 import type { CustomResponse } from "../wire/resp";
-
-type CreateConvResponse = {
-  conversation: ConvDto;
-  message: MsgDto;
-};
 
 export function useFriendshipActions() {
   const { friendships, setFriendships, removeConv, loadConvs, loadMsgs } = useChat();
@@ -65,9 +60,24 @@ export function useFriendshipActions() {
     try {
       await api<CustomResponse>(`/friendship/block/${uid}`, { method: "POST" });
       if (convId) removeConv(convId);
-      setFriendships(friendships.filter((f) => f.uid !== uid));
+      setFriendships(
+        friendships.map((f) =>
+          f.uid === uid
+            ? { ...f, status: "blocked", direction: "outgoing", directConversationId: null }
+            : f
+        )
+      );
     } catch (err) {
       console.error("Error blocking user:", err);
+    }
+  };
+
+  const unblockUser = async (uid: string) => {
+    try {
+      await api<CustomResponse>(`/friendship/delete/${uid}`, { method: "DELETE" });
+      setFriendships(friendships.filter((f) => f.uid !== uid));
+    } catch (err) {
+      console.error("Error unblocking user:", err);
     }
   };
 
@@ -82,5 +92,5 @@ export function useFriendshipActions() {
     }
   };
 
-  return { acceptFriendship, declineFriendship, cancelRequest, unfriend, blockUser, addFriend };
+  return { acceptFriendship, declineFriendship, cancelRequest, unfriend, blockUser, unblockUser, addFriend };
 }

@@ -9,6 +9,9 @@ import {
   Loader2,
   MessageSquarePlus,
   Ban,
+  ChevronDown,
+  ChevronRight,
+  ShieldOff,
 } from 'lucide-react'; // Assuming you use lucide-react for icons
 import type { Friendship } from '../wire/friendship';
 import { FriendshipOptions } from './FriendshipOptions';
@@ -23,6 +26,7 @@ type FriendsListProps = {
   onCancel: (uid: string) => void;
   onUnfriend: (uid: string, convId: string | null) => void;
   onBlock: (uid: string, convId: string | null) => void;
+  onUnblock: (uid: string) => void;
   onAddFriend: (email: string) => void;
   onCreateGroup: (name: string, participantIds: string[]) => Promise<void>;
 }
@@ -35,10 +39,12 @@ export default function FriendshipList({
   onCancel,
   onUnfriend,
   onBlock,
+  onUnblock,
   onAddFriend,
   onCreateGroup,
 }: FriendsListProps) {
   const [query, setQuery] = useState("");
+  const [blockedOpen, setBlockedOpen] = useState(false);
 
   // -- State for "Add Friend" ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -54,7 +60,7 @@ export default function FriendshipList({
   const [groupError, setGroupError] = useState("");
 
   // 2. Filter & Split Data
-  const { friends, incoming, outgoing } = useMemo(() => {
+  const { friends, incoming, outgoing, blocked } = useMemo(() => {
     // First, filter by search query
     const filtered = data.filter(u => 
       u.name.toLowerCase().includes(query.toLowerCase()) || 
@@ -65,6 +71,7 @@ export default function FriendshipList({
       friends: filtered.filter(u => u.status === 'accepted'),
       incoming: filtered.filter(u => u.status === 'pending' && u.direction === 'incoming'),
       outgoing: filtered.filter(u => u.status === 'pending' && u.direction === 'outgoing'),
+      blocked: data.filter(u => u.status === 'blocked' && u.direction === 'outgoing'),
     };
   }, [data, query]);
 
@@ -284,6 +291,40 @@ export default function FriendshipList({
             </div>
           )}
         </section>
+        {/* Section 4: Blocked Users */}
+        {blocked.length > 0 && (
+          <section>
+            <button
+              onClick={() => setBlockedOpen(o => !o)}
+              className="flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 hover:text-slate-300 transition"
+            >
+              {blockedOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              Blocked ({blocked.length})
+            </button>
+
+            {blockedOpen && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {blocked.map(user => (
+                  <div key={user.uid} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4 opacity-75">
+                    {renderAvatar(user.name)}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{user.name}</p>
+                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => onUnblock(user.uid)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white transition"
+                      title="Unblock"
+                    >
+                      <ShieldOff size={14} />
+                      Unblock
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
 
       {isAddModalOpen && (

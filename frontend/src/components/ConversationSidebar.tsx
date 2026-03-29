@@ -3,12 +3,18 @@ import type { ConvState } from "../context/ChatContext";
 import type { Conversation } from "../wire/conversation";
 
 
-function timeAgo(ts: number) {
-  const mins = Math.max(1, Math.round((Date.now() - ts) / 60000));
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  return `${Math.round(hrs / 24)}d`;
+function formatConvTime(ts: number) {
+  const now = new Date();
+  const date = new Date(ts);
+  const diffMins = Math.max(1, Math.round((Date.now() - ts) / 60000));
+
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffMins < 1440) return `${Math.round(diffMins / 60)}h`;
+
+  if (date.getFullYear() === now.getFullYear()) {
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ convs: ConvState; activeConvId?: string; onOpen:(id:string)=>void }) {
@@ -53,7 +59,7 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium">{conv.title}</p>
                 <span className="text-xs text-slate-400 ml-auto">
-                  {typeof conv.lastMsgTs === "number" ? timeAgo(conv.lastMsgTs) : "--"}
+                  {typeof conv.lastMsgTs === "number" ? formatConvTime(conv.lastMsgTs) : "--"}
                 </span>
               </div>
               <p className="truncate text-sm text-slate-300">{conv.lastMsgText}</p>

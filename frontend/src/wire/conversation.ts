@@ -1,3 +1,5 @@
+import type { MsgDto } from "./message";
+
 export type Conversation = {
   id: string;
   type: "group" | "direct";
@@ -30,6 +32,11 @@ export type ConvDto = {
   last_seq: number;
   last_read_seq: number;
   unread_count: number;
+};
+
+export type CreateConvResponse = {
+  conversation: ConvDto;
+  message: MsgDto;
 };
 
 export const toConversation = (w: ConvDto): Conversation => ({

@@ -14,6 +14,22 @@ type MessagePaneProps = {
   onBlock?: () => void;
 };
 
+function getDateLabel(ts: number): string {
+  const now = new Date();
+  const msgDate = new Date(ts);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const msgStart = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate()).getTime();
+  const diffDays = Math.round((todayStart - msgStart) / 86400000);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return msgDate.toLocaleDateString("en-US", { weekday: "long" });
+  if (msgDate.getFullYear() === now.getFullYear()) {
+    return msgDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+  return msgDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 // ---------- Messages pane ----------
 export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBlock }: MessagePaneProps) {
   const { user } = useAuth();
@@ -21,13 +37,30 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
 
   const msgList = useMemo(() => {
     const confirmed = msg.order.map((seq) => msg.entities[seq]).filter(Boolean);
-    // Map pending IDs to message objects
     const pending = (msg.pendingOrder || [])
       .map((id) => msg.pendingEntities[id])
       .filter(Boolean);
-
     return [...confirmed, ...pending];
   }, [msg]);
+
+  type DateSeparator = { type: "date"; label: string; key: string };
+  type MsgItem = { type: "msg"; msg: Message };
+
+  const renderedItems = useMemo(() => {
+    const items: Array<DateSeparator | MsgItem> = [];
+    let lastLabel = "";
+    for (const m of msgList) {
+      if (m.ts) {
+        const label = getDateLabel(m.ts);
+        if (label !== lastLabel) {
+          items.push({ type: "date", label, key: `sep-${label}` });
+          lastLabel = label;
+        }
+      }
+      items.push({ type: "msg", msg: m });
+    }
+    return items;
+  }, [msgList]);
 
   const boxRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -144,54 +177,51 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
         onScroll={handleScroll}
         className="overflow-y-auto space-y-2 px-4 py-2"
       >
-        {msgList.map((msg) => (
-          <div
-            id={msg.seq ? `msg-${msg.seq}` : undefined}
-            key={msg.id || msg.clientMsgId}
-            className={[
-              "flex",
-              isSelf(msg) ? "justify-end" : "justify-start",
-            ].join(" ")}
-          >
+        {renderedItems.map((item) =>
+          item.type === "date" ? (
+            <div key={item.key} className="flex items-center gap-3 my-2">
+              <div className="flex-1 h-px bg-slate-200" />
+              <span className="text-xs text-slate-400 font-medium">{item.label}</span>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+          ) : (
             <div
-              className={[
-                "max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow",
-                msg.status === "failed"
-                  ? "bg-red-100 text-red-800 border border-red-300" // Failed Style
-                  : isSelf(msg)
-                  ? "bg-indigo-600 text-white rounded-br-sm" // Self Sent Style
-                  : "bg-slate-100 text-slate-900 rounded-bl-sm", // Other Style
-                msg.status === "sending" ? "opacity-70" : "",
-              ].join(" ")}
+              id={item.msg.seq ? `msg-${item.msg.seq}` : undefined}
+              key={item.msg.id || item.msg.clientMsgId}
+              className={["flex", isSelf(item.msg) ? "justify-end" : "justify-start"].join(" ")}
             >
-              <p
-                className={`whitespace-pre-wrap break-words ${
-                  isSelf(msg) ? "text-right" : "text-left"
-                }`}
+              <div
+                className={[
+                  "max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow",
+                  item.msg.status === "failed"
+                    ? "bg-red-100 text-red-800 border border-red-300"
+                    : isSelf(item.msg)
+                    ? "bg-indigo-600 text-white rounded-br-sm"
+                    : "bg-slate-100 text-slate-900 rounded-bl-sm",
+                  item.msg.status === "sending" ? "opacity-70" : "",
+                ].join(" ")}
               >
-                {msg.text}
-              </p>
-
-              <div className="flex items-center justify-end gap-1 mt-1">
-                {isSelf(msg) && msg.status === "sending" && (
-                  <span className="text-[10px] italic">...</span>
-                )}
-
-                {isSelf(msg) && msg.status === "failed" && (
-                  <span className="text-[10px] font-bold">X</span>
-                )}
-
-                {/* Timestamp is now last (rightmost) */}
-                <p className="text-[11px] opacity-70">
-                  {new Date(msg.ts ?? 0).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <p className={`whitespace-pre-wrap break-words ${isSelf(item.msg) ? "text-right" : "text-left"}`}>
+                  {item.msg.text}
                 </p>
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  {isSelf(item.msg) && item.msg.status === "sending" && (
+                    <span className="text-[10px] italic">...</span>
+                  )}
+                  {isSelf(item.msg) && item.msg.status === "failed" && (
+                    <span className="text-[10px] font-bold">X</span>
+                  )}
+                  <p className="text-[11px] opacity-70">
+                    {new Date(item.msg.ts ?? 0).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
         {msgList.length === 0 && (
           <div className="h-full grid place-items-center text-slate-400">
             No messages yet.
