@@ -198,6 +198,71 @@ func (r *PgxConversationRepo) RemoveParticipant(ctx context.Context, conversatio
 	return err
 }
 
+func (r *PgxConversationRepo) LeaveGroup(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) error {
+	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Check the leaving user's role
+	var role string
+	err = tx.QueryRow(ctx, `
+		SELECT role FROM conversation_participants
+		WHERE conversation_id = $1 AND uid = $2`,
+		conversationID, uid,
+	).Scan(&role)
+	if err != nil {
+		return err
+	}
+
+	if role == "creator" {
+		// Find another member to promote
+		var nextUID uuid.UUID
+		err = tx.QueryRow(ctx, `
+			SELECT uid FROM conversation_participants
+			WHERE conversation_id = $1 AND uid != $2
+			LIMIT 1`,
+			conversationID, uid,
+		).Scan(&nextUID)
+
+		if err == pgx.ErrNoRows {
+			// Last member — delete the whole conversation
+			_, err = tx.Exec(ctx, `DELETE FROM conversations WHERE id = $1`, conversationID)
+			if err != nil {
+				return err
+			}
+			return tx.Commit(ctx)
+		}
+		if err != nil {
+			return err
+		}
+
+		// Promote the next member to creator
+		_, err = tx.Exec(ctx, `
+			UPDATE conversation_participants
+			SET role = 'creator'
+			WHERE conversation_id = $1 AND uid = $2`,
+			conversationID, nextUID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove the leaving user
+	_, err = tx.Exec(ctx, `
+		DELETE FROM conversation_participants
+		WHERE conversation_id = $1 AND uid = $2`,
+		conversationID, uid,
+	)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (r *PgxConversationRepo) UpdateLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID, seq int64) error {
 	_, err := r.Pool.Exec(ctx, `
 		UPDATE conversation_participants

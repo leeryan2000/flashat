@@ -379,6 +379,30 @@ func (h *ConversationHandler) GetLastReadSeq(c *gin.Context) {
 	c.JSON(http.StatusOK, lastReadSeq)
 }
 
+func (h *ConversationHandler) LeaveGroup(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Parse UID failed"})
+		return
+	}
+
+	conversationIDStr := c.Param("conversation_id")
+	conversationID, err := uuid.Parse(conversationIDStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Parse conversation ID failed"})
+		return
+	}
+
+	err = h.Repo.LeaveGroup(c.Request.Context(), conversationID, uid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to leave group"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Left group successfully"})
+}
+
 func (h *ConversationHandler) GetSummary(c *gin.Context) {
 	uidStr := c.GetString("uid")
 	uid, err := uuid.Parse(uidStr)

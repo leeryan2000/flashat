@@ -26,5 +26,7 @@ func InitializeConversationRoutes(router *gin.RouterGroup, h *handlers.Handlers,
 	conversationRoutes.PUT("/read_seq", ch.UpdateLastReadSeq)
 	conversationRoutes.GET("/read_seq", ch.GetLastReadSeq)
 
+	conversationRoutes.DELETE("/:conversation_id/leave", ch.LeaveGroup)
+
 	conversationRoutes.GET("/summary", ch.GetSummary)
 }

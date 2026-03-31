@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useChat } from "../context/ChatContext";
+import { Send } from "lucide-react";
 
 export function Composer({ convId }: { convId: string }) {
   const [text, setText] = useState("");
@@ -12,26 +13,35 @@ export function Composer({ convId }: { convId: string }) {
   }
 
   return (
-    <div className="mt-3 grid grid-cols-[1fr_auto] gap-2 rounded-xl border border-slate-200 p-2 bg-white">
-      <textarea
-        rows={1}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            send();
-          }
-        }}
-        placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
-        className="resize-none w-full px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      <button
-        onClick={send}
-        className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:brightness-110 active:scale-95 transition"
-      >
-        Send
-      </button>
+    <div className="p-3 bg-white">
+      <div className="flex items-end gap-2 rounded-2xl border border-slate-200 shadow-sm bg-white px-3 py-2">
+        <textarea
+          rows={1}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
+          placeholder="Write a message..."
+          className="resize-none flex-1 text-base text-slate-800 placeholder:text-slate-400 outline-none overflow-y-auto py-2 leading-6"
+          style={{ height: "40px", maxHeight: "160px" }}
+        />
+        <button
+          onClick={send}
+          disabled={text.trim() === ""}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+        >
+          <Send size={15} />
+          Send
+        </button>
+      </div>
     </div>
   );
 }

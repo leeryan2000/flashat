@@ -5,9 +5,10 @@ import MessagesPane from "../components/MessagePane";
 import { api } from "../api/api";
 import { dtoToMessage, type MsgDto } from "../wire/message";
 import { useFriendshipActions } from "../hooks/useFriendshipActions";
+import type { CustomResponse } from "../wire/resp";
 
 export default function Chat() {
-  const { convs, msgs, loadMsgs, activeConvId, setActiveConvId, friendships } = useChat();
+  const { convs, msgs, loadMsgs, activeConvId, setActiveConvId, friendships, removeConv } = useChat();
   const { blockUser } = useFriendshipActions();
   const [hasMore, setHasMore] = useState(true);
 
@@ -27,6 +28,17 @@ export default function Chat() {
     if (!activeFriend || !activeConvId) return;
     await blockUser(activeFriend.uid, activeConvId);
     setActiveConvId(null);
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!activeConvId) return;
+    try {
+      await api<CustomResponse>(`/conversation/${activeConvId}/leave`, { method: "DELETE" });
+      removeConv(activeConvId);
+      setActiveConvId(null);
+    } catch (err) {
+      console.error("Error leaving group:", err);
+    }
   };
 
   const loadMore = async () => {
@@ -73,6 +85,7 @@ export default function Chat() {
             activeConvId={activeConvId}
             onLoadMore={loadMore}
             onBlock={activeFriend ? handleBlock : undefined}
+            onLeaveGroup={activeConv?.type === "group" ? handleLeaveGroup : undefined}
           />
         ) : (
           <div className="h-full grid place-items-center text-slate-400">

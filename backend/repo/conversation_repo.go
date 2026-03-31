@@ -20,6 +20,7 @@ type ConversationRepo interface {
 	AddParticipant(ctx context.Context, conversationID uuid.UUID, participantUID uuid.UUID) error
 	ModifyParticipant(ctx context.Context, conversationID uuid.UUID, participantUID uuid.UUID, role string) error
 	RemoveParticipant(ctx context.Context, conversationID uuid.UUID, participantUID uuid.UUID) error
+	LeaveGroup(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) error
 
 	// Read-state
 	UpdateLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID, seq int64) error

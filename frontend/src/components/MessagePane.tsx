@@ -4,7 +4,7 @@ import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../wire/message";
 import type { Conversation } from "../wire/conversation";
-import { MoreVertical, Ban } from "lucide-react";
+import { MoreVertical, Ban, LogOut } from "lucide-react";
 
 type MessagePaneProps = {
   conv?: Conversation;
@@ -12,6 +12,7 @@ type MessagePaneProps = {
   activeConvId: string;
   onLoadMore: () => Promise<void>;
   onBlock?: () => void;
+  onLeaveGroup?: () => void;
 };
 
 function getDateLabel(ts: number): string {
@@ -31,7 +32,7 @@ function getDateLabel(ts: number): string {
 }
 
 // ---------- Messages pane ----------
-export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBlock }: MessagePaneProps) {
+export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBlock, onLeaveGroup }: MessagePaneProps) {
   const { user } = useAuth();
   const { convs, markAsRead } = useChat();
 
@@ -144,7 +145,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
       {conv && (
         <div className="relative flex items-center justify-center px-4 py-3 border-b border-slate-200 bg-white">
           <span className="font-semibold text-slate-800">{conv.title}</span>
-          {conv.type === "direct" && onBlock && (
+          {(conv.type === "direct" && onBlock) || (conv.type === "group" && onLeaveGroup) ? (
             <div className="absolute right-4">
               <button
                 onClick={() => setMenuOpen((o) => !o)}
@@ -156,18 +157,29 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
                   <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
-                    <button
-                      onClick={() => { setMenuOpen(false); onBlock(); }}
-                      className="w-full text-left px-4 py-3 text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-3 transition"
-                    >
-                      <Ban size={16} />
-                      Block User
-                    </button>
+                    {conv.type === "direct" && onBlock && (
+                      <button
+                        onClick={() => { setMenuOpen(false); onBlock(); }}
+                        className="w-full text-left px-4 py-3 text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-3 transition"
+                      >
+                        <Ban size={16} />
+                        Block User
+                      </button>
+                    )}
+                    {conv.type === "group" && onLeaveGroup && (
+                      <button
+                        onClick={() => { setMenuOpen(false); onLeaveGroup(); }}
+                        className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 transition"
+                      >
+                        <LogOut size={16} />
+                        Leave Group
+                      </button>
+                    )}
                   </div>
                 </>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
@@ -192,7 +204,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
             >
               <div
                 className={[
-                  "max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow",
+                  "max-w-[75%] rounded-2xl px-3 py-2 text-base shadow",
                   item.msg.status === "failed"
                     ? "bg-red-100 text-red-800 border border-red-300"
                     : isSelf(item.msg)
