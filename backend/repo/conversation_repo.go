@@ -10,7 +10,6 @@ import (
 
 type ConversationRepo interface {
 	CreateGroupConversation(ctx context.Context, conv *models.Conversation, msg *models.Message, creatorUID uuid.UUID, participantsUID []uuid.UUID) error
-	// For direct chats: get existing or create with a canonical direct_key.
 	CreateDirectConversation(ctx context.Context, conv *models.Conversation, uidA, uidB uuid.UUID) error
 
 	ListConversationByUID(ctx context.Context, uid uuid.UUID) ([]*models.Conversation, error)

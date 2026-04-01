@@ -35,7 +35,7 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 	}
 
 	user := models.User{
-		UID:            uuid.NewString(),
+		UID:            uuid.New(),
 		Name:           createUserInput.Name,
 		Email:          createUserInput.Email,
 		HashedPassword: hashedPassword,

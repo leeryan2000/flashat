@@ -91,11 +91,7 @@ func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {
 		return
 	}
 
-	friendUID, err := uuid.Parse(friendProfile.UID)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to parse friend UID"})
-		return
-	}
+	friendUID := friendProfile.UID
 
 	convSummary := &wire.ConversationSummary{
 		ConversationID: conv.ID,

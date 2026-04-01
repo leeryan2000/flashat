@@ -40,7 +40,7 @@ func (h AuthHandler) Login(c *gin.Context) {
 	}
 
 	sessionID := uuid.NewString()
-	if err := h.RedisClient.SetSession(c.Request.Context(), sessionID, user.UID); err != nil {
+	if err := h.RedisClient.SetSession(c.Request.Context(), sessionID, user.UID.String()); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
 		return
 	}
