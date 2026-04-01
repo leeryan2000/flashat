@@ -19,10 +19,9 @@ func (r *PgxUserRepo) CreateUser(ctx context.Context, user *models.User) error {
 			name,
 			email,
 			hashed_password,
-			user_avatar_url,
-			created_at
+			user_avatar_url
 		)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING uid, name, email, hashed_password, user_avatar_url, created_at
 	`,
 		user.UID,
@@ -30,7 +29,6 @@ func (r *PgxUserRepo) CreateUser(ctx context.Context, user *models.User) error {
 		user.Email,
 		user.HashedPassword,
 		user.UserAvatarURL,
-		user.CreatedAt,
 	).Scan(
 		&user.UID,
 		&user.Name,

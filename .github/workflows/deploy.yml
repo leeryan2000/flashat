@@ -74,15 +74,6 @@ jobs:
             # Pull the fresh images from Docker Hub
             docker-compose pull
 
-            # TEMPORARY: Down all migrations so updated 001 migration re-runs
-            source .env
-            docker compose exec -T db psql -U ${DB_USER} -d ${DB_NAME} -c "
-              DROP TABLE IF EXISTS friendships;
-              DROP TABLE IF EXISTS conversations, conversation_participants, conversation_counters, messages CASCADE;
-              DROP TABLE IF EXISTS users;
-              DROP TABLE IF EXISTS schema_migrations;
-            "
-
             # Restart the containers with the new images/configs
             docker-compose up -d
 
