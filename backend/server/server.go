@@ -39,7 +39,7 @@ func RunPeriodicTask(task func()) {
 }
 
 func checkClients(s *Server) {
-	log.Println("Checking connected clients...", len(s.Hub.ClientsByUID))
+	log.Println("Checking connected clients...", len(s.Hub.Clients), "connections,", len(s.Hub.ClientsByUID), "unique users")
 }
 
 func StartServer() (*Server, error) {

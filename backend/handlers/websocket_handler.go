@@ -26,12 +26,13 @@ var upgrader = websocket.Upgrader{
 
 // ***** make it more bulletproof
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
+	const maxConnectionsPerUser = 5
+
 	uidStr := c.GetString("uid")
 
-	// see if the user are connected already
-	if _, ok := wh.Hub.ClientsByUID[uidStr]; ok {
-		log.Println("User already connected:", uidStr)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User already connected"})
+	if len(wh.Hub.ClientsByUID[uidStr]) >= maxConnectionsPerUser {
+		log.Println("Connection limit reached for UID:", uidStr)
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many open connections"})
 		return
 	}
 

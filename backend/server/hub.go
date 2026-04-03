@@ -7,8 +7,8 @@ import (
 )
 
 type Hub struct {
-	Clients      map[*Client]struct{} // Changed from bool to struct{}
-	ClientsByUID map[string]*Client
+	Clients      map[*Client]struct{}
+	ClientsByUID map[string]map[*Client]struct{} // supports multiple tabs/devices per user
 
 	Register   chan *Client
 	Unregister chan *Client
@@ -17,9 +17,8 @@ type Hub struct {
 // connect the user as long as the webpage is open
 func NewHub() *Hub {
 	return &Hub{
-		Clients: make(map[*Client]struct{}),
-		// ***** should change to map[string]map[*Client]struct{} if allowing multiple connections per user from different devices
-		ClientsByUID: make(map[string]*Client),
+		Clients:      make(map[*Client]struct{}),
+		ClientsByUID: make(map[string]map[*Client]struct{}),
 		Register:     make(chan *Client),
 		Unregister:   make(chan *Client),
 	}
@@ -38,32 +37,43 @@ func (hub *Hub) Run() {
 }
 
 func (hub *Hub) SendToUID(uid uuid.UUID, payload []byte) {
-	if client, ok := hub.ClientsByUID[uid.String()]; ok {
-		client.Send <- payload
+	if clients, ok := hub.ClientsByUID[uid.String()]; ok {
+		for client := range clients {
+			client.Send <- payload
+		}
 	}
 }
 
 func (hub *Hub) BroadcastToParticipant(uids []uuid.UUID, fromUID uuid.UUID, payload []byte) {
-	// check if the participants are online and send the payload
 	for _, uid := range uids {
-		// message blocked from the sender
-		if client, ok := hub.ClientsByUID[uid.String()]; ok && uid != fromUID {
-			log.Println("Broadcasting to UID:", uid)
-			client.Send <- payload
+		if uid == fromUID {
+			continue
+		}
+		if clients, ok := hub.ClientsByUID[uid.String()]; ok {
+			for client := range clients {
+				log.Println("Broadcasting to UID:", uid)
+				client.Send <- payload
+			}
 		}
 	}
 }
 
 func (hub *Hub) addClient(c *Client) {
 	hub.Clients[c] = struct{}{}
-	hub.ClientsByUID[c.UID] = c
+	if hub.ClientsByUID[c.UID] == nil {
+		hub.ClientsByUID[c.UID] = make(map[*Client]struct{})
+	}
+	hub.ClientsByUID[c.UID][c] = struct{}{}
 	log.Println("Client registered:", c.UID)
 }
 
 func (hub *Hub) removeClient(c *Client) {
 	if _, ok := hub.Clients[c]; ok {
 		delete(hub.Clients, c)
-		delete(hub.ClientsByUID, c.UID)
+		delete(hub.ClientsByUID[c.UID], c)
+		if len(hub.ClientsByUID[c.UID]) == 0 {
+			delete(hub.ClientsByUID, c.UID)
+		}
 		close(c.Send)
 	}
 }

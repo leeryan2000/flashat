@@ -149,5 +149,8 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 
 	s.Hub.BroadcastToParticipant(uids, fromUID, outEnvJSON)
 
+	// Sync sender's other tabs/devices with the sent message
+	s.Hub.SendToUID(fromUID, outEnvJSON)
+
 	return nil
 }
