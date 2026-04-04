@@ -41,7 +41,6 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 	c.Conn.SetReadDeadline(time.Now().Add(PONG_WAIT))
 	c.Conn.SetPongHandler(func(string) error {
 		c.Conn.SetReadDeadline(time.Now().Add(PONG_WAIT))
-		log.Println("Pong received from UID:", c.UID)
 		return nil
 	})
 
@@ -84,7 +83,6 @@ func (c *Client) WritePump() {
 				)
 				return
 			}
-			log.Print("Sending message:", string(msg))
 			c.Conn.SetWriteDeadline(time.Now().Add(WRITE_WAIT))
 			err := c.Conn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
@@ -92,7 +90,6 @@ func (c *Client) WritePump() {
 			}
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(WRITE_WAIT))
-			log.Println("Sending ping to UID:", c.UID)
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Println("❌ Ping failed, closing connection:", err)
 				c.Cleanup()
