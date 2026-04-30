@@ -5,7 +5,7 @@ import { PATHS } from "../routes/paths";
 import { api } from "../api/api";
 import { toConversation, type CreateConvResponse } from "../wire/conversation";
 import { dtoToMessage } from "../wire/message";
-import type { Friendship } from "../wire/friendship";
+import { toFriendship, type Friendship, type FriendshipDto } from "../wire/friendship";
 import type { CustomResponse } from "../wire/resp";
 import { useFriendshipActions } from "../hooks/useFriendshipActions";
 
@@ -77,12 +77,14 @@ export default function Friendships() {
 
   const onAddFriend = async (email: string) => {
     try {
-      await api<CustomResponse>(`/friendship/request`, {
+      const dto = await api<FriendshipDto>(`/friendship/request`, {
         method: "POST",
         body: JSON.stringify({ email }),
       });
+      setFriendships([...friendships, toFriendship(dto)]);
     } catch (err) {
       console.error("Error sending friend request:", err);
+      throw err;
     }
   };
 

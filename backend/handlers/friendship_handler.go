@@ -32,13 +32,13 @@ func (h *FriendshipHandler) RequestFriendship(c *gin.Context) {
 		return
 	}
 
-	err = h.Repo.RequestFriendship(c.Request.Context(), uid, input.Email)
+	friendship, err := h.Repo.RequestFriendship(c.Request.Context(), uid, input.Email)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to request friendship"})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Friendship request sent"})
+	c.JSON(200, friendship)
 }
 
 func (h *FriendshipHandler) AcceptFriendship(c *gin.Context) {

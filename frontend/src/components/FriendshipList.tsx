@@ -27,7 +27,7 @@ type FriendsListProps = {
   onUnfriend: (uid: string, convId: string | null) => void;
   onBlock: (uid: string, convId: string | null) => void;
   onUnblock: (uid: string) => void;
-  onAddFriend: (email: string) => void;
+  onAddFriend: (email: string) => Promise<void>;
   onCreateGroup: (name: string, participantIds: string[]) => Promise<void>;
 }
 

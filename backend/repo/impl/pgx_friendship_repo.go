@@ -16,31 +16,39 @@ type PgxFriendshipRepo struct {
 	Pool *pgxpool.Pool
 }
 
-func (r *PgxFriendshipRepo) RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) error {
-	// Implementation for requesting friendship using pgx
-	tag, err := r.Pool.Exec(ctx, `
-		INSERT INTO friendships (requester_uid, receiver_uid, status)
-		SELECT
-			$1,
-			u.uid,
-			'pending'
-		FROM users u
-		WHERE u.email = $2
-		AND u.uid <> $1
-		AND NOT EXISTS (
-			SELECT 1 FROM friendships f
-			WHERE (f.requester_uid = $1 AND f.receiver_uid = u.uid)
-			   OR (f.requester_uid = u.uid AND f.receiver_uid = $1)
+func (r *PgxFriendshipRepo) RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) (*wire.Friendship, error) {
+	var f wire.Friendship
+	err := r.Pool.QueryRow(ctx, `
+		WITH target AS (
+			SELECT u.uid, u.name, u.email, u.user_avatar_url
+			FROM users u
+			WHERE u.email = $2
+			AND u.uid <> $1
+			AND NOT EXISTS (
+				SELECT 1 FROM friendships f
+				WHERE (f.requester_uid = $1 AND f.receiver_uid = u.uid)
+				   OR (f.requester_uid = u.uid AND f.receiver_uid = $1)
+			)
+		),
+		ins AS (
+			INSERT INTO friendships (requester_uid, receiver_uid, status)
+			SELECT $1, target.uid, 'pending' FROM target
 		)
+		SELECT uid, name, email, user_avatar_url FROM target
 		`,
 		requesterUID, email,
-	)
+	).Scan(&f.UID, &f.Name, &f.Email, &f.AvatarURL)
 
-	if tag.RowsAffected() == 0 {
-		return pgx.ErrNoRows
+	if err == pgx.ErrNoRows {
+		return nil, pgx.ErrNoRows
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return err
+	f.Status = "pending"
+	f.Direction = "outgoing"
+	return &f, nil
 }
 
 // Transaction: for making sure the conversation is created only if friendship is accepted

@@ -10,7 +10,7 @@ import (
 
 type FriendshipRepo interface {
 	// Methods for managing friendships would go here
-	RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) error
+	RequestFriendship(ctx context.Context, requesterUID uuid.UUID, email string) (*wire.Friendship, error)
 
 	AcceptFriendship(ctx context.Context, conv *models.Conversation, msg *models.Message, requesterUID, receiverUID uuid.UUID) error
 
