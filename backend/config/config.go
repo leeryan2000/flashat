@@ -17,6 +17,7 @@ type Configuration struct {
 	DB_PORT string
 
 	REDIS_ADDR string
+	MQ_ADDR    string
 }
 
 func LoadConfig() Configuration {

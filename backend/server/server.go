@@ -12,9 +12,10 @@ import (
 )
 
 type Server struct {
-	Hub         *Hub
-	Pool        *pgxpool.Pool
-	RedisClient *db.RedisClient
+	Hub            *Hub
+	Pool           *pgxpool.Pool
+	RedisClient    *db.RedisClient
+	RabbitMQClient *db.RabbitMQClient
 
 	// Service
 	MessageService *service.MessageService
@@ -63,6 +64,12 @@ func StartServer() (*Server, error) {
 		return nil, err
 	}
 	s.RedisClient = redisClient
+
+	rabbitMQClient, err := db.NewRabbitMQClient(cfg)
+	if err != nil {
+		return nil, err
+	}
+	s.RabbitMQClient = rabbitMQClient
 
 	s.Hub = NewHub()
 	go s.Hub.Run()
