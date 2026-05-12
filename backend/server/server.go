@@ -19,6 +19,7 @@ type Server struct {
 
 	// Service
 	MessageService *service.MessageService
+	MessageWorker  *service.MessageWorker
 
 	// Repo
 	UserRepo         *repo.PgxUserRepo
@@ -74,16 +75,20 @@ func StartServer() (*Server, error) {
 	s.Hub = NewHub()
 	go s.Hub.Run()
 
-	s.MessageService = service.NewMessageService(
-		s.Hub,
-		&repo.PgxMessageRepo{Pool: s.Pool},
-		&repo.PgxConversationRepo{Pool: s.Pool},
-	)
-
 	s.UserRepo = &repo.PgxUserRepo{Pool: s.Pool}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}
 	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
 	s.FriendshipRepo = &repo.PgxFriendshipRepo{Pool: s.Pool}
+
+	s.MessageService = service.NewMessageService(
+		s.Hub,
+		s.MessageRepo,
+		s.ConversationRepo,
+		s.RabbitMQClient,
+	)
+
+	s.MessageWorker = service.NewMessageWorker(s.RabbitMQClient, s.MessageService)
+	s.MessageWorker.Start()
 
 	RunPeriodicTask(func() {
 		checkClients(s)

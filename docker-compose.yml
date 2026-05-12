@@ -3,6 +3,10 @@ services:
     image: leeryan2000/flashat-backend:latest  # ← pulled from hub
     restart: always
     env_file: .env
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
     networks:
       - flashat-net
 
@@ -22,8 +26,21 @@ services:
 
   redis:
     image: redis:alpine
+    restart: always
     networks:
       - flashat-net
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    restart: always
+    environment:
+      RABBITMQ_USER: ${MQ_USER}
+      RABBITMQ_PASS: ${MQ_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - flashat-net
+
 
   nginx:
     image: nginx:alpine
@@ -47,3 +64,4 @@ networks:
 
 volumes:
   postgres_data:
+  rabbitmq_data:

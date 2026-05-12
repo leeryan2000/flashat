@@ -50,8 +50,6 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 		if err != nil {
 			break
 		}
-		// ***** delete line
-		log.Println("Received message:", string(raw))
 		// Expect JSON envelope from frontend
 		var env wire.Msg
 		if err := json.Unmarshal(raw, &env); err != nil {

@@ -17,6 +17,8 @@ type Configuration struct {
 	DB_PORT string
 
 	REDIS_ADDR string
+	MQ_USER    string
+	MQ_PASS    string
 	MQ_ADDR    string
 }
 
@@ -37,6 +39,9 @@ func LoadConfig() Configuration {
 	configuration.DB_HOST = os.Getenv("DB_HOST")
 	configuration.DB_PORT = os.Getenv("DB_PORT")
 	configuration.REDIS_ADDR = os.Getenv("REDIS_ADDR")
+	configuration.MQ_USER = os.Getenv("MQ_USER")
+	configuration.MQ_PASS = os.Getenv("MQ_PASS")
+	configuration.MQ_ADDR = os.Getenv("MQ_ADDR")
 
 	return configuration
 }

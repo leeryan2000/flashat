@@ -16,17 +16,19 @@ type MsgHandlerFunc func(ctx context.Context, env *wire.Msg) error
 
 type MessageService struct {
 	Hub              Hub
+	Publisher        Publisher
 	MessageRepo      repo.MessageRepo
 	ConversationRepo repo.ConversationRepo
 
 	handlers map[wire.WireType]MsgHandlerFunc
 }
 
-func NewMessageService(hub Hub, msgRepo repo.MessageRepo, convRepo repo.ConversationRepo) *MessageService {
+func NewMessageService(hub Hub, msgRepo repo.MessageRepo, convRepo repo.ConversationRepo, publisher Publisher) *MessageService {
 	s := &MessageService{
 		Hub:              hub,
 		MessageRepo:      msgRepo,
 		ConversationRepo: convRepo,
+		Publisher:        publisher,
 		handlers:         make(map[wire.WireType]MsgHandlerFunc),
 	}
 
@@ -43,6 +45,8 @@ func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) erro
 	}
 	return handler(ctx, env)
 }
+
+// ---- Handlers ----
 
 func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
 	conversationID, err := uuid.Parse(env.ConversationID)
@@ -73,6 +77,21 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		return errors.New("missing conversation id")
 	}
 
+	if _, err := uuid.Parse(env.ConversationID); err != nil {
+		return errors.New("invalid conversation id")
+	}
+	if _, err := uuid.Parse(env.FromUID); err != nil {
+		return errors.New("invalid from uid")
+	}
+
+	if env.ServerMsgID == "" {
+		env.ServerMsgID = uuid.New().String()
+	}
+
+	return s.Publisher.Publish(env)
+}
+
+func (s *MessageService) ProcessChat(ctx context.Context, env *wire.Msg) error {
 	conversationID, err := uuid.Parse(env.ConversationID)
 	if err != nil {
 		return err
@@ -82,8 +101,13 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 	if err != nil {
 		return err
 	}
-	// Create server generated msgID to replace the client generated
-	msgID := uuid.New()
+
+	msgID, err := uuid.Parse(env.ServerMsgID)
+	if err != nil {
+		return err
+	}
+
+	// --- Save to DB ---
 	msg := &models.Message{
 		ID:             msgID,
 		ConversationID: conversationID,
@@ -91,14 +115,12 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		Body:           env.Body,
 	}
 
-	err = s.MessageRepo.SaveMessage(ctx, msg)
-
-	if err != nil {
+	if err := s.MessageRepo.SaveMessage(ctx, msg); err != nil {
 		log.Println("❌ Failed to save message:", err)
 		return err
 	}
 
-	// Ack for the sender
+	// --- ACK the sender with server seq and id ---
 	ackEnv := &wire.Msg{
 		Type:           wire.Ack,
 		ConversationID: env.ConversationID,
@@ -109,36 +131,30 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		Ts:             msg.CreatedAt,
 		Body:           env.Body,
 	}
-
-	ackEnvJSON, err := json.Marshal(ackEnv)
+	ackJSON, err := json.Marshal(ackEnv)
 	if err != nil {
 		return err
 	}
+	s.Hub.SendToUID(fromUID, ackJSON)
 
-	// Send ack to tell the client if the message saved successfully
-	s.Hub.SendToUID(fromUID, ackEnvJSON)
-
-	// Pack the Envelope to broadcast to user
+	// --- Broadcast to other participants ---
 	outEnv := &wire.Msg{
 		Type:           wire.Chat,
 		ConversationID: env.ConversationID,
 		ServerMsgID:    msg.ID.String(),
 		FromUID:        env.FromUID,
-		Seq:            msg.Seq, // client seq would be updated with server seq
+		Seq:            msg.Seq,
 		Ts:             msg.CreatedAt,
-		// ***** could create wire message for the details of the content e.g. text, picture, is it reply to what message, or mentioned anyone
-		Body: env.Body,
+		Body:           env.Body,
 	}
-
-	outEnvJSON, err := json.Marshal(outEnv)
+	outJSON, err := json.Marshal(outEnv)
 	if err != nil {
 		return err
 	}
 
-	// ***** cache: apply cache for the participantlist
-	// retrieve participants from conversation using convID
 	participants, err := s.ConversationRepo.ListParticipantByID(ctx, conversationID)
 	if err != nil {
+		log.Println("❌ Failed to list participants:", err)
 		return err
 	}
 
@@ -147,10 +163,8 @@ func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
 		uids = append(uids, p.UID)
 	}
 
-	s.Hub.BroadcastToParticipant(uids, fromUID, outEnvJSON)
-
-	// Sync sender's other tabs/devices with the sent message
-	s.Hub.SendToUID(fromUID, outEnvJSON)
+	s.Hub.BroadcastToParticipant(uids, fromUID, outJSON)
+	s.Hub.SendToUID(fromUID, outJSON) // sync sender's other tabs/devices
 
 	return nil
 }
