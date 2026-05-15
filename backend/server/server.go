@@ -26,6 +26,9 @@ type Server struct {
 	ConversationRepo *repo.PgxConversationRepo
 	MessageRepo      *repo.PgxMessageRepo
 	FriendshipRepo   *repo.PgxFriendshipRepo
+
+	// Config
+	RegisterCode string
 }
 
 // ***** Test
@@ -79,6 +82,7 @@ func StartServer() (*Server, error) {
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}
 	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
 	s.FriendshipRepo = &repo.PgxFriendshipRepo{Pool: s.Pool}
+	s.RegisterCode = cfg.REGISTER_CODE
 
 	s.MessageService = service.NewMessageService(
 		s.Hub,

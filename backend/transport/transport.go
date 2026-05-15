@@ -11,7 +11,7 @@ import (
 // main.go owns the server lifecycle and calls Shutdown() for graceful cleanup.
 func BuildRouter(s *server.Server) *gin.Engine {
 	h := handlers.Handlers{
-		User:         handlers.UserHandler{Repo: s.UserRepo},
+		User:         handlers.UserHandler{Repo: s.UserRepo, RegisterCode: s.RegisterCode},
 		Auth:         handlers.AuthHandler{Repo: s.UserRepo, RedisClient: s.RedisClient},
 		Conversation: handlers.ConversationHandler{Repo: s.ConversationRepo},
 		Message:      handlers.MessageHandler{Repo: s.MessageRepo},

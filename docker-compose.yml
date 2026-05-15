@@ -34,8 +34,8 @@ services:
     image: rabbitmq:3-alpine
     restart: always
     environment:
-      RABBITMQ_USER: ${MQ_USER}
-      RABBITMQ_PASS: ${MQ_PASS}
+      RABBITMQ_DEFAULT_USER: ${MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASS}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:

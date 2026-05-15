@@ -20,6 +20,8 @@ type Configuration struct {
 	MQ_USER    string
 	MQ_PASS    string
 	MQ_ADDR    string
+
+	REGISTER_CODE string
 }
 
 func LoadConfig() Configuration {
@@ -42,6 +44,7 @@ func LoadConfig() Configuration {
 	configuration.MQ_USER = os.Getenv("MQ_USER")
 	configuration.MQ_PASS = os.Getenv("MQ_PASS")
 	configuration.MQ_ADDR = os.Getenv("MQ_ADDR")
+	configuration.REGISTER_CODE = os.Getenv("REGISTER_CODE")
 
 	return configuration
 }

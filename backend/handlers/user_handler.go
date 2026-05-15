@@ -10,12 +10,17 @@ import (
 	"github.com/leeryan2000/flashat/utils"
 )
 
-type UserHandler struct{ Repo repo.UserRepo }
+type UserHandler struct {
+	Repo         repo.UserRepo
+	RegisterCode string
+}
 
 type createUserInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Name     string `json:"name"`
+	// ***** replace with email verification code later
+	Code string `json:"code"`
 }
 
 func (h UserHandler) CreateUser(c *gin.Context) {
@@ -24,6 +29,12 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&createUserInput); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Failed to bind create user input"})
+		return
+	}
+
+	// ***** replace with email verification check later
+	if createUserInput.Code != h.RegisterCode {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid verification code"})
 		return
 	}
 

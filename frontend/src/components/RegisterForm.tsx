@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { PATHS } from "../routes/paths";
-import { Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, KeyRound, Loader2, ArrowRight } from "lucide-react";
 
 export function RegisterForm() {
   const { register, isLoading } = useAuth(); // Assuming your context has a register function
@@ -12,6 +12,7 @@ export function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +27,7 @@ export function RegisterForm() {
 
     try {
       // Send data to server via Context
-      await register(name, email, password);
+      await register(name, email, password, code);
       // Redirect to Chat (or Login if you require email verification first)
       navigate(PATHS.login);
     } catch (err: any) {
@@ -94,6 +95,21 @@ export function RegisterForm() {
             className="w-full bg-slate-800/50 border border-slate-700 text-slate-100 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-500"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Verification Code Input */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <KeyRound className="h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+          </div>
+          <input
+            type="text"
+            placeholder="Verification code"
+            className="w-full bg-slate-800/50 border border-slate-700 text-slate-100 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-500"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
             required
           />
         </div>
