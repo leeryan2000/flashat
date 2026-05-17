@@ -1,0 +1,141 @@
+import { useState } from "react";
+import { X, Check, Loader2, MessageSquarePlus } from "lucide-react";
+import type { Friendship } from "../wire/friendship";
+
+type CreateGroupModalProps = {
+  friends: Friendship[];
+  onClose: () => void;
+  onCreateGroup: (name: string, participantIds: string[]) => Promise<void>;
+};
+
+export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGroupModalProps) {
+  const [groupName, setGroupName] = useState("");
+  const [selectedFriendIds, setSelectedFriendIds] = useState<string[]>([]);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [groupError, setGroupError] = useState("");
+
+  const toggleFriendSelection = (uid: string) => {
+    setSelectedFriendIds(prev =>
+      prev.includes(uid)
+        ? prev.filter(id => id !== uid)
+        : [...prev, uid]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupName.trim() || selectedFriendIds.length === 0) {
+      setGroupError("Please enter a name and select at least one friend.");
+      return;
+    }
+
+    setIsCreatingGroup(true);
+    setGroupError("");
+
+    try {
+      await onCreateGroup(groupName, selectedFriendIds);
+      setGroupName("");
+      setSelectedFriendIds([]);
+      onClose();
+    } catch {
+      setGroupError("Failed to create group.");
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
+  const renderAvatar = (name: string) => (
+    <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-semibold shrink-0">
+      {name.slice(0, 2).toUpperCase()}
+    </div>
+  );
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4">
+      <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-white">Create Group</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-400 mb-1">
+              Group Name
+            </label>
+            <input
+              type="text"
+              autoFocus
+              required
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="e.g. Project Team"
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+          </div>
+
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <label className="block text-sm font-medium text-slate-400 mb-2">
+              Select Members ({selectedFriendIds.length})
+            </label>
+
+            <div className="flex-1 overflow-y-auto border border-slate-700 rounded-xl bg-slate-900/50 p-2 space-y-1">
+              {friends.length === 0 ? (
+                <p className="text-slate-500 text-sm text-center py-4">You have no friends to add yet.</p>
+              ) : (
+                friends.map(friend => {
+                  const isSelected = selectedFriendIds.includes(friend.uid);
+                  return (
+                    <div
+                      key={friend.uid}
+                      onClick={() => toggleFriendSelection(friend.uid)}
+                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition ${
+                        isSelected ? 'bg-indigo-600/20 border border-indigo-500/50' : 'hover:bg-slate-800 border border-transparent'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition ${
+                        isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-slate-600'
+                      }`}>
+                        {isSelected && <Check size={14} className="text-white" />}
+                      </div>
+
+                      {renderAvatar(friend.name)}
+
+                      <div className="min-w-0">
+                        <p className={`text-sm font-medium ${isSelected ? 'text-indigo-200' : 'text-slate-200'}`}>
+                          {friend.name}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {groupError && <p className="text-red-400 text-sm mt-4">{groupError}</p>}
+
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isCreatingGroup || selectedFriendIds.length === 0}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreatingGroup ? <Loader2 className="animate-spin" size={18} /> : <MessageSquarePlus size={18} />}
+              Create Group
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

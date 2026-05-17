@@ -64,8 +64,8 @@ export default function ProfilePage() {
             </div>
           </div>
           
-          <h2 className="text-2xl font-bold text-white">Your Profile</h2>
-          <p className="text-sm text-slate-400">Manage your account settings</p>
+          <h2 className="text-2xl font-bold text-white">Profile</h2>
+          <p className="text-sm text-slate-400">Manage your Profile</p>
         </div>
 
         {/* User Details Section */}

@@ -52,7 +52,6 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 		HashedPassword: hashedPassword,
 	}
 
-	// ***** after redis implemented, turn this into storing in redis first, then after verification store in main db through another handler function
 	if err := h.Repo.CreateUser(c.Request.Context(), &user); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to server"})
 		return

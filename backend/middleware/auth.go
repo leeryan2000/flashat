@@ -21,7 +21,6 @@ func Authenticate(s *server.Server) gin.HandlerFunc {
 
 		uid, err := s.RedisClient.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			// err is redis.Nil when session expired or not found
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired session"})
 			return
 		}
