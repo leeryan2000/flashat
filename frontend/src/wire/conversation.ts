@@ -1,5 +1,11 @@
 import type { MsgDto } from "./message";
 
+export type Participant = {
+  uid: string;
+  name: string;
+  role: "admin" | "member";
+};
+
 export type Conversation = {
   id: string;
   type: "group" | "direct";
@@ -18,6 +24,8 @@ export type Conversation = {
   // Last read sequence number for this conversation
   lastReadSeq: number;
   unreadCount: number;
+
+  participants: Participant[];
 };
 
 export type ConvDto = {
@@ -32,6 +40,7 @@ export type ConvDto = {
   last_seq: number;
   last_read_seq: number;
   unread_count: number;
+  participants: Participant[];
 };
 
 export type CreateConvResponse = {
@@ -51,4 +60,5 @@ export const toConversation = (w: ConvDto): Conversation => ({
   lastSeq: w.last_seq,
   lastReadSeq: w.last_read_seq,
   unreadCount: w.unread_count,
+  participants: w.participants ?? [],
 });

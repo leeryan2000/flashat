@@ -4,6 +4,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type ParticipantSummary struct {
+	UID  uuid.UUID `json:"uid"`
+	Name string    `json:"name"`
+	Role string    `json:"role"` // "admin" | "member"
+}
+
 // conversation summary
 type ConversationSummary struct {
 	ConversationID uuid.UUID `json:"id"`
@@ -20,4 +26,6 @@ type ConversationSummary struct {
 	LastSeq     int64 `json:"last_seq"`
 	LastReadSeq int64 `json:"last_read_seq"`
 	UnreadCount int64 `json:"unread_count"`
+
+	Participants []ParticipantSummary `json:"participants"`
 }

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/google/uuid"
@@ -311,7 +312,17 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 
 			COALESCE(cc.last_seq, lm.seq, 0) AS last_seq,
 			cp.last_read_seq,
-			GREATEST(COALESCE(cc.last_seq, lm.seq, 0) - cp.last_read_seq, 0) AS unread_count
+			GREATEST(COALESCE(cc.last_seq, lm.seq, 0) - cp.last_read_seq, 0) AS unread_count,
+
+			COALESCE((
+				SELECT json_agg(
+					json_build_object('uid', p.uid, 'name', u2.name, 'role', p.role)
+					ORDER BY CASE WHEN p.role = 'admin' THEN 0 ELSE 1 END, u2.name
+				)
+				FROM conversation_participants p
+				JOIN users u2 ON u2.uid = p.uid
+				WHERE p.conversation_id = c.id
+			), '[]') AS participants
 		FROM conversations c
 		JOIN conversation_participants cp
 		  ON cp.conversation_id = c.id
@@ -350,6 +361,7 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 
 	for rows.Next() {
 		c := &wire.ConversationSummary{}
+		var participantsJSON json.RawMessage
 
 		if err := rows.Scan(
 			&c.ConversationID,
@@ -363,7 +375,12 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 			&c.LastSeq,
 			&c.LastReadSeq,
 			&c.UnreadCount,
+			&participantsJSON, // JSON array of participants
 		); err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(participantsJSON, &c.Participants); err != nil {
 			return nil, err
 		}
 

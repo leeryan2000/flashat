@@ -4,7 +4,8 @@ import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../wire/message";
 import type { Conversation } from "../wire/conversation";
-import { MoreVertical, Ban, LogOut } from "lucide-react";
+import { MoreVertical, Ban, LogOut, Users } from "lucide-react";
+import { ParticipantsPanel } from "./ParticipantsPanel";
 
 type MessagePaneProps = {
   conv?: Conversation;
@@ -138,49 +139,71 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
   };
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   return (
-    <div className={`h-full grid ${conv ? "grid-rows-[auto_1fr_auto]" : "grid-rows-[1fr_auto]"}`}>
+    <div className={`relative h-full grid ${conv ? "grid-rows-[auto_1fr_auto]" : "grid-rows-[1fr_auto]"}`}>
       {/* header */}
       {conv && (
         <div className="relative flex items-center justify-center px-4 py-3 border-b border-slate-200 bg-white">
           <span className="font-semibold text-slate-800">{conv.title}</span>
-          {(conv.type === "direct" && onBlock) || (conv.type === "group" && onLeaveGroup) ? (
-            <div className="absolute right-4">
+          <div className="absolute right-4 flex items-center gap-1">
+            {/* Participants panel button — group only */}
+            {conv.type === "group" && (
               <button
-                onClick={() => setMenuOpen((o) => !o)}
-                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                onClick={() => setPanelOpen((o) => !o)}
+                className={`p-2 rounded-lg transition ${panelOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`}
+                title="Members"
               >
-                <MoreVertical size={18} />
+                <Users size={18} />
               </button>
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
-                    {conv.type === "direct" && onBlock && (
-                      <button
-                        onClick={() => { setMenuOpen(false); onBlock(); }}
-                        className="w-full text-left px-4 py-3 text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-3 transition"
-                      >
-                        <Ban size={16} />
-                        Block User
-                      </button>
-                    )}
-                    {conv.type === "group" && onLeaveGroup && (
-                      <button
-                        onClick={() => { setMenuOpen(false); onLeaveGroup(); }}
-                        className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 transition"
-                      >
-                        <LogOut size={16} />
-                        Leave Group
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          ) : null}
+            )}
+            {/* More options menu */}
+            {(conv.type === "direct" && onBlock) || (conv.type === "group" && onLeaveGroup) ? (
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((o) => !o)}
+                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                >
+                  <MoreVertical size={18} />
+                </button>
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+                      {conv.type === "direct" && onBlock && (
+                        <button
+                          onClick={() => { setMenuOpen(false); onBlock(); }}
+                          className="w-full text-left px-4 py-3 text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-3 transition"
+                        >
+                          <Ban size={16} />
+                          Block User
+                        </button>
+                      )}
+                      {conv.type === "group" && onLeaveGroup && (
+                        <button
+                          onClick={() => { setMenuOpen(false); onLeaveGroup(); }}
+                          className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 transition"
+                        >
+                          <LogOut size={16} />
+                          Leave Group
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
+      )}
+
+      {/* Participants panel */}
+      {conv?.type === "group" && panelOpen && (
+        <ParticipantsPanel
+          participants={conv.participants}
+          onClose={() => setPanelOpen(false)}
+        />
       )}
 
       {/* messages list */}
