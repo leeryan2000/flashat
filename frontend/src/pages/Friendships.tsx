@@ -8,10 +8,12 @@ import { dtoToMessage } from "../wire/message";
 import { toFriendship, type Friendship, type FriendshipDto } from "../wire/friendship";
 import type { CustomResponse } from "../wire/resp";
 import { useFriendshipActions } from "../hooks/useFriendshipActions";
+import { useAuth } from "../context/AuthContext";
 
 export default function Friendships() {
   const { friendships, setFriendships, setActiveConvId, loadConvs, loadMsgs, removeConv } = useChat();
   const { blockUser } = useFriendshipActions();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const onChatClick = (convId: string) => {
@@ -88,13 +90,26 @@ export default function Friendships() {
     }
   };
 
-  const onCreateGroup = async (name: string, participants: string[]) => {
+  const onCreateGroup = async (name: string, participantIds: string[]) => {
     try {
       const resp = await api<CreateConvResponse>(`/conversation/group`, {
         method: "POST",
-        body: JSON.stringify({ name, participants }),
+        body: JSON.stringify({ name, participantIds }),
       });
-      loadConvs([toConversation(resp.conversation)]);
+
+      const selectedMembers = friendships
+        .filter(f => participantIds.includes(f.uid))
+        .map(f => ({ uid: f.uid, name: f.name, role: "member" as const }));
+
+      const conv = {
+        ...toConversation(resp.conversation),
+        participants: [
+          { uid: user!.uid, name: user!.name, role: "creator" as const },
+          ...selectedMembers,
+        ],
+      };
+
+      loadConvs([conv]);
       loadMsgs([dtoToMessage(resp.message)]);
     } catch (err) {
       console.error("Error creating group conversation:", err);

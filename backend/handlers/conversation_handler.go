@@ -18,7 +18,7 @@ type ConversationHandler struct {
 
 type groupInput struct {
 	GroupName    string   `json:"name"`
-	Participants []string `json:"participants"` // UIDs of participants
+	ParticipantIds []string `json:"participantIds"` // UIDs of participants
 }
 
 func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
@@ -37,8 +37,8 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 	}
 
 	set := map[uuid.UUID]struct{}{creatorUID: {}}
-	participantsUID := make([]uuid.UUID, 0, len(input.Participants))
-	for _, uidStr := range input.Participants {
+	participantsUID := make([]uuid.UUID, 0, len(input.ParticipantIds))
+	for _, uidStr := range input.ParticipantIds {
 		uid, err := uuid.Parse(uidStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Parse UID failed"})
