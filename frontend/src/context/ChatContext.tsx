@@ -312,6 +312,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const newMsg: Message = {
           convId: convId,
           fromUid: user?.uid || "",
+          fromName: user?.name || "",
           clientMsgId: clientMsgId,
           ts: message.ts,
           text: text.trim(),

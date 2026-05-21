@@ -16,6 +16,33 @@ type MessagePaneProps = {
   onLeaveGroup?: () => void;
 };
 
+const AVATAR_COLORS = [
+  "bg-rose-500", "bg-pink-500", "bg-fuchsia-500", "bg-purple-500",
+  "bg-violet-500", "bg-blue-500", "bg-sky-500", "bg-cyan-500",
+  "bg-teal-500", "bg-emerald-500", "bg-green-500", "bg-amber-500", "bg-orange-500",
+];
+
+function avatarColor(uid: string): string {
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) hash = (hash * 31 + uid.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+function nameInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+function Avatar({ uid, name }: { uid: string; name: string }) {
+  return (
+    <div title={name} className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(uid)}`}>
+      {nameInitials(name)}
+    </div>
+  );
+}
+
 function getDateLabel(ts: number): string {
   const now = new Date();
   const msgDate = new Date(ts);
@@ -36,6 +63,12 @@ function getDateLabel(ts: number): string {
 export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBlock, onLeaveGroup }: MessagePaneProps) {
   const { user } = useAuth();
   const { convs, markAsRead } = useChat();
+
+  const participantMap = useMemo(() => {
+    const map = new Map<string, string>();
+    conv?.participants.forEach((p) => map.set(p.uid, p.name));
+    return map;
+  }, [conv?.participants]);
 
   const msgList = useMemo(() => {
     const confirmed = msg.order.map((seq) => msg.entities[seq]).filter(Boolean);
@@ -223,37 +256,56 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
             <div
               id={item.msg.seq ? `msg-${item.msg.seq}` : undefined}
               key={item.msg.id || item.msg.clientMsgId}
-              className={["flex", isSelf(item.msg) ? "justify-end" : "justify-start"].join(" ")}
+              className={["flex items-end gap-2", isSelf(item.msg) ? "justify-end" : "justify-start"].join(" ")}
             >
-              <div
-                className={[
-                  "max-w-[75%] rounded-2xl px-3 py-2 text-base shadow",
-                  item.msg.status === "failed"
-                    ? "bg-red-100 text-red-800 border border-red-300"
-                    : isSelf(item.msg)
-                    ? "bg-indigo-600 text-white rounded-br-sm"
-                    : "bg-slate-100 text-slate-900 rounded-bl-sm",
-                  item.msg.status === "sending" ? "opacity-70" : "",
-                ].join(" ")}
-              >
-                <p className={`whitespace-pre-wrap break-words ${isSelf(item.msg) ? "text-right" : "text-left"}`}>
-                  {item.msg.text}
-                </p>
-                <div className="flex items-center justify-end gap-1 mt-1">
-                  {isSelf(item.msg) && item.msg.status === "sending" && (
-                    <span className="text-[10px] italic">...</span>
-                  )}
-                  {isSelf(item.msg) && item.msg.status === "failed" && (
-                    <span className="text-[10px] font-bold">X</span>
-                  )}
-                  <p className="text-[11px] opacity-70">
-                    {new Date(item.msg.ts ?? 0).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+              {/* Avatar for other users */}
+              {!isSelf(item.msg) && (() => {
+                const name = participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "?";
+                return <Avatar uid={item.msg.fromUid} name={name} />;
+              })()}
+
+              <div className="flex flex-col max-w-[75%]">
+                {/* Sender name for group chats */}
+                {!isSelf(item.msg) && conv?.type === "group" && (
+                  <span className="text-xs text-slate-500 mb-1 ml-1">
+                    {participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "Unknown"}
+                  </span>
+                )}
+                <div
+                  className={[
+                    "rounded-2xl px-3 py-2 text-base shadow",
+                    item.msg.status === "failed"
+                      ? "bg-red-100 text-red-800 border border-red-300"
+                      : isSelf(item.msg)
+                      ? "bg-indigo-600 text-white rounded-br-sm"
+                      : "bg-slate-100 text-slate-900 rounded-bl-sm",
+                    item.msg.status === "sending" ? "opacity-70" : "",
+                  ].join(" ")}
+                >
+                  <p className={`whitespace-pre-wrap break-words ${isSelf(item.msg) ? "text-right" : "text-left"}`}>
+                    {item.msg.text}
                   </p>
+                  <div className="flex items-center justify-end gap-1 mt-1">
+                    {isSelf(item.msg) && item.msg.status === "sending" && (
+                      <span className="text-[10px] italic">...</span>
+                    )}
+                    {isSelf(item.msg) && item.msg.status === "failed" && (
+                      <span className="text-[10px] font-bold">X</span>
+                    )}
+                    <p className="text-[11px] opacity-70">
+                      {new Date(item.msg.ts ?? 0).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Self avatar */}
+              {isSelf(item.msg) && user && (
+                <Avatar uid={user.uid} name={user.name} />
+              )}
             </div>
           )
         )}

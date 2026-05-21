@@ -17,15 +17,15 @@ const (
 type WireType string
 
 type Msg struct {
-	Type           WireType `json:"type"`
-	ConversationID string   `json:"conversation_id,omitempty"`
-	ClientMsgID    string   `json:"client_msg_id,omitempty"`
-	ServerMsgID    string   `json:"server_msg_id,omitempty"`
-	FromUID        string   `json:"from_uid,omitempty"`
-	// discover whether seq is needed from the client
-	Seq  int64           `json:"seq,omitempty"`
-	Ts   int64           `json:"ts,omitempty"`
-	Body json.RawMessage `json:"body,omitempty"`
+	Type           WireType        `json:"type"`
+	ConversationID string          `json:"conversation_id,omitempty"`
+	ClientMsgID    string          `json:"client_msg_id,omitempty"`
+	ServerMsgID    string          `json:"server_msg_id,omitempty"`
+	FromUID        string          `json:"from_uid,omitempty"`
+	FromName       string          `json:"from_name,omitempty"`
+	Seq            int64           `json:"seq,omitempty"`
+	Ts             int64           `json:"ts,omitempty"`
+	Body           json.RawMessage `json:"body,omitempty"`
 
 	LastReadSeq int64 `json:"last_read_seq,omitempty"`
 }

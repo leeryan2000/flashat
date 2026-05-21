@@ -3,7 +3,7 @@ import type { MsgDto } from "./message";
 export type Participant = {
   uid: string;
   name: string;
-  role: "admin" | "member";
+  role: "creator" | "admin" | "member";
 };
 
 export type Conversation = {

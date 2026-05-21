@@ -16,10 +16,15 @@ export function ParticipantsPanel({ participants, onClose }: ParticipantsPanelPr
         {p.name.slice(0, 2).toUpperCase()}
       </div>
       <span className="flex-1 text-sm text-slate-200 truncate">{p.name}</span>
-      {(p.role === "admin" || p.role === "creator") ? (
+      {p.role === "creator" ? (
+        <span className="flex items-center gap-1 text-[11px] font-medium text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">
+          <Shield size={11} />
+          Creator
+        </span>
+      ) : p.role === "admin" ? (
         <span className="flex items-center gap-1 text-[11px] font-medium text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded-full">
           <Shield size={11} />
-          {p.role === "creator" ? "Creator" : "Admin"}
+          Admin
         </span>
       ) : (
         <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-700/50 px-2 py-0.5 rounded-full">
