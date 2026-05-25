@@ -264,7 +264,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                 return <Avatar uid={item.msg.fromUid} name={name} />;
               })()}
 
-              <div className="flex flex-col max-w-[75%]">
+              <div className="flex flex-col max-w-[33%]">
                 {/* Sender name for group chats */}
                 {!isSelf(item.msg) && conv?.type === "group" && (
                   <span className="text-xs text-slate-500 mb-1 ml-1">
@@ -282,7 +282,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                     item.msg.status === "sending" ? "opacity-70" : "",
                   ].join(" ")}
                 >
-                  <p className={`whitespace-pre-wrap break-words ${isSelf(item.msg) ? "text-right" : "text-left"}`}>
+                  <p className="whitespace-pre-wrap break-words text-left">
                     {item.msg.text}
                   </p>
                   <div className="flex items-center justify-end gap-1 mt-1">
