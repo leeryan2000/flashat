@@ -165,6 +165,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     onMessageReceived(lastMsg);
   }, [lastMsg]);
 
+  // Update tab title with total unread count
+  useEffect(() => {
+    const totalUnread = convs.order.reduce((sum, id) => {
+      return sum + (convs.entities[id]?.unreadCount ?? 0);
+    }, 0);
+
+    document.title = totalUnread > 0 ? `(${totalUnread}) Flashat` : "Flashat";
+  }, [convs]);
+
   // Message hanlder
   const onMessageReceived = useEffectEvent((lastMsg: string) => {
     if (!user || user?.uid === "") return;
