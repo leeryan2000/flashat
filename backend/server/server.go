@@ -90,6 +90,8 @@ func StartServer() (*Server, error) {
 		s.ConversationRepo,
 		s.RabbitMQClient,
 	)
+	s.MessageService.RegisterObserver(&service.AckObserver{Hub: s.Hub})
+	s.MessageService.RegisterObserver(&service.BroadcastObserver{Hub: s.Hub})
 
 	s.MessageWorker = service.NewMessageWorker(s.RabbitMQClient, s.MessageService)
 	s.MessageWorker.Start()

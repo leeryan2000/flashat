@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log"
 
@@ -20,7 +19,8 @@ type MessageService struct {
 	MessageRepo      repo.MessageRepo
 	ConversationRepo repo.ConversationRepo
 
-	handlers map[wire.WireType]MsgHandlerFunc
+	handlers  map[wire.WireType]MsgHandlerFunc
+	observers []MessageObserver
 }
 
 func NewMessageService(hub Hub, msgRepo repo.MessageRepo, convRepo repo.ConversationRepo, publisher Publisher) *MessageService {
@@ -36,6 +36,10 @@ func NewMessageService(hub Hub, msgRepo repo.MessageRepo, convRepo repo.Conversa
 	s.handlers[wire.Read] = s.handleRead
 
 	return s
+}
+
+func (s *MessageService) RegisterObserver(obs MessageObserver) {
+	s.observers = append(s.observers, obs)
 }
 
 func (s *MessageService) HandleEnvelope(ctx context.Context, env *wire.Msg) error {
@@ -107,66 +111,39 @@ func (s *MessageService) ProcessChat(ctx context.Context, env *wire.Msg) error {
 		return err
 	}
 
-	// --- Save to DB ---
+	// --- Save to DB first, Stops if this fails ---
 	msg := &models.Message{
 		ID:             msgID,
 		ConversationID: conversationID,
 		FromUID:        fromUID,
 		Body:           env.Body,
 	}
-
 	if err := s.MessageRepo.SaveMessage(ctx, msg); err != nil {
 		log.Println("❌ Failed to save message:", err)
 		return err
 	}
 
-	// --- ACK the sender with server seq and id ---
-	ackEnv := &wire.Msg{
-		Type:           wire.Ack,
-		ConversationID: env.ConversationID,
-		ClientMsgID:    env.ClientMsgID,
-		ServerMsgID:    msg.ID.String(),
-		FromUID:        env.FromUID,
-		FromName:       msg.FromName,
-		Seq:            msg.Seq,
-		Ts:             msg.CreatedAt,
-		Body:           env.Body,
-	}
-	ackJSON, err := json.Marshal(ackEnv)
-	if err != nil {
-		return err
-	}
-	s.Hub.SendToUID(fromUID, ackJSON)
-
-	// --- Broadcast to other participants ---
-	outEnv := &wire.Msg{
-		Type:           wire.Chat,
-		ConversationID: env.ConversationID,
-		ServerMsgID:    msg.ID.String(),
-		FromUID:        env.FromUID,
-		FromName:       msg.FromName,
-		Seq:            msg.Seq,
-		Ts:             msg.CreatedAt,
-		Body:           env.Body,
-	}
-	outJSON, err := json.Marshal(outEnv)
-	if err != nil {
-		return err
-	}
-
+	// --- Fetch participants ---
 	participants, err := s.ConversationRepo.ListParticipantByID(ctx, conversationID)
 	if err != nil {
 		log.Println("❌ Failed to list participants:", err)
 		return err
 	}
-
 	uids := make([]uuid.UUID, 0, len(participants))
 	for _, p := range participants {
 		uids = append(uids, p.UID)
 	}
 
-	s.Hub.BroadcastToParticipant(uids, fromUID, outJSON)
-	s.Hub.SendToUID(fromUID, outJSON) // sync sender's other tabs/devices
+	// --- Notify observers ---
+	event := &MessageEvent{
+		Ctx:          ctx,
+		OriginalEnv:  env,
+		SavedMsg:     msg,
+		Participants: uids,
+	}
+	for _, obs := range s.observers {
+		obs.OnMessageSaved(event)
+	}
 
 	return nil
 }
