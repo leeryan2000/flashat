@@ -17,7 +17,7 @@ type ConversationHandler struct {
 }
 
 type groupInput struct {
-	GroupName    string   `json:"name"`
+	GroupName      string   `json:"name"`
 	ParticipantIds []string `json:"participantIds"` // UIDs of participants
 }
 

@@ -92,10 +92,9 @@ func (h UserHandler) GetUserById(c *gin.Context) {
 }
 
 func (h UserHandler) UpdateName(c *gin.Context) {
-	uidStr := c.Param("uid")
-
+	uidStr := c.GetString("uid")
 	if uidStr == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "ID is required"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
@@ -108,8 +107,13 @@ func (h UserHandler) UpdateName(c *gin.Context) {
 	var input struct {
 		Name string `json:"name"`
 	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Failed to bind input"})
+	if err := c.ShouldBindJSON(&input); err != nil || input.Name == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Name is required"})
+		return
+	}
+
+	if err := h.Repo.UpdateName(c.Request.Context(), uid, input.Name); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
