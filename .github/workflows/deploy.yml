@@ -58,8 +58,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # Copies your Nginx routing and Compose file
-          source: "nginx/,docker-compose.yml,frontend/dist/" 
+          # Copies your Nginx routing, Compose file, and monitoring configs
+          source: "nginx/,docker-compose.yml,frontend/dist/,monitoring/"
           target: "/home/ec2-user/app"
 
       - name: Pull Images and Start Docker on EC2

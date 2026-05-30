@@ -58,6 +58,43 @@ services:
     networks:
       - flashat-net
 
+  loki:
+    image: grafana/loki:2.9.0
+    restart: always
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - flashat-net
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    restart: always
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # read Docker logs
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - flashat-net
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000"  # localhost only — not exposed to internet
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+    networks:
+      - flashat-net
+
 networks:
   flashat-net:
     driver: bridge
@@ -65,3 +102,5 @@ networks:
 volumes:
   postgres_data:
   rabbitmq_data:
+  loki_data:
+  grafana_data:

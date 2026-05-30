@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,11 @@ import (
 )
 
 func main() {
+	// Structured JSON logging — output goes to stdout, Docker captures it
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
+
 	s, err := server.StartServer()
 	if err != nil {
 		log.Fatal("failed to start server: ", err)
@@ -27,7 +33,7 @@ func main() {
 
 	// Start HTTP server in background
 	go func() {
-		log.Println("server listening on :8080")
+		slog.Info("server listening", "port", 8080)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("listen error: ", err)
 		}
@@ -37,7 +43,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("shutting down...")
+	slog.Info("shutting down...")
 
 	// Give in-flight HTTP requests 10s to finish
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -49,5 +55,5 @@ func main() {
 	s.RedisClient.Close()
 	s.Pool.Close()
 
-	log.Println("shutdown complete")
+	slog.Info("shutdown complete")
 }
