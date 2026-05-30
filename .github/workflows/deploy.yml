@@ -70,7 +70,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ec2-user/app
-            
+
+            # Free up disk space before pulling new images
+            docker system prune -af
+
             # Pull the fresh images from Docker Hub
             docker-compose pull
 
