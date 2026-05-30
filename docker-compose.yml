@@ -1,3 +1,5 @@
+name: flashat
+
 services:
   backend:
     image: leeryan2000/flashat-backend:latest  # ← pulled from hub
