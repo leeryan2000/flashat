@@ -12,9 +12,9 @@ type WSStatus = "idle" | "connecting" | "open" | "closed" | "error";
 
 type WebSocketContextType = {
   status: WSStatus;
-  lastMsg: string | null;
   send: (data: string) => void;
   disconnect: () => void;
+  addMessageListener: (handler: (msg: string) => void) => () => void;
 };
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -33,8 +33,8 @@ const getWebSocketURL = () => {
 
 export function WebSocketProvider({ children }: {children: React.ReactNode}) {
   const [status, setStatus] = useState<WSStatus>("idle");
-  const [lastMsg, setLastMsg] = useState<string | null>(null);
-  
+  const listenersRef = useRef<Set<(msg: string) => void>>(new Set());
+
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   
@@ -62,7 +62,7 @@ export function WebSocketProvider({ children }: {children: React.ReactNode}) {
     };
 
     ws.onmessage = (wire) => {
-      setLastMsg(wire.data);
+      listenersRef.current.forEach(handler => handler(wire.data));
     };
 
     ws.onclose = (event) => {
@@ -104,10 +104,15 @@ export function WebSocketProvider({ children }: {children: React.ReactNode}) {
     }
   }, []);
 
+  const addMessageListener = useCallback((handler: (msg: string) => void) => {
+    listenersRef.current.add(handler);
+    return () => listenersRef.current.delete(handler);
+  }, []);
+
   const disconnect = useCallback(() => {
     isIntentionalClose.current = true; // Prevent auto-reconnect
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-    
+
     socketRef.current?.close();
     setStatus("closed");
   }, []);
@@ -115,11 +120,11 @@ export function WebSocketProvider({ children }: {children: React.ReactNode}) {
   const value = useMemo(
     () => ({
       status,
-      lastMsg,
       send,
       disconnect,
+      addMessageListener,
     }),
-    [status, lastMsg, send, disconnect]
+    [status, send, disconnect, addMessageListener]
   );
 
   return (

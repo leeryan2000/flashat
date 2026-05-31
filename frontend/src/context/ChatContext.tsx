@@ -52,7 +52,7 @@ const ChatContext = createContext<ChatContext | null>(null);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { send, lastMsg, status } = useWebSocket();
+  const { send, addMessageListener, status } = useWebSocket();
   const [convs, setConvs] = useState<ConvState>({ entities: {}, order: [] });
   const [msgs, setMsgs] = useState<MsgState>({}); // Messages for the client stored here
   const [friendships, setFriendships] = useState<Friendship[]>([]);
@@ -161,9 +161,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [convs.order]);
 
   useEffect(() => {
-    if (!lastMsg) return;
-    onMessageReceived(lastMsg);
-  }, [lastMsg]);
+    return addMessageListener(onMessageReceived);
+  }, [addMessageListener]);
 
   // Update tab title with total unread count
   useEffect(() => {
