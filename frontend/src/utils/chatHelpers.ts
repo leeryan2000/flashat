@@ -22,10 +22,13 @@ export const applyAckedMsgToMsgState = (
         prevSlice.pendingEntities;
 
     const newSlice: MsgSlice = {
-        order: [...prevSlice.order, ackedMsg.seq!],
+        // Only add seq to order if broadcast hasn't already added it
+        order: prevSlice.order.includes(ackedMsg.seq!)
+            ? prevSlice.order
+            : [...prevSlice.order, ackedMsg.seq!],
         entities: { ...prevSlice.entities, [ackedMsg.seq!]: ackedMsg },
         pendingOrder: prevSlice.pendingOrder.filter(
-        (id) => id !== client_msg_id
+            (cid) => cid !== client_msg_id
         ),
         pendingEntities: remainingPendingEntities,
     };
