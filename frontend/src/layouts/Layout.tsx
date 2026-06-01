@@ -14,7 +14,7 @@ export default function Layout() {
       {/* Body: sidebar + main */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-slate-900 text-slate-100 p-4 space-y-3 shadow-xl">
+        <aside className="w-64 bg-slate-900 text-slate-100 p-4 shadow-xl flex flex-col h-full">
           <Sidebar/>
         </aside>
 
