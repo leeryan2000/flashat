@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -53,11 +53,12 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 		// Expect JSON envelope from frontend
 		var env wire.Msg
 		if err := json.Unmarshal(raw, &env); err != nil {
-			log.Println("❌ Failed to unmarshal envelope:", err)
+			slog.Error("failed to unmarshal envelope", "error", err)
 			break // ignore malformed
 		}
 
 		if err = handle(c.Ctx, &env); err != nil {
+			slog.Error("failed to handle envelope", "uid", c.UID, "error", err)
 			break
 		}
 	}
@@ -89,7 +90,7 @@ func (c *Client) WritePump() {
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(WRITE_WAIT))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Println("❌ Ping failed, closing connection:", err)
+				slog.Error("ping failed, closing connection", "error", err)
 				c.Cleanup()
 				return
 			}

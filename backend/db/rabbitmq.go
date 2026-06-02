@@ -3,7 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/leeryan2000/flashat/config"
 	"github.com/leeryan2000/flashat/wire"
@@ -44,7 +44,7 @@ func (r *RabbitMQClient) Publish(env *wire.Msg) error {
 		return err
 	}
 
-	log.Printf("Publishing message to RabbitMQ: Type=%s FromUID=%s ConvID=%s\n", env.Type, env.FromUID, env.ConversationID)
+	slog.Info("publishing message to RabbitMQ", "type", env.Type, "from_uid", env.FromUID, "conv_id", env.ConversationID)
 
 	return r.Ch.Publish(
 		"",              // default exchange

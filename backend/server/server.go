@@ -1,7 +1,7 @@
 package server
 
 import (
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -44,7 +44,7 @@ func RunPeriodicTask(task func()) {
 }
 
 func checkClients(s *Server) {
-	log.Println("Checking connected clients...", len(s.Hub.Clients), "connections,", len(s.Hub.ClientsByUID), "unique users")
+	slog.Info("connected clients", "connections", len(s.Hub.Clients), "unique_users", len(s.Hub.ClientsByUID))
 }
 
 func StartServer() (*Server, error) {

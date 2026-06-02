@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
@@ -64,11 +64,11 @@ func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
 	}
 
 	lastReadSeq := env.LastReadSeq
-	log.Println("Handling read receipt from UID:", fromUID, "for conversation:", conversationID, "up to seq:", lastReadSeq)
+	slog.Info("handling read receipt", "uid", fromUID, "conv_id", conversationID, "seq", lastReadSeq)
 
 	err = s.ConversationRepo.UpdateLastReadSeq(ctx, conversationID, fromUID, lastReadSeq)
 	if err != nil {
-		log.Println("❌ Failed to update last read seq:", err)
+		slog.Error("failed to update last read seq", "error", err)
 		return err
 	}
 
@@ -76,7 +76,7 @@ func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
 }
 
 func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
-	log.Println("Handling chat message from UID:", env.FromUID)
+	slog.Info("handling chat message", "from_uid", env.FromUID)
 	if env.ConversationID == "" {
 		return errors.New("missing conversation id")
 	}
@@ -119,14 +119,14 @@ func (s *MessageService) ProcessChat(ctx context.Context, env *wire.Msg) error {
 		Body:           env.Body,
 	}
 	if err := s.MessageRepo.SaveMessage(ctx, msg); err != nil {
-		log.Println("❌ Failed to save message:", err)
+		slog.Error("failed to save message", "error", err)
 		return err
 	}
 
 	// --- Fetch participants ---
 	participants, err := s.ConversationRepo.ListParticipantByID(ctx, conversationID)
 	if err != nil {
-		log.Println("❌ Failed to list participants:", err)
+		slog.Error("failed to list participants", "error", err)
 		return err
 	}
 	uids := make([]uuid.UUID, 0, len(participants))

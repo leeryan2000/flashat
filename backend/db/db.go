@@ -4,7 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -53,7 +53,7 @@ func RunMigrations(c config.Configuration) error {
 		return fmt.Errorf("failed to run migrate up: %w", err)
 	}
 
-	log.Println("Database migrations applied successfully!")
+	slog.Info("database migrations applied successfully")
 	return nil
 }
 

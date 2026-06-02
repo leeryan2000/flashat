@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/wire"
@@ -15,7 +15,7 @@ type AckObserver struct {
 func (o *AckObserver) OnMessageSaved(e *MessageEvent) {
 	fromUID, err := uuid.Parse(e.OriginalEnv.FromUID)
 	if err != nil {
-		log.Println("❌ AckObserver: failed to parse fromUID:", err)
+		slog.Error("AckObserver: failed to parse fromUID", "error", err)
 		return
 	}
 
@@ -33,7 +33,7 @@ func (o *AckObserver) OnMessageSaved(e *MessageEvent) {
 
 	payload, err := json.Marshal(ackEnv)
 	if err != nil {
-		log.Println("❌ AckObserver: failed to marshal ack:", err)
+		slog.Error("AckObserver: failed to marshal ack", "error", err)
 		return
 	}
 

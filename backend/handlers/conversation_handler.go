@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -71,13 +71,12 @@ func (h *ConversationHandler) CreateGroupConversation(c *gin.Context) {
 
 	err = h.Repo.CreateGroupConversation(c.Request.Context(), conv, msg, creatorUID, participantsUID)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to create group conversation", "error", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create group conversation"})
 		return
 	}
 
-	log.Println(conv.CreatedAt, " Group Conversation Created")
-	log.Println(msg.CreatedAt, " Message Created")
+	slog.Info("group conversation created", "conv_id", conv.ID, "created_at", conv.CreatedAt)
 
 	convSummary := &wire.ConversationSummary{
 		ConversationID: conv.ID,
@@ -143,12 +142,12 @@ func (h *ConversationHandler) CreateDirectConversation(c *gin.Context) {
 
 	err = h.Repo.CreateDirectConversation(c.Request.Context(), conv, uid, targetUID)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to create direct conversation", "error", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create direct conversation"})
 		return
 	}
 
-	log.Println(conv.CreatedAt, " Conversation Created")
+	slog.Info("direct conversation created", "conv_id", conv.ID, "created_at", conv.CreatedAt)
 
 	c.JSON(http.StatusOK, conv)
 }

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -30,7 +30,7 @@ func LoadConfig() Configuration {
 	// Load the environment file
 	err := godotenv.Load(envFile)
 	if err != nil {
-		log.Printf("Warning: Error loading %s file, reading from system env only", envFile)
+		slog.Warn("error loading env file, reading from system env only", "file", envFile)
 	}
 
 	configuration := Configuration{}

@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -32,7 +32,7 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 	).Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.GroupAvatarUrl, &conv.CreatedAt)
 
 	if err != nil {
-		log.Println("Failed to create group conversation:", err)
+		slog.Error("failed to create group conversation", "error", err)
 		return err
 	}
 
@@ -77,7 +77,7 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 
 	err = utils.SaveMessageWithTx(ctx, tx, msg)
 	if err != nil {
-		log.Println("Save message failed ", err)
+		slog.Error("save message failed", "error", err)
 		return err
 	}
 

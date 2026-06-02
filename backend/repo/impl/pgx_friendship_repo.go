@@ -2,7 +2,7 @@ package repo
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -70,7 +70,7 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 	}
 
 	if tag.RowsAffected() == 0 {
-		log.Println("No pending friendship found to accept")
+		slog.Warn("no pending friendship found to accept")
 		return pgx.ErrNoRows
 	}
 

@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/wire"
@@ -15,7 +15,7 @@ type BroadcastObserver struct {
 func (o *BroadcastObserver) OnMessageSaved(e *MessageEvent) {
 	fromUID, err := uuid.Parse(e.OriginalEnv.FromUID)
 	if err != nil {
-		log.Println("❌ BroadcastObserver: failed to parse fromUID:", err)
+		slog.Error("BroadcastObserver: failed to parse fromUID", "error", err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (o *BroadcastObserver) OnMessageSaved(e *MessageEvent) {
 
 	payload, err := json.Marshal(outEnv)
 	if err != nil {
-		log.Println("❌ BroadcastObserver: failed to marshal broadcast:", err)
+		slog.Error("BroadcastObserver: failed to marshal broadcast", "error", err)
 		return
 	}
 

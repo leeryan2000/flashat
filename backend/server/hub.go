@@ -1,7 +1,7 @@
 package server
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 )
@@ -51,7 +51,7 @@ func (hub *Hub) BroadcastToParticipant(uids []uuid.UUID, fromUID uuid.UUID, payl
 		}
 		if clients, ok := hub.ClientsByUID[uid.String()]; ok {
 			for client := range clients {
-				log.Println("Broadcasting to UID:", uid)
+				slog.Info("broadcasting to UID", "uid", uid)
 				client.Send <- payload
 			}
 		}
@@ -64,7 +64,7 @@ func (hub *Hub) addClient(c *Client) {
 		hub.ClientsByUID[c.UID] = make(map[*Client]struct{})
 	}
 	hub.ClientsByUID[c.UID][c] = struct{}{}
-	log.Println("Client registered:", c.UID)
+	slog.Info("client registered", "uid", c.UID)
 }
 
 func (hub *Hub) removeClient(c *Client) {
