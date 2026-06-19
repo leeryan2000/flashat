@@ -55,3 +55,4 @@ Two accounts are pre-configured and already friends with each other so you can t
 | Reverse Proxy | Nginx |
 | Deployment | Docker Compose, AWS EC2 |
 | CI/CD | GitHub Actions |
+| Monitoring | Grafana |

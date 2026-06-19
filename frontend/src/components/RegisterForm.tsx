@@ -106,7 +106,7 @@ export function RegisterForm() {
           </div>
           <input
             type="text"
-            placeholder="Verification code"
+            placeholder="Invitation code"
             className="w-full bg-slate-800/50 border border-slate-700 text-slate-100 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-500"
             value={code}
             onChange={(e) => setCode(e.target.value)}
