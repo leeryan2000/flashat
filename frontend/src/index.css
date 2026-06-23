@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+:root {
+  --primary: #8b6fd4;
+  --primary-hover: #7c5ec4;
+  --primary-shadow: rgba(139, 111, 212, 0.25);
+  --sidebar-bg: #1a1825;
+  --sidebar-item: #272436;
+  --sidebar-ring: #8b6fd4;
+}
+
+[data-theme="indigo"] {
+  --primary: #6b6ec4;
+  --primary-hover: #5c5fb4;
+  --primary-shadow: rgba(107, 110, 196, 0.25);
+  --sidebar-bg: #13141f;
+  --sidebar-item: #1c1e30;
+  --sidebar-ring: #6b6ec4;
+}
+
+[data-theme="emerald"] {
+  --primary: #3dab87;
+  --primary-hover: #2e9a77;
+  --primary-shadow: rgba(61, 171, 135, 0.25);
+  --sidebar-bg: #111e1a;
+  --sidebar-item: #192e27;
+  --sidebar-ring: #3dab87;
+}

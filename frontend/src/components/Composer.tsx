@@ -36,7 +36,8 @@ export function Composer({ convId }: { convId: string }) {
         <button
           onClick={send}
           disabled={text.trim() === ""}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          style={{ background: "var(--primary)" }}
         >
           <Send size={15} />
           Send

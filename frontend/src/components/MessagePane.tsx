@@ -263,10 +263,11 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                     item.msg.status === "failed"
                       ? "bg-red-100 text-red-800 border border-red-300"
                       : isSelf(item.msg)
-                      ? "bg-indigo-600 text-white rounded-br-sm"
+                      ? "text-white rounded-br-sm"
                       : "bg-slate-100 text-slate-900 rounded-bl-sm",
                     item.msg.status === "sending" ? "opacity-70" : "",
                   ].join(" ")}
+                  style={item.msg.status !== "failed" && isSelf(item.msg) ? { background: "var(--primary)" } : undefined}
                 >
                   <p className="whitespace-pre-wrap break-words text-left">
                     {item.msg.text}

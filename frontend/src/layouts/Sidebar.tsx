@@ -2,56 +2,50 @@ import { NavLink } from "react-router-dom";
 import { MessageSquare, Users, User, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { avatarColor, nameInitials } from "../utils/avatar";
+import { motion } from "framer-motion";
+
+const navItems = [
+  { to: "", end: true, icon: MessageSquare, label: "Chat" },
+  { to: "friends", icon: Users, label: "Friends" },
+  { to: "profile", icon: User, label: "Profile" },
+  { to: "settings", icon: Settings, label: "Settings" },
+];
 
 export default function Sidebar() {
   const { user } = useAuth();
 
-  // 🛠️ Helper function to style the links dynamically based on active state
-  const getNavClass = ({ isActive }: { isActive: boolean }) => {
-    const baseClasses = "flex items-center gap-3 w-full rounded-xl px-4 py-3 transition-all active:scale-[0.98] font-medium";
-    
-    if (isActive) {
-      // Active State: Highlighted with your theme's indigo color
-      return `${baseClasses} bg-indigo-600 text-white shadow-lg shadow-indigo-500/20`;
-    } else {
-      // Inactive State: Dimmed, turns lighter on hover
-      return `${baseClasses} text-slate-400 hover:bg-slate-800 hover:text-slate-100`;
-    }
-  };
-
   return (
     <div className="w-full flex flex-col flex-1">
-      {/* Optional: A small section label */}
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4 px-4">
-        Main Menu
-      </p>
-
       <nav className="space-y-2 flex-1">
-        {/* Note: Added 'end' so the Chat button doesn't stay highlighted when you visit sub-pages */}
-        <NavLink to="" end className={getNavClass}>
-          <MessageSquare size={20} />
-          <span>Chat</span>
-        </NavLink>
-
-        <NavLink to="friends" className={getNavClass}>
-          <Users size={20} />
-          <span>Friends</span>
-        </NavLink>
-
-        <NavLink to="profile" className={getNavClass}>
-          <User size={20} />
-          <span>Profile</span>
-        </NavLink>
-
-        <NavLink to="settings" className={getNavClass}>
-          <Settings size={20} />
-          <span>Settings</span>
-        </NavLink>
+        {navItems.map(({ to, end, icon: Icon, label }) => (
+          <motion.div key={to} whileHover={{ x: 4 }} whileTap={{ scale: 0.97 }}>
+            <NavLink to={to} end={end}>
+              {({ isActive }) => (
+                <div
+                  className="flex items-center gap-3 w-full rounded-xl px-4 py-3 font-medium transition-colors duration-150 cursor-pointer"
+                  style={
+                    isActive
+                      ? { background: "var(--primary)", color: "white", boxShadow: "0 4px 12px var(--primary-shadow)" }
+                      : { color: "#cbd5e1" }
+                  }
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLDivElement).style.background = "var(--sidebar-item)"; (e.currentTarget as HTMLDivElement).style.color = "#f8fafc"; }}
+                  onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.background = ""; (e.currentTarget as HTMLDivElement).style.color = "#cbd5e1"; } }}
+                >
+                  <Icon size={20} />
+                  <span>{label}</span>
+                </div>
+              )}
+            </NavLink>
+          </motion.div>
+        ))}
       </nav>
 
-      {/* User card at the bottom */}
       {user && (
-        <div className="flex items-center gap-3 px-2 py-3 rounded-xl bg-slate-800 mt-4">
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="flex items-center gap-3 px-2 py-3 rounded-xl mt-4 cursor-default"
+          style={{ background: "var(--sidebar-item)" }}
+        >
           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(user.uid)}`}>
             {nameInitials(user.name)}
           </div>
@@ -59,7 +53,7 @@ export default function Sidebar() {
             <span className="text-sm font-medium text-slate-100 truncate">{user.name}</span>
             <span className="text-xs text-slate-400 truncate">{user.email}</span>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

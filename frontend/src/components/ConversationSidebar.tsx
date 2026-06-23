@@ -32,14 +32,15 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
   }, [convs, query]);
 
   return (
-    <div className="h-full bg-slate-900 text-slate-100 w-80 flex-shrink-0 grid grid-rows-[auto_1fr]">
+    <div className="h-full text-slate-100 w-80 flex-shrink-0 grid grid-rows-[auto_1fr]" style={{ background: "var(--sidebar-bg)" }}>
       {/* search */}
-      <div className="p-3 border-b border-slate-800">
+      <div className="p-3 border-b" style={{ borderColor: "var(--sidebar-item)" }}>
         <input
           value={query}
           onChange={e=>setQ(e.target.value)}
           placeholder="Search conversations"
-          className="w-full rounded-xl bg-slate-800/60 px-3 py-2 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2"
+          style={{ background: "var(--sidebar-item)", outlineColor: "var(--sidebar-ring)" }}
         />
       </div>
 
@@ -49,12 +50,12 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
           <button
             key={conv.id}
             onClick={()=>onOpen(conv.id)}
-            className={[
-              "w-full text-left px-3 py-3 gap-3 flex items-start",
-              activeConvId===conv.id ? "bg-slate-800" : "hover:bg-slate-800/60"
-            ].join(" ")}
+            className="w-full text-left px-3 py-3 gap-3 flex items-start transition-colors duration-100"
+            style={{ background: activeConvId===conv.id ? "var(--sidebar-item)" : undefined }}
+            onMouseEnter={e => { if (activeConvId !== conv.id) (e.currentTarget as HTMLButtonElement).style.background = "var(--sidebar-item)"; }}
+            onMouseLeave={e => { if (activeConvId !== conv.id) (e.currentTarget as HTMLButtonElement).style.background = ""; }}
           >
-            <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-xs">{conv.title.slice(0,2)}</div>
+            <div className="h-10 w-10 rounded-full flex items-center justify-center text-white text-xs shrink-0" style={{ background: "var(--primary)" }}>{conv.title.slice(0,2)}</div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium">
