@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 export type Theme = "violet" | "indigo" | "emerald" | "rose";
 
 const themes: { id: Theme; label: string; color: string }[] = [
-  { id: "violet", label: "Violet", color: "#7c3aed" },
+  { id: "violet", label: "Violet", color: "#7327f7" },
   { id: "indigo", label: "Indigo", color: "#4f46e5" },
   { id: "emerald", label: "Emerald", color: "#059669" },
 ];

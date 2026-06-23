@@ -62,18 +62,18 @@ export default function FriendshipList({
   }, [data, query]);
 
   const renderAvatar = (name: string) => (
-    <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-semibold shrink-0">
+    <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shrink-0" style={{ background: "var(--primary)" }}>
       {name.slice(0, 2).toUpperCase()}
     </div>
   );
 
   return (
-    <div className="h-full w-full bg-slate-900 text-slate-100 flex flex-col">
+    <div className="h-full w-full text-slate-100 flex flex-col" style={{ background: "var(--sidebar-bg)" }}>
       {/* --- Header --- */}
-      <div className="p-6 border-b border-slate-800 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="p-6 border-b border-slate-700/50 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
         <h1 className="text-2xl font-bold flex items-center gap-3">
-          <Users className="w-6 h-6 text-indigo-400" />
+          <Users className="w-6 h-6" style={{ color: "var(--primary)" }} />
           Friends
         </h1>
 
@@ -85,14 +85,17 @@ export default function FriendshipList({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search friends..."
-              className="w-full rounded-xl bg-slate-800/60 pl-9 pr-4 py-2 text-sm placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition"
+              className="w-full rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2 transition"
+              style={{ background: "var(--sidebar-item)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
           </div>
 
           {/* Add Friend Button */}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition text-sm shadow-lg shadow-indigo-500/20"
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-xl font-medium transition text-sm shadow-lg"
+            style={{ background: "var(--primary)", boxShadow: "0 4px 12px var(--primary-shadow)" }}
           >
             <UserPlus size={18} />
           </button>
@@ -100,7 +103,8 @@ export default function FriendshipList({
           {/* Create Group Button */}
           <button
             onClick={() => setIsGroupModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition text-sm shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 text-slate-200 rounded-xl font-medium transition text-sm"
+            style={{ background: "var(--sidebar-item)" }}
           >
             <MessageSquarePlus size={18} />
             <span className="hidden sm:inline">New Group</span>
@@ -119,7 +123,7 @@ export default function FriendshipList({
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {incoming.map(user => (
-                <div key={user.uid} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4">
+                <div key={user.uid} className="p-4 rounded-xl border border-slate-700/20 flex items-center gap-4" style={{ background: "var(--sidebar-item)" }}>
                   {renderAvatar(user.name)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
@@ -162,7 +166,7 @@ export default function FriendshipList({
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {outgoing.map(user => (
-                <div key={user.uid} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4 opacity-75">
+                <div key={user.uid} className="p-4 rounded-xl border border-slate-700/20 flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)" }}>
                   {renderAvatar(user.name)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
@@ -195,7 +199,8 @@ export default function FriendshipList({
               {friends.map(user => (
                 <div
                   key={user.uid}
-                  className="group bg-slate-800 hover:bg-slate-700/80 transition p-4 rounded-xl border border-transparent hover:border-slate-600 flex items-center gap-4"
+                  className="group transition p-4 rounded-xl border border-transparent flex items-center gap-4"
+                  style={{ background: "var(--sidebar-item)" }}
                 >
                   {renderAvatar(user.name)}
 
@@ -209,7 +214,8 @@ export default function FriendshipList({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => user.directConversationId && onChatClick(user.directConversationId)}
-                      className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition"
+                      className="p-2 rounded-lg transition hover:text-white"
+                      style={{ background: "color-mix(in srgb, var(--primary) 15%, transparent)", color: "var(--primary)" }}
                       title="Send Message"
                     >
                       <MessageSquare size={18} />
@@ -239,7 +245,7 @@ export default function FriendshipList({
             {blockedOpen && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {blocked.map(user => (
-                  <div key={user.uid} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4 opacity-75">
+                  <div key={user.uid} className="p-4 rounded-xl border border-slate-700/20 flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)" }}>
                     {renderAvatar(user.name)}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{user.name}</p>

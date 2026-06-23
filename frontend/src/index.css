@@ -1,28 +1,31 @@
 @import "tailwindcss";
 
+/* Violet — all hues sit at ~255° */
 :root {
-  --primary: #8b6fd4;
-  --primary-hover: #7c5ec4;
-  --primary-shadow: rgba(139, 111, 212, 0.25);
-  --sidebar-bg: #1a1825;
-  --sidebar-item: #272436;
-  --sidebar-ring: #8b6fd4;
+  --primary: #7b68c8;
+  --primary-hover: #6a58b8;
+  --primary-shadow: rgba(123, 104, 200, 0.25);
+  --sidebar-bg: #14121e;
+  --sidebar-item: #221f33;
+  --sidebar-ring: #7b68c8;
 }
 
+/* Indigo — all hues sit at ~230° */
 [data-theme="indigo"] {
-  --primary: #6b6ec4;
-  --primary-hover: #5c5fb4;
-  --primary-shadow: rgba(107, 110, 196, 0.25);
-  --sidebar-bg: #13141f;
-  --sidebar-item: #1c1e30;
-  --sidebar-ring: #6b6ec4;
+  --primary: #5f6dc0;
+  --primary-hover: #5060b0;
+  --primary-shadow: rgba(95, 109, 192, 0.25);
+  --sidebar-bg: #10111e;
+  --sidebar-item: #181a2e;
+  --sidebar-ring: #5f6dc0;
 }
 
+/* Emerald — all hues sit at ~160° */
 [data-theme="emerald"] {
-  --primary: #3dab87;
-  --primary-hover: #2e9a77;
-  --primary-shadow: rgba(61, 171, 135, 0.25);
-  --sidebar-bg: #111e1a;
-  --sidebar-item: #192e27;
-  --sidebar-ring: #3dab87;
+  --primary: #3a9e80;
+  --primary-hover: #2e8e70;
+  --primary-shadow: rgba(58, 158, 128, 0.25);
+  --sidebar-bg: #0d1a16;
+  --sidebar-item: #152820;
+  --sidebar-ring: #3a9e80;
 }

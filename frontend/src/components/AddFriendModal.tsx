@@ -31,7 +31,7 @@ export function AddFriendModal({ onClose, onAddFriend }: AddFriendModalProps) {
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4">
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="border p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200" style={{ background: "var(--sidebar-item)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-white">Send Friend Request</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white">
@@ -51,7 +51,9 @@ export function AddFriendModal({ onClose, onAddFriend }: AddFriendModalProps) {
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full border rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 outline-none"
+              style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
             {addError && <p className="text-red-400 text-sm mt-2">{addError}</p>}
           </div>
@@ -60,14 +62,17 @@ export function AddFriendModal({ onClose, onAddFriend }: AddFriendModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition"
+              className="px-4 py-2 text-slate-300 hover:text-white rounded-lg transition"
+              onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "")}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isAdding}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: "var(--primary)" }}
             >
               {isAdding ? <Loader2 className="animate-spin" size={18} /> : <UserPlus size={18} />}
               Send Request

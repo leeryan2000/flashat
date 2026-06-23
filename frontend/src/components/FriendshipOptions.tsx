@@ -10,7 +10,10 @@ export function FriendshipOptions({ onUnfriend, onBlock }: { onUnfriend: () => v
       {/* 1. The Trigger Button (Three Dots) */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`p-2 rounded-lg transition ${isOpen ? 'bg-slate-700 text-white' : 'text-slate-500 hover:bg-slate-700/50 hover:text-slate-300'}`}
+        className="p-2 rounded-lg transition"
+        style={isOpen ? { background: "color-mix(in srgb, var(--primary) 20%, transparent)", color: "var(--primary)" } : { color: "#64748b" }}
+        onMouseEnter={e => { if (!isOpen) { e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)"; e.currentTarget.style.color = "#cbd5e1"; } }}
+        onMouseLeave={e => { if (!isOpen) { e.currentTarget.style.background = ""; e.currentTarget.style.color = "#64748b"; } }}
         title="Options"
       >
         <MoreVertical size={18} />
@@ -26,7 +29,7 @@ export function FriendshipOptions({ onUnfriend, onBlock }: { onUnfriend: () => v
           />
           
           {/* The Actual Menu List */}
-          <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute right-0 mt-2 w-48 border border-slate-700/30 rounded-xl shadow-xl z-20 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100" style={{ background: "var(--sidebar-item)" }}>
             
             {/* Option: Unfriend */}
             <button 

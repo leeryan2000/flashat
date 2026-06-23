@@ -45,16 +45,16 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="h-full w-full bg-slate-900 text-slate-100 flex flex-col items-center p-6 md:p-10 overflow-y-auto">
+    <div className="h-full w-full text-slate-100 flex flex-col items-center p-6 md:p-10 overflow-y-auto" style={{ background: "var(--sidebar-bg)" }}>
       
       {/* Profile Card Container */}
-      <div className="w-full max-w-2xl bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+      <div className="w-full max-w-2xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300" style={{ background: "var(--sidebar-item)" }}>
         
         {/* Header & Avatar Section */}
         <div className="flex flex-col items-center mb-10">
           <div className="relative group cursor-pointer mb-4">
             {/* Avatar Circle */}
-            <div className="h-28 w-28 rounded-full bg-indigo-600 flex items-center justify-center text-4xl font-bold shadow-lg shadow-indigo-500/30">
+            <div className="h-28 w-28 rounded-full flex items-center justify-center text-4xl font-bold shadow-lg" style={{ background: "var(--primary)", boxShadow: "0 8px 24px var(--primary-shadow)" }}>
               {getInitials(user?.name)}
             </div>
             
@@ -72,8 +72,8 @@ export default function ProfilePage() {
         <div className="space-y-6">
           
           {/* Email Field (Read-only) */}
-          <div className="bg-slate-900/50 rounded-2xl p-4 border border-slate-700/50 flex items-center gap-4">
-            <div className="p-3 bg-slate-800 rounded-xl text-slate-400">
+          <div className="rounded-2xl p-4 border border-slate-700/20 flex items-center gap-4" style={{ background: "color-mix(in srgb, var(--primary) 6%, transparent)" }}>
+            <div className="p-3 rounded-xl" style={{ background: "var(--sidebar-bg)", color: "var(--primary)" }}>
               <Mail size={20} />
             </div>
             <div className="flex-1 min-w-0">
@@ -83,51 +83,50 @@ export default function ProfilePage() {
           </div>
 
           {/* Name Field (Editable) */}
-          <div className="bg-slate-900/50 rounded-2xl p-4 border border-slate-700/50 flex items-center gap-4 transition-all">
-            <div className="p-3 bg-slate-800 rounded-xl text-indigo-400">
+          <div className="rounded-2xl p-4 border border-slate-700/20 flex items-center gap-4 transition-all" style={{ background: "color-mix(in srgb, var(--primary) 6%, transparent)" }}>
+            <div className="p-3 rounded-xl" style={{ background: "var(--sidebar-bg)", color: "var(--primary)" }}>
               <User size={20} />
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Display Name</p>
-              
               {isEditing ? (
                 <input
                   type="text"
                   autoFocus
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-slate-800 border border-indigo-500/50 rounded-lg px-3 py-1 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg px-3 py-1 text-white outline-none focus:ring-2 border"
+                  style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 50%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
                 />
               ) : (
                 <p className="text-slate-200 font-medium truncate">{user?.name || "Username"}</p>
               )}
             </div>
-            {/* Edit / Save Actions */}
+
             <div className="flex gap-2">
               {isEditing ? (
                 <>
-                  <button 
+                  <button
                     onClick={handleSave}
                     disabled={isSaving}
                     className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition disabled:opacity-50"
                   >
                     <Check size={18} />
                   </button>
-                  <button 
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditName(user?.name || ""); // Reset
-                    }}
-                    className="p-2 rounded-lg bg-slate-700 text-slate-400 hover:text-white transition"
+                  <button
+                    onClick={() => { setIsEditing(false); setEditName(user?.name || ""); }}
+                    className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-600/40 transition"
+                    style={{ background: "var(--sidebar-bg)" }}
                   >
                     <X size={18} />
                   </button>
                 </>
               ) : (
-                <button 
+                <button
                   onClick={() => setIsEditing(true)}
-                  className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/50 transition"
+                  className="p-2 rounded-lg border border-slate-700/30 text-slate-400 hover:text-slate-200 hover:bg-slate-600/40 transition"
+                  style={{ background: "var(--sidebar-bg)" }}
                   title="Edit Name"
                 >
                   <Edit2 size={18} />

@@ -45,14 +45,14 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
   };
 
   const renderAvatar = (name: string) => (
-    <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-semibold shrink-0">
+    <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shrink-0" style={{ background: "var(--primary)" }}>
       {name.slice(0, 2).toUpperCase()}
     </div>
   );
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4">
-      <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+      <div className="border p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]" style={{ background: "var(--sidebar-item)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-white">Create Group</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white">
@@ -72,7 +72,9 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="e.g. Project Team"
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full border rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 outline-none"
+              style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
           </div>
 
@@ -81,7 +83,7 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
               Select Members ({selectedFriendIds.length})
             </label>
 
-            <div className="flex-1 overflow-y-auto border border-slate-700 rounded-xl bg-slate-900/50 p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto border rounded-xl p-2 space-y-1" style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 15%, transparent)" }}>
               {friends.length === 0 ? (
                 <p className="text-slate-500 text-sm text-center py-4">You have no friends to add yet.</p>
               ) : (
@@ -91,20 +93,20 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
                     <div
                       key={friend.uid}
                       onClick={() => toggleFriendSelection(friend.uid)}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition ${
-                        isSelected ? 'bg-indigo-600/20 border border-indigo-500/50' : 'hover:bg-slate-800 border border-transparent'
-                      }`}
+                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition border"
+                      style={isSelected ? { background: "color-mix(in srgb, var(--primary) 15%, transparent)", borderColor: "color-mix(in srgb, var(--primary) 50%, transparent)" } : { borderColor: "transparent" }}
                     >
-                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition ${
-                        isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-slate-600'
-                      }`}>
+                      <div
+                        className="w-5 h-5 rounded-md border flex items-center justify-center transition"
+                        style={isSelected ? { background: "var(--primary)", borderColor: "var(--primary)" } : { borderColor: "#475569" }}
+                      >
                         {isSelected && <Check size={14} className="text-white" />}
                       </div>
 
                       {renderAvatar(friend.name)}
 
                       <div className="min-w-0">
-                        <p className={`text-sm font-medium ${isSelected ? 'text-indigo-200' : 'text-slate-200'}`}>
+                        <p className="text-sm font-medium text-slate-200">
                           {friend.name}
                         </p>
                       </div>
@@ -121,14 +123,17 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition"
+              className="px-4 py-2 text-slate-300 hover:text-white rounded-lg transition"
+              onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "")}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isCreatingGroup || selectedFriendIds.length === 0}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: "var(--primary)" }}
             >
               {isCreatingGroup ? <Loader2 className="animate-spin" size={18} /> : <MessageSquarePlus size={18} />}
               Create Group
