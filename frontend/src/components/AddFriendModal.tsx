@@ -53,7 +53,6 @@ export function AddFriendModal({ onClose, onAddFriend }: AddFriendModalProps) {
               placeholder="name@example.com"
               className="w-full border rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 outline-none"
               style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
-              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
             {addError && <p className="text-red-400 text-sm mt-2">{addError}</p>}
           </div>

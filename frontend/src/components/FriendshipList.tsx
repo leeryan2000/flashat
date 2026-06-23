@@ -87,7 +87,6 @@ export default function FriendshipList({
               placeholder="Search friends..."
               className="w-full rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2 transition"
               style={{ background: "var(--sidebar-item)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
-              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
           </div>
 
