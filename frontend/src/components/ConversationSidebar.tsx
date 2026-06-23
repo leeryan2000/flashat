@@ -57,7 +57,9 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
             <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-xs">{conv.title.slice(0,2)}</div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="truncate font-medium">{conv.title}</p>
+                <p className="truncate font-medium">
+                  {conv.title}{conv.type === "group" && <span className="text-slate-400 font-normal"> ({conv.participants.length})</span>}
+                </p>
                 <span className="text-xs text-slate-400 ml-auto">
                   {typeof conv.lastMsgTs === "number" ? formatConvTime(conv.lastMsgTs) : "--"}
                 </span>

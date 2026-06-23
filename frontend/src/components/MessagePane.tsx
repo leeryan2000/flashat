@@ -163,7 +163,9 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
       {/* header */}
       {conv && (
         <div className="relative flex items-center justify-center px-4 py-3 border-b border-slate-200 bg-white">
-          <span className="font-semibold text-slate-800">{conv.title}</span>
+          <span className="font-semibold text-slate-800">
+            {conv.title}{conv.type === "group" && <span className="font-normal text-slate-500"> ({conv.participants.length})</span>}
+          </span>
           <div className="absolute right-4 flex items-center gap-1">
             {/* Participants panel button — group only */}
             {conv.type === "group" && (
