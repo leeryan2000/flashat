@@ -4,9 +4,11 @@ import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../wire/message";
 import type { Conversation } from "../wire/conversation";
-import { MoreVertical, Ban, LogOut, Users } from "lucide-react";
+import { MoreVertical, Ban, LogOut, Users, UserPlus } from "lucide-react";
 import { ParticipantsPanel } from "./ParticipantsPanel";
+import { AddMembersModal } from "./AddMembersModal";
 import { avatarColor, nameInitials } from "../utils/avatar";
+import { api } from "../api/api";
 
 type MessagePaneProps = {
   conv?: Conversation;
@@ -46,13 +48,19 @@ function getDateLabel(ts: number): string {
 // ---------- Messages pane ----------
 export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBlock, onLeaveGroup }: MessagePaneProps) {
   const { user } = useAuth();
-  const { convs, markAsRead } = useChat();
+  const { convs, markAsRead, friendships, loadConvs } = useChat();
 
   const participantMap = useMemo(() => {
     const map = new Map<string, string>();
     conv?.participants.forEach((p) => map.set(p.uid, p.name));
     return map;
   }, [conv?.participants]);
+
+  const eligibleFriends = useMemo(() => {
+    if (!conv || conv.type !== "group") return [];
+    const participantUids = new Set(conv.participants.map((p) => p.uid));
+    return friendships.filter((f) => f.status === "accepted" && !participantUids.has(f.uid));
+  }, [friendships, conv]);
 
   const msgList = useMemo(() => {
     const confirmed = msg.order.map((seq) => msg.entities[seq]).filter(Boolean);
@@ -157,6 +165,21 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [addUserOpen, setAddUserOpen] = useState(false);
+
+  const handleAddParticipants = async (selected: { uid: string; name: string }[]) => {
+    if (!conv || selected.length === 0) return;
+    await Promise.all(
+      selected.map((s) =>
+        api("/conversation/participant", {
+          method: "POST",
+          body: JSON.stringify({ participant_uid: s.uid, conversation_id: conv.id, role: "member" }),
+        })
+      )
+    );
+    const newParticipants = selected.map((s) => ({ uid: s.uid, name: s.name, role: "member" as const }));
+    loadConvs([{ ...conv, participants: [...conv.participants, ...newParticipants] }]);
+  };
 
   return (
     <div className={`relative h-full grid ${conv ? "grid-rows-[auto_1fr_auto]" : "grid-rows-[1fr_auto]"}`}>
@@ -175,6 +198,16 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                 title="Members"
               >
                 <Users size={18} />
+              </button>
+            )}
+            {/* Add user button — group only */}
+            {conv.type === "group" && (
+              <button
+                onClick={() => setAddUserOpen(true)}
+                className={`p-2 rounded-lg transition ${addUserOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`}
+                title="Add member"
+              >
+                <UserPlus size={18} />
               </button>
             )}
             {/* More options menu */}
@@ -222,6 +255,15 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
         <ParticipantsPanel
           participants={conv.participants}
           onClose={() => setPanelOpen(false)}
+        />
+      )}
+
+      {/* Add members modal */}
+      {conv?.type === "group" && addUserOpen && (
+        <AddMembersModal
+          friends={eligibleFriends}
+          onClose={() => setAddUserOpen(false)}
+          onAdd={handleAddParticipants}
         />
       )}
 
