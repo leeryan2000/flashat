@@ -44,8 +44,7 @@ func (h AuthHandler) Login(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
 		return
 	}
-	// ***** change the SameSite option for the cookie
-	c.SetCookie("session_id", sessionID, int(3*24*60*60), "", "", false, true)
+	c.SetCookie("session_id", sessionID, int(3*24*60*60), "/", ".flashatapp.com", true, true)
 
 	c.JSON(http.StatusOK, user)
 
@@ -56,7 +55,7 @@ func (h AuthHandler) Logout(c *gin.Context) {
 	if err == nil && sessionID != "" {
 		h.RedisClient.DeleteSession(c.Request.Context(), sessionID)
 	}
-	c.SetCookie("session_id", "", -1, "", "", false, true)
+	c.SetCookie("session_id", "", -1, "/", ".flashatapp.com", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
 
