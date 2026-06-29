@@ -13,6 +13,7 @@ import {
   ShieldOff,
 } from 'lucide-react';
 import type { Friendship } from '../wire/friendship';
+import { avatarColor, nameInitials } from '../utils/avatar';
 import { FriendshipOptions } from './FriendshipOptions';
 import { AddFriendModal } from './AddFriendModal';
 import { CreateGroupModal } from './CreateGroupModal';
@@ -62,8 +63,8 @@ export default function FriendshipList({
   }, [data, query]);
 
   const renderAvatar = (name: string) => (
-    <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shrink-0" style={{ background: "var(--primary)" }}>
-      {name.slice(0, 2).toUpperCase()}
+    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shrink-0 ${avatarColor(name)}`}>
+      {nameInitials(name)}
     </div>
   );
 

@@ -4,9 +4,9 @@ const AVATAR_COLORS = [
   "bg-teal-500", "bg-emerald-500", "bg-green-500", "bg-amber-500", "bg-orange-500",
 ];
 
-export function avatarColor(uid: string): string {
+export function avatarColor(name: string): string {
   let hash = 0;
-  for (let i = 0; i < uid.length; i++) hash = (hash * 31 + uid.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[hash % AVATAR_COLORS.length];
 }
 

@@ -23,14 +23,8 @@ func getDSN(c config.Configuration) string {
 }
 
 func getURL(c config.Configuration) string {
-	if c.GO_ENV == "development" {
-		return fmt.Sprintf(
-			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			c.DB_USER, c.DB_PASS, c.DB_HOST, c.DB_PORT, c.DB_NAME,
-		)
-	}
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		c.DB_USER, c.DB_PASS, c.DB_HOST, c.DB_PORT, c.DB_NAME,
 	)
 }

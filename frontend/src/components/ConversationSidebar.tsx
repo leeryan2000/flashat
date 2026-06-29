@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ConvState } from "../context/ChatContext";
 import type { Conversation } from "../wire/conversation";
+import { avatarColor } from "../utils/avatar";
 
 
 function formatConvTime(ts: number) {
@@ -55,7 +56,7 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
             onMouseEnter={e => { if (activeConvId !== conv.id) (e.currentTarget as HTMLButtonElement).style.background = "var(--sidebar-item)"; }}
             onMouseLeave={e => { if (activeConvId !== conv.id) (e.currentTarget as HTMLButtonElement).style.background = ""; }}
           >
-            <div className="h-10 w-10 rounded-full flex items-center justify-center text-white text-xs shrink-0" style={{ background: "var(--primary)" }}>{conv.title.slice(0,2)}</div>
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(conv.title)}`}>{conv.title.slice(0,2).toUpperCase()}</div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium">

@@ -23,7 +23,7 @@ type MessagePaneProps = {
 
 function Avatar({ uid, name }: { uid: string; name: string }) {
   return (
-    <div title={name} className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(uid)}`}>
+    <div title={name} className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(name)}`}>
       {nameInitials(name)}
     </div>
   );

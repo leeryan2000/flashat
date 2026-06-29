@@ -103,7 +103,7 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
                       </div>
 
                       <div
-                        className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${avatarColor(friend.uid)}`}
+                        className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${avatarColor(friend.name)}`}
                       >
                         {nameInitials(friend.name)}
                       </div>

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
-  User, 
-  Mail, 
-  Camera, 
+import {
+  User,
+  Mail,
+  Camera,
   Check,
   X,
   Edit2
 } from 'lucide-react';
+import { avatarColor, nameInitials } from '../utils/avatar';
 
 export default function ProfilePage() {
   // Pull current user data and logout function from your context
@@ -39,10 +40,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Helper to get avatar initials (e.g., "Ryan" -> "RY")
-  const getInitials = (name?: string) => {
-    return name ? name.slice(0, 2).toUpperCase() : "??";
-  };
 
   return (
     <div className="h-full w-full text-slate-100 flex flex-col items-center p-6 md:p-10 overflow-y-auto" style={{ background: "var(--sidebar-bg)" }}>
@@ -54,8 +51,8 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center mb-10">
           <div className="relative group cursor-pointer mb-4">
             {/* Avatar Circle */}
-            <div className="h-28 w-28 rounded-full flex items-center justify-center text-4xl font-bold shadow-lg" style={{ background: "var(--primary)", boxShadow: "0 8px 24px var(--primary-shadow)" }}>
-              {getInitials(user?.name)}
+            <div className={`h-28 w-28 rounded-full flex items-center justify-center text-4xl font-bold shadow-lg ${user?.name ? avatarColor(user.name) : ""}`} style={{ boxShadow: "0 8px 24px var(--primary-shadow)" }}>
+              {user?.name ? nameInitials(user.name) : "??"}
             </div>
             
             {/* Hover Overlay for changing avatar (Optional UI) */}

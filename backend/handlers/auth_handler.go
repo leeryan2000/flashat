@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,6 +14,13 @@ import (
 type AuthHandler struct {
 	Repo        repo.UserRepo
 	RedisClient *db.RedisClient
+}
+
+func cookieOptions() (domain string, secure bool) {
+	if os.Getenv("GO_ENV") == "production" {
+		return ".flashatapp.com", true
+	}
+	return "", false
 }
 
 // `json:"email"` tells json encode/decoder how to map go struct fields to json key
@@ -44,7 +52,8 @@ func (h AuthHandler) Login(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
 		return
 	}
-	c.SetCookie("session_id", sessionID, int(3*24*60*60), "/", ".flashatapp.com", true, true)
+	domain, secure := cookieOptions()
+	c.SetCookie("session_id", sessionID, int(3*24*60*60), "/", domain, secure, true)
 
 	c.JSON(http.StatusOK, user)
 
@@ -55,7 +64,9 @@ func (h AuthHandler) Logout(c *gin.Context) {
 	if err == nil && sessionID != "" {
 		h.RedisClient.DeleteSession(c.Request.Context(), sessionID)
 	}
-	c.SetCookie("session_id", "", -1, "/", ".flashatapp.com", true, true)
+	domain, secure := cookieOptions()
+	c.SetCookie("session_id", "", -1, "/", domain, secure, true)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
 

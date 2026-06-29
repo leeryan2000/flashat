@@ -1,5 +1,6 @@
 import { X, Shield, User } from "lucide-react";
 import type { Participant } from "../wire/conversation";
+import { avatarColor, nameInitials } from "../utils/avatar";
 
 type ParticipantsPanelProps = {
   participants: Participant[];
@@ -12,8 +13,8 @@ export function ParticipantsPanel({ participants, onClose }: ParticipantsPanelPr
 
   const renderRow = (p: Participant) => (
     <div key={p.uid} className="flex items-center gap-3 px-4 py-2.5 transition" onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 8%, transparent)")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
-      <div className="h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0" style={{ background: "var(--primary)" }}>
-        {p.name.slice(0, 2).toUpperCase()}
+      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${avatarColor(p.name)}`}>
+        {nameInitials(p.name)}
       </div>
       <span className="flex-1 text-sm text-slate-200 truncate">{p.name}</span>
       {p.role === "creator" ? (

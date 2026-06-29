@@ -46,7 +46,7 @@ export default function Sidebar() {
           className="flex items-center gap-3 px-2 py-3 rounded-xl mt-4 cursor-default"
           style={{ background: "var(--sidebar-item)" }}
         >
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(user.uid)}`}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(user.name)}`}>
             {nameInitials(user.name)}
           </div>
           <div className="flex flex-col min-w-0">
