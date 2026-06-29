@@ -21,7 +21,7 @@ type MessagePaneProps = {
 
 
 
-function Avatar({ uid, name }: { uid: string; name: string }) {
+function Avatar({ name }: { name: string }) {
   return (
     <div title={name} className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(name)}`}>
       {nameInitials(name)}
@@ -289,7 +289,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
               {/* Avatar for other users */}
               {!isSelf(item.msg) && (() => {
                 const name = participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "?";
-                return <Avatar uid={item.msg.fromUid} name={name} />;
+                return <Avatar name={name} />;
               })()}
 
               <div className="flex flex-col max-w-[33%]">
@@ -333,7 +333,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
 
               {/* Self avatar */}
               {isSelf(item.msg) && user && (
-                <Avatar uid={user.uid} name={user.name} />
+                <Avatar name={user.name} />
               )}
             </div>
           )
