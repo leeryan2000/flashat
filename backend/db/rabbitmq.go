@@ -44,7 +44,7 @@ func (r *RabbitMQClient) Publish(env *wire.Msg) error {
 		return err
 	}
 
-	slog.Info("publishing message to RabbitMQ", "type", env.Type, "from_uid", env.FromUID, "conv_id", env.ConversationID)
+	slog.Debug("publishing message to RabbitMQ", "type", env.Type, "from_uid", env.FromUID, "conv_id", env.ConversationID)
 
 	return r.Ch.Publish(
 		"",              // default exchange

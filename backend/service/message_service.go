@@ -76,7 +76,7 @@ func (s *MessageService) handleRead(ctx context.Context, env *wire.Msg) error {
 }
 
 func (s *MessageService) handleChat(ctx context.Context, env *wire.Msg) error {
-	slog.Info("handling chat message", "from_uid", env.FromUID)
+	slog.Debug("handling chat message", "from_uid", env.FromUID)
 	if env.ConversationID == "" {
 		return errors.New("missing conversation id")
 	}

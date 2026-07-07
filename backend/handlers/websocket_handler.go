@@ -30,7 +30,7 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 
 	uidStr := c.GetString("uid")
 
-	if len(wh.Hub.ClientsByUID[uidStr]) >= maxConnectionsPerUser {
+	if wh.Hub.ConnectionCountForUID(uidStr) >= maxConnectionsPerUser {
 		slog.Warn("connection limit reached", "uid", uidStr)
 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many open connections"})
 		return
@@ -41,8 +41,6 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 		slog.Error("WebSocket upgrade failed", "error", err)
 		return
 	}
-	slog.Info("WebSocket connection established", "uid", uidStr)
-
 	// Create a context that lives with the client lifecycle
 	ctx, cancel := context.WithCancel(context.Background())
 

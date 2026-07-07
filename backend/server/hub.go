@@ -71,6 +71,15 @@ func (hub *Hub) Counts() (clients int, uniqueUsers int) {
 	return len(hub.Clients), len(hub.ClientsByUID)
 }
 
+// ConnectionCountForUID returns how many open connections a given user
+// currently has. Safe for concurrent use — use this instead of reading
+// ClientsByUID directly from outside the Hub.
+func (hub *Hub) ConnectionCountForUID(uid string) int {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
+	return len(hub.ClientsByUID[uid])
+}
+
 func (hub *Hub) addClient(c *Client) {
 	hub.mu.Lock()
 	defer hub.mu.Unlock()

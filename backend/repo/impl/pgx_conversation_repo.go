@@ -32,7 +32,6 @@ func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv 
 	).Scan(&conv.ID, &conv.Type, &conv.GroupName, &conv.GroupAvatarUrl, &conv.CreatedAt)
 
 	if err != nil {
-		slog.Error("failed to create group conversation", "error", err)
 		return err
 	}
 
