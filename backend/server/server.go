@@ -44,7 +44,8 @@ func RunPeriodicTask(task func()) {
 }
 
 func checkClients(s *Server) {
-	slog.Info("connected clients", "connections", len(s.Hub.Clients), "unique_users", len(s.Hub.ClientsByUID))
+	clients, uniqueUsers := s.Hub.Counts()
+	slog.Info("connected clients", "connections", clients, "unique_users", uniqueUsers)
 }
 
 func StartServer() (*Server, error) {

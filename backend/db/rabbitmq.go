@@ -59,6 +59,24 @@ func (r *RabbitMQClient) Publish(env *wire.Msg) error {
 	)
 }
 
+// PublishRaw re-publishes an already-serialized message body, carrying custom
+// headers (e.g. a retry counter). Used by the worker to requeue a failed
+// message with an incremented attempt count.
+func (r *RabbitMQClient) PublishRaw(body []byte, headers amqp.Table) error {
+	return r.Ch.Publish(
+		"",              // default exchange
+		"chat_messages", // routing key (match queue name, when using default exchange)
+		false,
+		false,
+		amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			Body:         body,
+			Headers:      headers,
+		},
+	)
+}
+
 func (r *RabbitMQClient) Close() {
 	if r == nil {
 		return

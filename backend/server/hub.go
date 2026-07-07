@@ -2,11 +2,13 @@ package server
 
 import (
 	"log/slog"
+	"sync"
 
 	"github.com/google/uuid"
 )
 
 type Hub struct {
+	mu           sync.RWMutex
 	Clients      map[*Client]struct{}
 	ClientsByUID map[string]map[*Client]struct{} // supports multiple tabs/devices per user
 
@@ -37,6 +39,8 @@ func (hub *Hub) Run() {
 }
 
 func (hub *Hub) SendToUID(uid uuid.UUID, payload []byte) {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
 	if clients, ok := hub.ClientsByUID[uid.String()]; ok {
 		for client := range clients {
 			client.Send <- payload
@@ -45,20 +49,31 @@ func (hub *Hub) SendToUID(uid uuid.UUID, payload []byte) {
 }
 
 func (hub *Hub) BroadcastToParticipant(uids []uuid.UUID, fromUID uuid.UUID, payload []byte) {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
 	for _, uid := range uids {
 		if uid == fromUID {
 			continue
 		}
 		if clients, ok := hub.ClientsByUID[uid.String()]; ok {
 			for client := range clients {
-				slog.Info("broadcasting to UID", "uid", uid)
 				client.Send <- payload
 			}
 		}
 	}
 }
 
+// Counts returns the current connection/user counts. Safe for concurrent use —
+// use this instead of reading Clients/ClientsByUID directly from outside the Hub.
+func (hub *Hub) Counts() (clients int, uniqueUsers int) {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
+	return len(hub.Clients), len(hub.ClientsByUID)
+}
+
 func (hub *Hub) addClient(c *Client) {
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
 	hub.Clients[c] = struct{}{}
 	if hub.ClientsByUID[c.UID] == nil {
 		hub.ClientsByUID[c.UID] = make(map[*Client]struct{})
@@ -68,6 +83,8 @@ func (hub *Hub) addClient(c *Client) {
 }
 
 func (hub *Hub) removeClient(c *Client) {
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
 	if _, ok := hub.Clients[c]; ok {
 		delete(hub.Clients, c)
 		delete(hub.ClientsByUID[c.UID], c)

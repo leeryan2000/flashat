@@ -52,6 +52,15 @@ jobs:
           npm install
           npm run build
 
+      - name: Free Up Disk Space on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker system prune -af
+
       - name: Ship Config Files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -79,9 +88,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ec2-user/app
-
-            # Free up disk space before pulling new images
-            docker system prune -af
 
             # Pull the fresh images from Docker Hub
             docker-compose pull

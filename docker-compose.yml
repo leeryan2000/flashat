@@ -1,5 +1,11 @@
 name: flashat
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   backend:
     image: leeryan2000/flashat-backend:latest  # ← pulled from hub
@@ -11,6 +17,7 @@ services:
       - rabbitmq
     networks:
       - flashat-net
+    logging: *default-logging
 
   db:
     image: postgres:17-alpine
@@ -18,19 +25,21 @@ services:
       - "5432:5432"
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USER}         
-      POSTGRES_PASSWORD: ${DB_PASS} 
-      POSTGRES_DB: ${DB_NAME}           
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - flashat-net
+    logging: *default-logging
 
   redis:
     image: redis:alpine
     restart: always
     networks:
       - flashat-net
+    logging: *default-logging
 
   rabbitmq:
     image: rabbitmq:3-alpine
@@ -42,6 +51,7 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - flashat-net
+    logging: *default-logging
 
 
   nginx:
@@ -59,6 +69,7 @@ services:
       - backend
     networks:
       - flashat-net
+    logging: *default-logging
 
   loki:
     image: grafana/loki:2.9.0
@@ -69,6 +80,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - flashat-net
+    logging: *default-logging
 
   promtail:
     image: grafana/promtail:2.9.0
@@ -81,6 +93,7 @@ services:
       - loki
     networks:
       - flashat-net
+    logging: *default-logging
 
   grafana:
     image: grafana/grafana:latest
@@ -97,6 +110,7 @@ services:
       - loki
     networks:
       - flashat-net
+    logging: *default-logging
 
 networks:
   flashat-net:
