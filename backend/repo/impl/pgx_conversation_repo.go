@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -15,6 +16,13 @@ import (
 
 type PgxConversationRepo struct {
 	Pool *pgxpool.Pool
+
+	// In-process cache of conversation participants, keyed by conversation ID.
+	// Avoids re-querying the DB on every chat message. Invalidated on any
+	// membership change (Add/Remove/LeaveGroup). Returns a shared slice to
+	// callers — safe today since the only consumer only reads it.
+	mu    sync.RWMutex
+	cache map[uuid.UUID][]*models.ConversationParticipant
 }
 
 func (r *PgxConversationRepo) CreateGroupConversation(ctx context.Context, conv *models.Conversation, msg *models.Message, creatorUID uuid.UUID, participantsUID []uuid.UUID) error {
@@ -145,6 +153,13 @@ func (r *PgxConversationRepo) GetConversationByID(ctx context.Context, conversat
 }
 
 func (r *PgxConversationRepo) ListParticipantByID(ctx context.Context, conversationID uuid.UUID) ([]*models.ConversationParticipant, error) {
+	r.mu.RLock()
+	if cached, ok := r.cache[conversationID]; ok {
+		r.mu.RUnlock()
+		return cached, nil
+	}
+	r.mu.RUnlock()
+
 	rows, err := r.Pool.Query(ctx, `
 		SELECT cp.conversation_id, cp.uid, cp.role, cp.last_read_seq
 		FROM conversation_participants cp
@@ -166,7 +181,20 @@ func (r *PgxConversationRepo) ListParticipantByID(ctx context.Context, conversat
 		participants = append(participants, p)
 	}
 
+	r.mu.Lock()
+	if r.cache == nil {
+		r.cache = make(map[uuid.UUID][]*models.ConversationParticipant)
+	}
+	r.cache[conversationID] = participants
+	r.mu.Unlock()
+
 	return participants, nil
+}
+
+func (r *PgxConversationRepo) invalidateParticipantCache(conversationID uuid.UUID) {
+	r.mu.Lock()
+	delete(r.cache, conversationID)
+	r.mu.Unlock()
 }
 
 func (r *PgxConversationRepo) AddParticipant(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) error {
@@ -176,7 +204,11 @@ func (r *PgxConversationRepo) AddParticipant(ctx context.Context, conversationID
 		ON CONFLICT (conversation_id, uid) DO NOTHING`,
 		conversationID, uid,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	r.invalidateParticipantCache(conversationID)
+	return nil
 }
 
 func (r *PgxConversationRepo) ModifyParticipant(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID, role string) error {
@@ -195,7 +227,11 @@ func (r *PgxConversationRepo) RemoveParticipant(ctx context.Context, conversatio
 		WHERE conversation_id = $1 AND uid = $2`,
 		conversationID, uid,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	r.invalidateParticipantCache(conversationID)
+	return nil
 }
 
 func (r *PgxConversationRepo) LeaveGroup(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID) error {
@@ -232,7 +268,11 @@ func (r *PgxConversationRepo) LeaveGroup(ctx context.Context, conversationID uui
 			if err != nil {
 				return err
 			}
-			return tx.Commit(ctx)
+			if err := tx.Commit(ctx); err != nil {
+				return err
+			}
+			r.invalidateParticipantCache(conversationID)
+			return nil
 		}
 		if err != nil {
 			return err
@@ -260,7 +300,11 @@ func (r *PgxConversationRepo) LeaveGroup(ctx context.Context, conversationID uui
 		return err
 	}
 
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	r.invalidateParticipantCache(conversationID)
+	return nil
 }
 
 func (r *PgxConversationRepo) UpdateLastReadSeq(ctx context.Context, conversationID uuid.UUID, uid uuid.UUID, seq int64) error {

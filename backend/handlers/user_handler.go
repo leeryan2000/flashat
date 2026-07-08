@@ -53,7 +53,6 @@ func (h UserHandler) CreateUser(c *gin.Context) {
 		HashedPassword: hashedPassword,
 	}
 
-
 	if err := h.Repo.CreateUser(c.Request.Context(), &user); err != nil {
 		slog.Error("failed to create user", "email", user.Email, "error", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user to server"})

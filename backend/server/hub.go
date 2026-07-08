@@ -88,7 +88,7 @@ func (hub *Hub) addClient(c *Client) {
 		hub.ClientsByUID[c.UID] = make(map[*Client]struct{})
 	}
 	hub.ClientsByUID[c.UID][c] = struct{}{}
-	slog.Info("client registered", "uid", c.UID)
+	slog.Info("client connected", "uid", c.UID)
 }
 
 func (hub *Hub) removeClient(c *Client) {
