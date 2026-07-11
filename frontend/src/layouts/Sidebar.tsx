@@ -1,8 +1,25 @@
 import { NavLink } from "react-router-dom";
 import { MessageSquare, Users, User, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useWebSocket } from "../context/WebSocketContext";
 import { avatarColor, nameInitials } from "../utils/avatar";
 import { motion } from "framer-motion";
+
+const STATUS_COLOR: Record<string, string> = {
+  open: "#22c55e",
+  connecting: "#f59e0b",
+  idle: "#94a3b8",
+  closed: "#94a3b8",
+  error: "#ef4444",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  open: "Connected",
+  connecting: "Connecting…",
+  idle: "Disconnected",
+  closed: "Disconnected",
+  error: "Connection error",
+};
 
 const navItems = [
   { to: "", end: true, icon: MessageSquare, label: "Chat" },
@@ -13,6 +30,7 @@ const navItems = [
 
 export default function Sidebar() {
   const { user } = useAuth();
+  const { status } = useWebSocket();
 
   return (
     <div className="w-full flex flex-col items-center flex-1">
@@ -55,12 +73,16 @@ export default function Sidebar() {
       {user && (
         <motion.div
           whileHover={{ scale: 1.08 }}
-          title={`${user.name} · ${user.email}`}
-          className="cursor-default mt-4"
+          title={`${user.name} · ${user.email} · ${STATUS_LABEL[status] ?? "Disconnected"}`}
+          className="relative cursor-default mt-4"
         >
           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(user.name)}`}>
             {nameInitials(user.name)}
           </div>
+          <span
+            className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+            style={{ background: STATUS_COLOR[status] ?? "#94a3b8", borderColor: "var(--nav-bg)" }}
+          />
         </motion.div>
       )}
     </div>
