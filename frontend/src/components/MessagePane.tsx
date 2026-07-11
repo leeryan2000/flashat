@@ -4,7 +4,7 @@ import { Composer } from "./Composer";
 import { useAuth } from "../context/AuthContext";
 import type { Message } from "../wire/message";
 import type { Conversation } from "../wire/conversation";
-import { MoreVertical, Ban, LogOut, Users, UserPlus } from "lucide-react";
+import { MoreVertical, Ban, LogOut, Users, UserPlus, Clock, AlertCircle, MessageSquare } from "lucide-react";
 import { ParticipantsPanel } from "./ParticipantsPanel";
 import { AddMembersModal } from "./AddMembersModal";
 import { avatarColor, nameInitials } from "../utils/avatar";
@@ -71,20 +71,23 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
   }, [msg]);
 
   type DateSeparator = { type: "date"; label: string; key: string };
-  type MsgItem = { type: "msg"; msg: Message };
+  type MsgItem = { type: "msg"; msg: Message; first: boolean };
 
   const renderedItems = useMemo(() => {
     const items: Array<DateSeparator | MsgItem> = [];
     let lastLabel = "";
+    let prevFromUid: string | null = null;
     for (const m of msgList) {
       if (m.ts) {
         const label = getDateLabel(m.ts);
         if (label !== lastLabel) {
           items.push({ type: "date", label, key: `sep-${label}` });
           lastLabel = label;
+          prevFromUid = null;
         }
       }
-      items.push({ type: "msg", msg: m });
+      items.push({ type: "msg", msg: m, first: m.fromUid !== prevFromUid });
+      prevFromUid = m.fromUid;
     }
     return items;
   }, [msgList]);
@@ -185,16 +188,24 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
     <div className={`relative h-full grid ${conv ? "grid-rows-[auto_1fr_auto]" : "grid-rows-[1fr_auto]"}`}>
       {/* header */}
       {conv && (
-        <div className="relative flex items-center justify-center px-4 py-3 border-b border-slate-200 bg-white">
-          <span className="font-semibold text-slate-800">
-            {conv.title}{conv.type === "group" && <span className="font-normal text-slate-500"> ({conv.participants.length})</span>}
+        <div
+          className="relative flex items-center justify-center px-4 py-3 border-b"
+          style={{ background: "var(--panel)", borderColor: "var(--panel-border)" }}
+        >
+          <span className="font-semibold" style={{ color: "var(--text)" }}>
+            {conv.title}{conv.type === "group" && <span className="font-normal" style={{ color: "var(--text-soft)" }}> ({conv.participants.length})</span>}
           </span>
           <div className="absolute right-4 flex items-center gap-1">
             {/* Participants panel button — group only */}
             {conv.type === "group" && (
               <button
                 onClick={() => setPanelOpen((o) => !o)}
-                className={`p-2 rounded-lg transition ${panelOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`}
+                className="p-2 rounded-lg transition"
+                style={
+                  panelOpen
+                    ? { background: "color-mix(in srgb, var(--text) 10%, transparent)", color: "var(--text)" }
+                    : { color: "var(--text-soft)" }
+                }
                 title="Members"
               >
                 <Users size={18} />
@@ -204,7 +215,12 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
             {conv.type === "group" && (
               <button
                 onClick={() => setAddUserOpen(true)}
-                className={`p-2 rounded-lg transition ${addUserOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`}
+                className="p-2 rounded-lg transition"
+                style={
+                  addUserOpen
+                    ? { background: "color-mix(in srgb, var(--text) 10%, transparent)", color: "var(--text)" }
+                    : { color: "var(--text-soft)" }
+                }
                 title="Add member"
               >
                 <UserPlus size={18} />
@@ -215,18 +231,25 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen((o) => !o)}
-                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                  className="p-2 rounded-lg transition"
+                  style={{ color: "var(--text-soft)" }}
                 >
                   <MoreVertical size={18} />
                 </button>
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+                    <div
+                      className="absolute right-0 mt-1 w-44 border rounded-xl shadow-xl z-20 py-1"
+                      style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}
+                    >
                       {conv.type === "direct" && onBlock && (
                         <button
                           onClick={() => { setMenuOpen(false); onBlock(); }}
-                          className="w-full text-left px-4 py-3 text-sm text-orange-500 hover:bg-orange-50 flex items-center gap-3 transition"
+                          className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition"
+                          style={{ color: "var(--warning-text)" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "var(--warning-bg)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "")}
                         >
                           <Ban size={16} />
                           Block User
@@ -235,7 +258,10 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                       {conv.type === "group" && onLeaveGroup && (
                         <button
                           onClick={() => { setMenuOpen(false); onLeaveGroup(); }}
-                          className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3 transition"
+                          className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition"
+                          style={{ color: "var(--danger-text)" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "var(--danger-bg)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "")}
                         >
                           <LogOut size={16} />
                           Leave Group
@@ -271,76 +297,85 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
       <div
         ref={boxRef}
         onScroll={handleScroll}
-        className="overflow-y-auto space-y-2 px-4 py-2"
+        className="overflow-y-auto px-4 py-2"
       >
         {renderedItems.map((item) =>
           item.type === "date" ? (
-            <div key={item.key} className="flex items-center gap-3 my-2">
-              <div className="flex-1 h-px bg-slate-200" />
-              <span className="text-xs text-slate-400 font-medium">{item.label}</span>
-              <div className="flex-1 h-px bg-slate-200" />
+            <div key={item.key} className="flex items-center gap-3 my-3">
+              <div className="flex-1 h-px" style={{ background: "var(--panel-border)" }} />
+              <span className="text-xs font-medium" style={{ color: "var(--text-faint)" }}>{item.label}</span>
+              <div className="flex-1 h-px" style={{ background: "var(--panel-border)" }} />
             </div>
           ) : (
             <div
               id={item.msg.seq ? `msg-${item.msg.seq}` : undefined}
               key={item.msg.id || item.msg.clientMsgId}
-              className={["flex items-end gap-2", isSelf(item.msg) ? "justify-end" : "justify-start"].join(" ")}
+              className={[
+                "flex items-end gap-2",
+                isSelf(item.msg) ? "justify-end" : "justify-start",
+                item.first ? "mt-3" : "mt-0.5",
+              ].join(" ")}
             >
-              {/* Avatar for other users */}
-              {!isSelf(item.msg) && (() => {
-                const name = participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "?";
-                return <Avatar name={name} />;
-              })()}
+              {/* Avatar for other users — only on the first message of a run */}
+              {!isSelf(item.msg) && (
+                item.first ? (
+                  <Avatar name={participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "?"} />
+                ) : (
+                  <div className="w-8 shrink-0" />
+                )
+              )}
 
-              <div className="flex flex-col max-w-[33%]">
-                {/* Sender name for group chats */}
-                {!isSelf(item.msg) && conv?.type === "group" && (
-                  <span className="text-xs text-slate-500 mb-1 ml-1">
+              <div className="flex flex-col max-w-[70%]">
+                {/* Sender name for group chats — only on the first message of a run */}
+                {!isSelf(item.msg) && conv?.type === "group" && item.first && (
+                  <span className="text-xs mb-1 ml-1" style={{ color: "var(--text-faint)" }}>
                     {participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "Unknown"}
                   </span>
                 )}
                 <div
                   className={[
-                    "rounded-2xl px-3 py-2 text-base shadow",
+                    "rounded-2xl px-3 py-2 text-[15px]",
                     item.msg.status === "failed"
-                      ? "bg-red-100 text-red-800 border border-red-300"
+                      ? "border"
                       : isSelf(item.msg)
                       ? "text-white rounded-br-sm"
-                      : "bg-slate-100 text-slate-900 rounded-bl-sm",
+                      : "rounded-bl-sm",
                     item.msg.status === "sending" ? "opacity-70" : "",
                   ].join(" ")}
-                  style={item.msg.status !== "failed" && isSelf(item.msg) ? { background: "var(--primary)" } : undefined}
+                  style={
+                    item.msg.status === "failed"
+                      ? { background: "var(--danger-bg)", color: "var(--danger-text)", borderColor: "var(--danger-bg-hover)" }
+                      : { background: isSelf(item.msg) ? "var(--primary)" : "var(--bubble-other)", color: isSelf(item.msg) ? "white" : "var(--text)" }
+                  }
                 >
-                  <p className="whitespace-pre-wrap break-words text-left">
-                    {item.msg.text}
-                  </p>
-                  <div className="flex items-center justify-end gap-1 mt-1">
-                    {isSelf(item.msg) && item.msg.status === "sending" && (
-                      <span className="text-[10px] italic">...</span>
-                    )}
-                    {isSelf(item.msg) && item.msg.status === "failed" && (
-                      <span className="text-[10px] font-bold">X</span>
-                    )}
-                    <p className="text-[11px] opacity-70">
-                      {new Date(item.msg.ts ?? 0).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                  <div className="flex flex-wrap items-end justify-end gap-x-2">
+                    <p className="whitespace-pre-wrap break-words text-left min-w-0">
+                      {item.msg.text}
                     </p>
+                    <span className="flex items-center gap-1 ml-auto pt-0.5 pb-0.5">
+                      {isSelf(item.msg) && item.msg.status === "sending" && (
+                        <Clock size={10} className="opacity-70" />
+                      )}
+                      {isSelf(item.msg) && item.msg.status === "failed" && (
+                        <AlertCircle size={11} />
+                      )}
+                      <span className="text-[10px] opacity-60 leading-none">
+                        {new Date(item.msg.ts ?? 0).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </span>
                   </div>
                 </div>
               </div>
-
-              {/* Self avatar */}
-              {isSelf(item.msg) && user && (
-                <Avatar name={user.name} />
-              )}
             </div>
           )
         )}
         {msgList.length === 0 && (
-          <div className="h-full grid place-items-center text-slate-400">
-            No messages yet.
+          <div className="h-full flex flex-col items-center justify-center gap-2" style={{ color: "var(--text-faint)" }}>
+            <MessageSquare size={28} className="opacity-50" />
+            <p className="text-sm">No messages yet. Say hi!</p>
           </div>
         )}
       </div>

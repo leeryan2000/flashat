@@ -4,8 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 import { Mail, Lock, User, KeyRound, Loader2, ArrowRight } from "lucide-react";
 
-const inputClass = "w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-slate-500";
-const inputStyle = { "--tw-ring-color": "var(--primary)" } as React.CSSProperties;
+const inputClass = "w-full border rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-[color:var(--text-faint)]";
+const inputStyle = { background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties;
 
 export function RegisterForm() {
   const { register, isLoading } = useAuth();
@@ -32,13 +32,16 @@ export function RegisterForm() {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Create an account</h2>
-        <p className="text-slate-400">Join us to start chatting with friends</p>
+        <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text)" }}>Create an account</h2>
+        <p style={{ color: "var(--text-soft)" }}>Join us to start chatting with friends</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400 text-center animate-in fade-in slide-in-from-top-2">
+          <div
+            className="border rounded-lg p-3 text-sm text-center animate-in fade-in slide-in-from-top-2"
+            style={{ background: "var(--danger-bg)", borderColor: "var(--danger-bg-hover)", color: "var(--danger-text)" }}
+          >
             {error}
           </div>
         )}
@@ -51,7 +54,7 @@ export function RegisterForm() {
         ].map(({ icon: Icon, placeholder, type, value, onChange }) => (
           <div key={placeholder} className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon className="h-5 w-5 text-slate-500" />
+              <Icon className="h-5 w-5" style={{ color: "var(--text-faint)" }} />
             </div>
             <input
               type={type}
@@ -78,7 +81,7 @@ export function RegisterForm() {
           )}
         </button>
 
-        <div className="text-center text-sm text-slate-500 mt-6">
+        <div className="text-center text-sm mt-6" style={{ color: "var(--text-faint)" }}>
           Already have an account?{" "}
           <Link to={PATHS.login} className="font-medium transition-colors hover:opacity-80" style={{ color: "var(--primary)" }}>
             Sign in

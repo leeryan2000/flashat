@@ -69,9 +69,9 @@ export default function FriendshipList({
   );
 
   return (
-    <div className="h-full w-full text-slate-100 flex flex-col" style={{ background: "var(--sidebar-bg)" }}>
+    <div className="h-full w-full flex flex-col" style={{ background: "var(--sidebar-bg)", color: "var(--text)" }}>
       {/* --- Header --- */}
-      <div className="p-6 border-b border-slate-700/50 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="p-6 border-b flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderColor: "var(--panel-border)" }}>
 
         <h1 className="text-2xl font-bold flex items-center gap-3">
           <Users className="w-6 h-6" style={{ color: "var(--primary)" }} />
@@ -81,13 +81,13 @@ export default function FriendshipList({
         <div className="flex gap-3">
           {/* Search Input */}
           <div className="relative w-64">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-faint)" }} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search friends..."
-              className="w-full rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2 transition"
-              style={{ background: "var(--sidebar-item)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              className="w-full rounded-xl pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 transition placeholder:text-[color:var(--text-faint)]"
+              style={{ background: "var(--sidebar-item)", color: "var(--text)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
           </div>
 
@@ -103,8 +103,8 @@ export default function FriendshipList({
           {/* Create Group Button */}
           <button
             onClick={() => setIsGroupModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 text-slate-200 rounded-xl font-medium transition text-sm"
-            style={{ background: "var(--sidebar-item)" }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition text-sm"
+            style={{ background: "var(--sidebar-item)", color: "var(--text)" }}
           >
             <MessageSquarePlus size={18} />
             <span className="hidden sm:inline">New Group</span>
@@ -118,35 +118,44 @@ export default function FriendshipList({
         {/* Section 1: Incoming Requests */}
         {incoming.length > 0 && (
           <section>
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-faint)" }}>
               Friend Requests ({incoming.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {incoming.map(user => (
-                <div key={user.uid} className="p-4 rounded-xl border border-slate-700/20 flex items-center gap-4" style={{ background: "var(--sidebar-item)" }}>
+                <div key={user.uid} className="p-4 rounded-xl border flex items-center gap-4" style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}>
                   {renderAvatar(user.name)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>{user.email}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => onAccept(user.uid)}
-                      className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition"
+                      className="p-2 rounded-lg transition"
+                      style={{ background: "var(--success-bg)", color: "var(--success-text)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--success-bg-hover)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--success-bg)")}
                       title="Accept"
                     >
                       <Check size={18} />
                     </button>
                     <button
                       onClick={() => onDecline(user.uid)}
-                      className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
+                      className="p-2 rounded-lg transition"
+                      style={{ background: "var(--danger-bg)", color: "var(--danger-text)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--danger-bg-hover)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--danger-bg)")}
                       title="Decline"
                     >
                       <X size={18} />
                     </button>
                     <button
                       onClick={() => onBlock(user.uid, null)}
-                      className="p-2 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition"
+                      className="p-2 rounded-lg transition"
+                      style={{ background: "var(--warning-bg)", color: "var(--warning-text)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--warning-bg-hover)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--warning-bg)")}
                       title="Block"
                     >
                       <Ban size={18} />
@@ -161,20 +170,23 @@ export default function FriendshipList({
         {/* Section 2: Sent Requests */}
         {outgoing.length > 0 && (
           <section>
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-faint)" }}>
               Sent Requests ({outgoing.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {outgoing.map(user => (
-                <div key={user.uid} className="p-4 rounded-xl border border-slate-700/20 flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)" }}>
+                <div key={user.uid} className="p-4 rounded-xl border flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}>
                   {renderAvatar(user.name)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
-                    <p className="text-xs text-slate-400 truncate">Pending...</p>
+                    <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>Pending...</p>
                   </div>
                   <button
                     onClick={() => onCancel(user.uid)}
-                    className="text-xs text-slate-400 hover:text-red-400 underline decoration-slate-600 hover:decoration-red-400 transition"
+                    className="text-xs underline transition"
+                    style={{ color: "var(--text-soft)" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "var(--danger-text)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "var(--text-soft)")}
                   >
                     Cancel
                   </button>
@@ -186,12 +198,12 @@ export default function FriendshipList({
 
         {/* Section 3: All Friends */}
         <section>
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-faint)" }}>
             All Friends ({friends.length})
           </h2>
 
           {friends.length === 0 ? (
-            <div className="text-slate-500 text-center py-10 italic">
+            <div className="text-center py-10 italic" style={{ color: "var(--text-faint)" }}>
               No friends found. Go add some people!
             </div>
           ) : (
@@ -205,16 +217,16 @@ export default function FriendshipList({
                   {renderAvatar(user.name)}
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate text-slate-200 group-hover:text-white">
+                    <p className="font-medium truncate" style={{ color: "var(--text)" }}>
                       {user.name}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>{user.email}</p>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => user.directConversationId && onChatClick(user.directConversationId)}
-                      className="p-2 rounded-lg transition hover:text-white"
+                      className="p-2 rounded-lg transition"
                       style={{ background: "color-mix(in srgb, var(--primary) 15%, transparent)", color: "var(--primary)" }}
                       title="Send Message"
                     >
@@ -236,7 +248,10 @@ export default function FriendshipList({
           <section>
             <button
               onClick={() => setBlockedOpen(o => !o)}
-              className="flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 hover:text-slate-300 transition"
+              className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider mb-4 transition"
+              style={{ color: "var(--text-faint)" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--text-soft)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-faint)")}
             >
               {blockedOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
               Blocked ({blocked.length})
@@ -245,15 +260,18 @@ export default function FriendshipList({
             {blockedOpen && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {blocked.map(user => (
-                  <div key={user.uid} className="p-4 rounded-xl border border-slate-700/20 flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)" }}>
+                  <div key={user.uid} className="p-4 rounded-xl border flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}>
                     {renderAvatar(user.name)}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{user.name}</p>
-                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                      <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>{user.email}</p>
                     </div>
                     <button
                       onClick={() => onUnblock(user.uid)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white transition"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+                      style={{ background: "var(--surface-muted)", color: "var(--text-soft)" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "var(--surface-muted-hover)"; e.currentTarget.style.color = "var(--text)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "var(--surface-muted)"; e.currentTarget.style.color = "var(--text-soft)"; }}
                       title="Unblock"
                     >
                       <ShieldOff size={14} />

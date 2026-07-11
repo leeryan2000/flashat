@@ -1,31 +1,139 @@
 @import "tailwindcss";
 
-/* Violet — all hues sit at ~255° */
+/* ============================================================
+   Violet — light (default accent + mode)
+   ============================================================ */
 :root {
+  --primary: #6c56c9;
+  --primary-hover: #5a46b3;
+  --primary-shadow: rgba(108, 86, 201, 0.18);
+  --nav-bg: #eae3f7;
+  --sidebar-bg: #f4f2fb;
+  --sidebar-item: #ffffff;
+  --sidebar-ring: #6c56c9;
+  --chat-bg: #faf9fd;
+  --panel: #ffffff;
+  --panel-border: #e6e1f5;
+  --bubble-other: #efebfa;
+
+  /* Shared, mode-only tokens (accent-independent) */
+  --text: #1a1825;
+  --text-soft: #5c5770;
+  --text-faint: #8d88a0;
+  --overlay: rgba(20, 18, 30, 0.45);
+  --input-bg: #ffffff;
+  --input-border: #e0dbef;
+  --surface-muted: #e2e8f0;
+  --surface-muted-hover: #cbd5e1;
+
+  --success-bg: #d1fae5;
+  --success-bg-hover: #a7f3d0;
+  --success-text: #047857;
+  --danger-bg: #fee2e2;
+  --danger-bg-hover: #fecaca;
+  --danger-text: #b91c1c;
+  --warning-bg: #ffedd5;
+  --warning-bg-hover: #fed7aa;
+  --warning-text: #c2410c;
+  --creator-bg: #fef3c7;
+  --creator-text: #b45309;
+}
+
+/* ---------- Indigo — light ---------- */
+[data-theme="indigo"] {
+  --primary: #4f5cae;
+  --primary-hover: #414da0;
+  --primary-shadow: rgba(79, 92, 174, 0.18);
+  --nav-bg: #e6e7f7;
+  --sidebar-bg: #f3f4fb;
+  --sidebar-item: #ffffff;
+  --sidebar-ring: #4f5cae;
+  --chat-bg: #f9f9fd;
+  --panel: #ffffff;
+  --panel-border: #e2e3f5;
+  --bubble-other: #ececf9;
+}
+
+/* ---------- Emerald — light ---------- */
+[data-theme="emerald"] {
+  --primary: #2f8a6f;
+  --primary-hover: #257a60;
+  --primary-shadow: rgba(47, 138, 111, 0.18);
+  --nav-bg: #e3f2ea;
+  --sidebar-bg: #f1f8f5;
+  --sidebar-item: #ffffff;
+  --sidebar-ring: #2f8a6f;
+  --chat-bg: #f7fbf9;
+  --panel: #ffffff;
+  --panel-border: #dcefe6;
+  --bubble-other: #e6f4ee;
+}
+
+/* ============================================================
+   Dark mode — Violet (default accent)
+   ============================================================ */
+[data-mode="dark"] {
   --primary: #7b68c8;
   --primary-hover: #6a58b8;
   --primary-shadow: rgba(123, 104, 200, 0.25);
+  --nav-bg: #0d0b16;
   --sidebar-bg: #14121e;
   --sidebar-item: #221f33;
   --sidebar-ring: #7b68c8;
+  --chat-bg: #191627;
+  --panel: #201d30;
+  --panel-border: #2d2942;
+  --bubble-other: #2a2640;
+
+  /* Shared, mode-only tokens (accent-independent) */
+  --text: #f1f5f9;
+  --text-soft: #94a3b8;
+  --text-faint: #64748b;
+  --overlay: rgba(0, 0, 0, 0.6);
+  --input-bg: rgba(0, 0, 0, 0.25);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --surface-muted: #334155;
+  --surface-muted-hover: #475569;
+
+  --success-bg: rgba(16, 185, 129, 0.2);
+  --success-bg-hover: rgba(16, 185, 129, 0.3);
+  --success-text: #34d399;
+  --danger-bg: rgba(239, 68, 68, 0.2);
+  --danger-bg-hover: rgba(239, 68, 68, 0.3);
+  --danger-text: #f87171;
+  --warning-bg: rgba(249, 115, 22, 0.2);
+  --warning-bg-hover: rgba(249, 115, 22, 0.3);
+  --warning-text: #fb923c;
+  --creator-bg: rgba(251, 191, 36, 0.1);
+  --creator-text: #fbbf24;
 }
 
-/* Indigo — all hues sit at ~230° */
-[data-theme="indigo"] {
+/* ---------- Indigo — dark ---------- */
+[data-theme="indigo"][data-mode="dark"] {
   --primary: #5f6dc0;
   --primary-hover: #5060b0;
   --primary-shadow: rgba(95, 109, 192, 0.25);
+  --nav-bg: #0a0b16;
   --sidebar-bg: #10111e;
   --sidebar-item: #181a2e;
   --sidebar-ring: #5f6dc0;
+  --chat-bg: #131525;
+  --panel: #171a2c;
+  --panel-border: #23273f;
+  --bubble-other: #1f2338;
 }
 
-/* Emerald — all hues sit at ~160° */
-[data-theme="emerald"] {
+/* ---------- Emerald — dark ---------- */
+[data-theme="emerald"][data-mode="dark"] {
   --primary: #3a9e80;
   --primary-hover: #2e8e70;
   --primary-shadow: rgba(58, 158, 128, 0.25);
+  --nav-bg: #081511;
   --sidebar-bg: #0d1a16;
   --sidebar-item: #152820;
   --sidebar-ring: #3a9e80;
+  --chat-bg: #101f1a;
+  --panel: #13251f;
+  --panel-border: #1d3a30;
+  --bubble-other: #1a332b;
 }

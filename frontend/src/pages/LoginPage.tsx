@@ -45,7 +45,7 @@ export default function LoginPage() {
         <LoginForm />
       </div>
 
-      <p className="mt-8 text-slate-500 text-sm relative z-10">© 2026 Flashat</p>
+      <p className="mt-8 text-sm relative z-10" style={{ color: "var(--text-faint)" }}>© 2026 Flashat</p>
     </div>
   );
 }

@@ -25,14 +25,17 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Flashat</h2>
-        <p className="text-slate-400 text-sm">Welcome back</p>
+        <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text)" }}>Flashat</h2>
+        <p className="text-sm" style={{ color: "var(--text-soft)" }}>Welcome back</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400 text-center animate-in fade-in slide-in-from-top-2">
+          <div
+            className="border rounded-lg p-3 text-sm text-center animate-in fade-in slide-in-from-top-2"
+            style={{ background: "var(--danger-bg)", borderColor: "var(--danger-bg-hover)", color: "var(--danger-text)" }}
+          >
             {error}
           </div>
         )}
@@ -41,14 +44,13 @@ export function LoginForm() {
           {/* Email */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-slate-500 transition-colors" style={{ color: undefined }}
-              />
+              <Mail className="h-5 w-5 transition-colors" style={{ color: "var(--text-faint)" }} />
             </div>
             <input
               type="text"
               placeholder="Email address"
-              className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-slate-500"
-              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              className="w-full border rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-[color:var(--text-faint)]"
+              style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -58,13 +60,13 @@ export function LoginForm() {
           {/* Password */}
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-slate-500 transition-colors" />
+              <Lock className="h-5 w-5 transition-colors" style={{ color: "var(--text-faint)" }} />
             </div>
             <input
               type="password"
               placeholder="Password"
-              className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-slate-500"
-              style={{ "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              className="w-full border rounded-xl py-3 pl-10 pr-4 outline-none focus:ring-2 focus:border-transparent transition-all placeholder:text-[color:var(--text-faint)]"
+              style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -86,7 +88,7 @@ export function LoginForm() {
           )}
         </button>
 
-        <div className="text-center text-sm text-slate-500">
+        <div className="text-center text-sm" style={{ color: "var(--text-faint)" }}>
           Don't have an account?{" "}
           <Link
             to={PATHS.register}

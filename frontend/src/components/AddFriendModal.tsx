@@ -30,18 +30,24 @@ export function AddFriendModal({ onClose, onAddFriend }: AddFriendModalProps) {
   };
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ background: "var(--overlay)" }}>
       <div className="border p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200" style={{ background: "var(--sidebar-item)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-white">Send Friend Request</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>Send Friend Request</h3>
+          <button
+            onClick={onClose}
+            className="transition"
+            style={{ color: "var(--text-soft)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "var(--text-soft)")}
+          >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-400 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-soft)" }}>
               Friend's Email Address
             </label>
             <input
@@ -51,19 +57,20 @@ export function AddFriendModal({ onClose, onAddFriend }: AddFriendModalProps) {
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full border rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 outline-none"
-              style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              className="w-full border rounded-xl px-4 py-3 focus:ring-2 outline-none placeholder:text-[color:var(--text-faint)]"
+              style={{ background: "var(--chat-bg)", color: "var(--text)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
-            {addError && <p className="text-red-400 text-sm mt-2">{addError}</p>}
+            {addError && <p className="text-sm mt-2" style={{ color: "var(--danger-text)" }}>{addError}</p>}
           </div>
 
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-300 hover:text-white rounded-lg transition"
-              onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "")}
+              className="px-4 py-2 rounded-lg transition"
+              style={{ color: "var(--text-soft)" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)"; e.currentTarget.style.color = "var(--text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.color = "var(--text-soft)"; }}
             >
               Cancel
             </button>

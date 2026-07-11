@@ -8,12 +8,12 @@ export function FriendshipOptions({ onUnfriend, onBlock }: { onUnfriend: () => v
   return (
     <div className="relative">
       {/* 1. The Trigger Button (Three Dots) */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-lg transition"
-        style={isOpen ? { background: "color-mix(in srgb, var(--primary) 20%, transparent)", color: "var(--primary)" } : { color: "#64748b" }}
-        onMouseEnter={e => { if (!isOpen) { e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)"; e.currentTarget.style.color = "#cbd5e1"; } }}
-        onMouseLeave={e => { if (!isOpen) { e.currentTarget.style.background = ""; e.currentTarget.style.color = "#64748b"; } }}
+        style={isOpen ? { background: "color-mix(in srgb, var(--primary) 20%, transparent)", color: "var(--primary)" } : { color: "var(--text-faint)" }}
+        onMouseEnter={e => { if (!isOpen) { e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)"; e.currentTarget.style.color = "var(--text-soft)"; } }}
+        onMouseLeave={e => { if (!isOpen) { e.currentTarget.style.background = ""; e.currentTarget.style.color = "var(--text-faint)"; } }}
         title="Options"
       >
         <MoreVertical size={18} />
@@ -23,21 +23,27 @@ export function FriendshipOptions({ onUnfriend, onBlock }: { onUnfriend: () => v
       {isOpen && (
         <>
           {/* Invisible Backdrop to close menu when clicking outside */}
-          <div 
-            className="fixed inset-0 z-10 cursor-default" 
-            onClick={() => setIsOpen(false)} 
+          <div
+            className="fixed inset-0 z-10 cursor-default"
+            onClick={() => setIsOpen(false)}
           />
-          
+
           {/* The Actual Menu List */}
-          <div className="absolute right-0 mt-2 w-48 border border-slate-700/30 rounded-xl shadow-xl z-20 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100" style={{ background: "var(--sidebar-item)" }}>
-            
+          <div
+            className="absolute right-0 mt-2 w-48 border rounded-xl shadow-xl z-20 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100"
+            style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}
+          >
+
             {/* Option: Unfriend */}
-            <button 
+            <button
               onClick={() => {
                 onUnfriend();
                 setIsOpen(false);
               }}
-              className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center gap-3 transition"
+              className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition"
+              style={{ color: "var(--danger-text)" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--danger-bg)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "")}
             >
               <UserX size={16} />
               Unfriend User
@@ -49,7 +55,10 @@ export function FriendshipOptions({ onUnfriend, onBlock }: { onUnfriend: () => v
                 onBlock();
                 setIsOpen(false);
               }}
-              className="w-full text-left px-4 py-3 text-sm text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 flex items-center gap-3 transition"
+              className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition"
+              style={{ color: "var(--warning-text)" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--warning-bg)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "")}
             >
               <Ban size={16} />
               Block User

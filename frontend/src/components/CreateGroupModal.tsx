@@ -52,18 +52,24 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
   );
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ background: "var(--overlay)" }}>
       <div className="border p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]" style={{ background: "var(--sidebar-item)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-white">Create Group</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>Create Group</h3>
+          <button
+            onClick={onClose}
+            className="transition"
+            style={{ color: "var(--text-soft)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "var(--text-soft)")}
+          >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-400 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-soft)" }}>
               Group Name
             </label>
             <input
@@ -73,19 +79,19 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="e.g. Project Team"
-              className="w-full border rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:ring-2 outline-none"
-              style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
+              className="w-full border rounded-xl px-4 py-3 focus:ring-2 outline-none placeholder:text-[color:var(--text-faint)]"
+              style={{ background: "var(--chat-bg)", color: "var(--text)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)", "--tw-ring-color": "var(--primary)" } as React.CSSProperties}
             />
           </div>
 
           <div className="flex-1 overflow-hidden flex flex-col">
-            <label className="block text-sm font-medium text-slate-400 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
               Select Members ({selectedFriendIds.length})
             </label>
 
-            <div className="flex-1 overflow-y-auto border rounded-xl p-2 space-y-1" style={{ background: "var(--sidebar-bg)", borderColor: "color-mix(in srgb, var(--primary) 15%, transparent)" }}>
+            <div className="flex-1 overflow-y-auto border rounded-xl p-2 space-y-1" style={{ background: "var(--chat-bg)", borderColor: "color-mix(in srgb, var(--primary) 15%, transparent)" }}>
               {friends.length === 0 ? (
-                <p className="text-slate-500 text-sm text-center py-4">You have no friends to add yet.</p>
+                <p className="text-sm text-center py-4" style={{ color: "var(--text-faint)" }}>You have no friends to add yet.</p>
               ) : (
                 friends.map(friend => {
                   const isSelected = selectedFriendIds.includes(friend.uid);
@@ -98,7 +104,7 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
                     >
                       <div
                         className="w-5 h-5 rounded-md border flex items-center justify-center transition"
-                        style={isSelected ? { background: "var(--primary)", borderColor: "var(--primary)" } : { borderColor: "#475569" }}
+                        style={isSelected ? { background: "var(--primary)", borderColor: "var(--primary)" } : { borderColor: "var(--panel-border)" }}
                       >
                         {isSelected && <Check size={14} className="text-white" />}
                       </div>
@@ -106,7 +112,7 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
                       {renderAvatar(friend.name)}
 
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-200">
+                        <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
                           {friend.name}
                         </p>
                       </div>
@@ -117,15 +123,16 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
             </div>
           </div>
 
-          {groupError && <p className="text-red-400 text-sm mt-4">{groupError}</p>}
+          {groupError && <p className="text-sm mt-4" style={{ color: "var(--danger-text)" }}>{groupError}</p>}
 
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t" style={{ borderColor: "var(--panel-border)" }}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-300 hover:text-white rounded-lg transition"
-              onMouseEnter={e => (e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "")}
+              className="px-4 py-2 rounded-lg transition"
+              style={{ color: "var(--text-soft)" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)"; e.currentTarget.style.color = "var(--text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.color = "var(--text-soft)"; }}
             >
               Cancel
             </button>

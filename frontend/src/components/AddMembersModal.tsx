@@ -42,7 +42,7 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
   };
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ background: "var(--overlay)" }}>
       <div
         className="border p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
         style={{
@@ -51,27 +51,33 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
         }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-white">Add Members</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition">
+          <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>Add Members</h3>
+          <button
+            onClick={onClose}
+            className="transition"
+            style={{ color: "var(--text-soft)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "var(--text-soft)")}
+          >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-hidden flex flex-col">
-            <label className="block text-sm font-medium text-slate-400 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
               Select Friends ({selectedIds.length} selected)
             </label>
 
             <div
               className="flex-1 overflow-y-auto border rounded-xl p-2 space-y-1"
               style={{
-                background: "var(--sidebar-bg)",
+                background: "var(--chat-bg)",
                 borderColor: "color-mix(in srgb, var(--primary) 15%, transparent)",
               }}
             >
               {friends.length === 0 ? (
-                <p className="text-slate-500 text-sm text-center py-4">
+                <p className="text-sm text-center py-4" style={{ color: "var(--text-faint)" }}>
                   All your friends are already in this group.
                 </p>
               ) : (
@@ -96,7 +102,7 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
                         style={
                           isSelected
                             ? { background: "var(--primary)", borderColor: "var(--primary)" }
-                            : { borderColor: "#475569" }
+                            : { borderColor: "var(--panel-border)" }
                         }
                       >
                         {isSelected && <Check size={14} className="text-white" />}
@@ -108,7 +114,7 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
                         {nameInitials(friend.name)}
                       </div>
 
-                      <p className="text-sm font-medium text-slate-200 truncate">
+                      <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>
                         {friend.name}
                       </p>
                     </div>
@@ -118,17 +124,19 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
             </div>
           </div>
 
-          {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+          {error && <p className="text-sm mt-4" style={{ color: "var(--danger-text)" }}>{error}</p>}
 
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t" style={{ borderColor: "var(--panel-border)" }}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-300 hover:text-white rounded-lg transition"
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)")
-              }
-              onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+              className="px-4 py-2 rounded-lg transition"
+              style={{ color: "var(--text-soft)" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 10%, transparent)";
+                e.currentTarget.style.color = "var(--text)";
+              }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ""; e.currentTarget.style.color = "var(--text-soft)"; }}
             >
               Cancel
             </button>

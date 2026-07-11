@@ -33,15 +33,15 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
   }, [convs, query]);
 
   return (
-    <div className="h-full text-slate-100 w-80 flex-shrink-0 grid grid-rows-[auto_1fr]" style={{ background: "var(--sidebar-bg)" }}>
+    <div className="h-full w-80 flex-shrink-0 grid grid-rows-[auto_1fr] border-r" style={{ background: "var(--sidebar-bg)", borderColor: "var(--panel-border)", color: "var(--text)" }}>
       {/* search */}
-      <div className="p-3 border-b" style={{ borderColor: "var(--sidebar-item)" }}>
+      <div className="p-3 border-b" style={{ borderColor: "var(--panel-border)" }}>
         <input
           value={query}
           onChange={e=>setQ(e.target.value)}
           placeholder="Search conversations"
-          className="w-full rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2"
-          style={{ background: "var(--sidebar-item)", outlineColor: "var(--sidebar-ring)" }}
+          className="w-full rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 placeholder:text-[color:var(--text-faint)]"
+          style={{ background: "var(--sidebar-item)", outlineColor: "var(--sidebar-ring)", color: "var(--text)" }}
         />
       </div>
 
@@ -60,13 +60,13 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium">
-                  {conv.title}{conv.type === "group" && <span className="text-slate-400 font-normal"> ({conv.participants.length})</span>}
+                  {conv.title}{conv.type === "group" && <span className="font-normal" style={{ color: "var(--text-soft)" }}> ({conv.participants.length})</span>}
                 </p>
-                <span className="text-xs text-slate-400 ml-auto">
+                <span className="text-xs ml-auto" style={{ color: "var(--text-soft)" }}>
                   {typeof conv.lastMsgTs === "number" ? formatConvTime(conv.lastMsgTs) : "--"}
                 </span>
               </div>
-              <p className="truncate text-sm text-slate-300">{conv.lastMsgText}</p>
+              <p className="truncate text-sm" style={{ color: "var(--text-soft)" }}>{conv.lastMsgText}</p>
             </div>
             {!!conv.unreadCount && (
               <span className="ml-2 inline-flex items-center justify-center rounded-full bg-emerald-500 text-white text-xs px-2 py-0.5">
@@ -76,7 +76,7 @@ export default function ConversationsSidebar({ convs, activeConvId, onOpen }:{ c
           </button>
         ))}
         {filtered.length===0 && (
-          <div className="p-6 text-sm text-slate-400">No conversations</div>
+          <div className="p-6 text-sm" style={{ color: "var(--text-soft)" }}>No conversations</div>
         )}
       </div>
     </div>

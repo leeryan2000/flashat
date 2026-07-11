@@ -7,6 +7,7 @@ import { dtoToMessage, type MsgDto } from "../wire/message";
 import { useFriendshipActions } from "../hooks/useFriendshipActions";
 import type { CustomResponse } from "../wire/resp";
 import { useAuth } from "../context/AuthContext";
+import { MessageSquare } from "lucide-react";
 
 export default function Chat() {
   const { convs, msgs, loadMsgs, activeConvId, setActiveConvId, friendships, removeConv } = useChat();
@@ -77,22 +78,28 @@ export default function Chat() {
     <div className="grid md:grid-cols-[320px_1fr] h-full overflow-hidden">
       {/* Leave group confirmation dialog */}
       {leaveConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-80 flex flex-col gap-4">
-            <h2 className="font-semibold text-slate-800 text-base">Leave Group</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "var(--overlay)" }}>
+          <div
+            className="rounded-2xl shadow-2xl p-6 w-80 flex flex-col gap-4 border"
+            style={{ background: "var(--sidebar-item)", borderColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}
+          >
+            <h2 className="font-semibold text-base" style={{ color: "var(--text)" }}>Leave Group</h2>
             {isLastMember ? (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm" style={{ color: "var(--text-soft)" }}>
                 You are the last member. Leaving will permanently delete this conversation and all its messages.
               </p>
             ) : (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm" style={{ color: "var(--text-soft)" }}>
                 Are you sure you want to leave this group?
               </p>
             )}
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setLeaveConfirm(false)}
-                className="px-4 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-100 transition"
+                className="px-4 py-2 rounded-xl text-sm transition"
+                style={{ color: "var(--text-soft)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "color-mix(in srgb, var(--text) 8%, transparent)"; e.currentTarget.style.color = "var(--text)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.color = "var(--text-soft)"; }}
               >
                 Cancel
               </button>
@@ -111,7 +118,7 @@ export default function Chat() {
         activeConvId={activeConvId ?? undefined}
         onOpen={(cid) => setActiveConvId(cid)}
       />
-      <section className="bg-white h-full overflow-hidden">
+      <section className="h-full overflow-hidden" style={{ background: "var(--chat-bg)" }}>
         {activeConvId ? (
           <MessagesPane
             key={activeConvId}
@@ -130,8 +137,18 @@ export default function Chat() {
             onLeaveGroup={activeConv?.type === "group" ? handleLeaveGroup : undefined}
           />
         ) : (
-          <div className="h-full grid place-items-center text-slate-400">
-            Select a conversation to start chatting.
+          <div className="h-full flex flex-col items-center justify-center gap-3">
+            <div
+              className="h-16 w-16 rounded-2xl flex items-center justify-center rotate-3 border"
+              style={{
+                background: "color-mix(in srgb, var(--primary) 12%, transparent)",
+                borderColor: "color-mix(in srgb, var(--primary) 25%, transparent)",
+              }}
+            >
+              <MessageSquare className="h-7 w-7" style={{ color: "var(--primary)" }} />
+            </div>
+            <p className="font-medium" style={{ color: "var(--text-soft)" }}>Your messages</p>
+            <p className="text-sm" style={{ color: "var(--text-faint)" }}>Select a conversation to start chatting.</p>
           </div>
         )}
       </section>
