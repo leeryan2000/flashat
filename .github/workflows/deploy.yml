@@ -6,9 +6,32 @@ on:
 
 jobs:
   # ---------------------------------------------------
+  # JOB 0: Run Backend Tests
+  # ---------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+
+      - name: Vet
+        working-directory: backend
+        run: go vet ./...
+
+      - name: Test (race detector)
+        working-directory: backend
+        run: go test ./... -race -count=1
+
+  # ---------------------------------------------------
   # JOB 1: Build and Push the Go Backend Image
   # ---------------------------------------------------
   build-backend:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code

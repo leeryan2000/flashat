@@ -21,9 +21,9 @@ type Client struct {
 }
 
 func (c *Client) Cleanup() {
-	c.Hub.Unregister <- c // Unregister the client from the Hub
-	c.Cancel()            // Cancel the context
-	c.Conn.Close()        // Close the WebSocket connection
+	c.Hub.Unregister(c)
+	c.Cancel()     // Cancel the context
+	c.Conn.Close() // Close the WebSocket connection
 }
 
 const (

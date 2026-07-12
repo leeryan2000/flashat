@@ -7,7 +7,7 @@ run: tidy build
 	 bin/flashat
 
 test:
-	go test -v ./handlers -count=1
+	go test ./... -race -count=1
 
 setup:
 	./migrate.sh goto 1

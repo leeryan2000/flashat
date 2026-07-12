@@ -77,7 +77,6 @@ func StartServer() (*Server, error) {
 	s.RabbitMQClient = rabbitMQClient
 
 	s.Hub = NewHub()
-	go s.Hub.Run()
 
 	s.UserRepo = &repo.PgxUserRepo{Pool: s.Pool}
 	s.MessageRepo = &repo.PgxMessageRepo{Pool: s.Pool}

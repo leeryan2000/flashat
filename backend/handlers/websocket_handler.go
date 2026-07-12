@@ -24,12 +24,15 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// ***** make it more bulletproof
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 	const maxConnectionsPerUser = 5
 
 	uidStr := c.GetString("uid")
 
+	// Fast-path rejection before paying for the handshake. The authoritative
+	// check happens atomically with registration below, since a check here
+	// followed by a separate Register call would let two concurrent connect
+	// requests both pass the check and both register, exceeding the cap.
 	if wh.Hub.ConnectionCountForUID(uidStr) >= maxConnectionsPerUser {
 		slog.Warn("connection limit reached", "uid", uidStr)
 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many open connections"})
@@ -54,7 +57,12 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 		Conversations: make(map[string]struct{}),
 	}
 
-	client.Hub.Register <- client
+	if !wh.Hub.Register(client, maxConnectionsPerUser) {
+		slog.Warn("connection limit reached", "uid", uidStr)
+		cancel()
+		conn.Close()
+		return
+	}
 
 	go client.WritePump()
 	go client.ReadPump(wh.MessageService.HandleEnvelope)
