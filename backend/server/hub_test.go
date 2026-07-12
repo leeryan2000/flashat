@@ -34,11 +34,6 @@ func drain(c *Client) {
 // TestHub_ConcurrentRegisterSendUnregister hammers the Hub the way
 // production traffic does: clients connecting/disconnecting on one set
 // of goroutines while messages are broadcast to them on another.
-//
-// Run with the race detector — this is what actually catches the bug
-// class fixed in 22f4142 / 3ee4a50:
-//
-//	go test ./server/... -race -run TestHub -count=20
 func TestHub_ConcurrentRegisterSendUnregister(t *testing.T) {
 	hub := NewHub()
 

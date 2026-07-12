@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/leeryan2000/flashat/db"
 	"github.com/leeryan2000/flashat/wire"
@@ -72,25 +73,71 @@ func (w *MessageWorker) processDelivery(d amqp.Delivery) {
 		return
 	}
 
-	if err := w.Service.ProcessChat(ctx, &env); err != nil {
-		retryCount := retryCountFromHeaders(d.Headers)
-		if retryCount >= maxDeliveryRetries {
-			slog.Error("worker: ProcessChat failed after max retries, discarding", "error", err, "retry_count", retryCount)
-			d.Nack(false, false) // give up — stop requeuing this message
+	processErr := w.Service.ProcessChat(ctx, &env)
+	retryCount := retryCountFromHeaders(d.Headers)
+
+	switch decideOutcome(processErr, retryCount) {
+	case outcomeAck:
+		d.Ack(false)
+
+	case outcomeDiscard:
+		slog.Error("worker: ProcessChat failed after max retries, discarding", "error", processErr, "retry_count", retryCount)
+		d.Nack(false, false) // give up — stop requeuing this message
+
+	case outcomeRetry:
+		slog.Error("worker: ProcessChat failed, requeueing", "error", processErr, "retry_count", retryCount+1)
+		// Re-publish with an incremented retry count (Nack's requeue can't carry
+		// custom headers), then remove the original delivery from the queue —
+		// but only once the replacement is safely enqueued.
+		if pubErr := w.republishWithRetry(d.Body, amqp.Table{retryCountHeader: int32(retryCount + 1)}); pubErr != nil {
+			slog.Error("worker: republish failed after retries, requeueing original instead", "error", pubErr)
+			d.Nack(false, true)
 			return
 		}
-
-		slog.Error("worker: ProcessChat failed, requeueing", "error", err, "retry_count", retryCount+1)
-		// Re-publish with an incremented retry count (Nack's requeue can't carry
-		// custom headers), then remove the original delivery from the queue.
-		if pubErr := w.MQ.PublishRaw(d.Body, amqp.Table{retryCountHeader: int32(retryCount + 1)}); pubErr != nil {
-			slog.Error("worker: failed to republish for retry", "error", pubErr)
-		}
 		d.Ack(false)
-		return
 	}
+}
 
-	d.Ack(false)
+// republishRetryAttempts and republishRetryDelay bound how hard we try to get
+// the incremented-retry copy onto the queue before giving up and requeuing the
+// original untouched. This absorbs brief broker blips without ever needing the
+// no-counter-increment fallback in processDelivery.
+const republishRetryAttempts = 3
+const republishRetryDelay = 100 * time.Millisecond
+
+func (w *MessageWorker) republishWithRetry(body []byte, headers amqp.Table) error {
+	var err error
+	for i := 0; i < republishRetryAttempts; i++ {
+		if err = w.MQ.PublishRaw(body, headers); err == nil {
+			return nil
+		}
+		time.Sleep(republishRetryDelay)
+	}
+	return err
+}
+
+// deliveryOutcome is what a delivery should be resolved to. Kept separate
+// from processDelivery's actual Ack/Nack/PublishRaw calls so the branching
+// can be unit tested without a real AMQP channel or MessageService.
+type deliveryOutcome int
+
+const (
+	outcomeAck     deliveryOutcome = iota // ProcessChat succeeded
+	outcomeDiscard                        // failed and out of retries — drop it
+	outcomeRetry                          // failed but retries remain — republish with count+1
+)
+
+// decideOutcome is the pure decision: given whether ProcessChat succeeded
+// and how many times this delivery has already been retried, what happens
+// to it next.
+func decideOutcome(processErr error, retryCount int) deliveryOutcome {
+	if processErr == nil {
+		return outcomeAck
+	}
+	if retryCount >= maxDeliveryRetries {
+		return outcomeDiscard
+	}
+	return outcomeRetry
 }
 
 func retryCountFromHeaders(headers amqp.Table) int {
