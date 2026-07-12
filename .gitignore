@@ -6,3 +6,4 @@ test/
 flashat-backend
 bin/
 node_modules/
+docker-compose.dev.yml
