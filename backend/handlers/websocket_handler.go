@@ -19,6 +19,14 @@ type WebsocketHandler struct {
 	GoEnv            string
 }
 
+// allowedProductionOrigins mirrors nginx's server_name (flashat.conf) —
+// the site is served identically on both the apex domain and www, with
+// no canonicalizing redirect, so both must be accepted here.
+var allowedProductionOrigins = map[string]bool{
+	"https://flashatapp.com":     true,
+	"https://www.flashatapp.com": true,
+}
+
 // checkOrigin only enforces the allowlist in production. Locally, the
 // frontend dev server and backend run on different ports (different
 // origins), so a strict check would break local development.
@@ -26,7 +34,7 @@ func (wh WebsocketHandler) checkOrigin(r *http.Request) bool {
 	if wh.GoEnv != "production" {
 		return true
 	}
-	return r.Header.Get("Origin") == "https://flashatapp.com"
+	return allowedProductionOrigins[r.Header.Get("Origin")]
 }
 
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
