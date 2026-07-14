@@ -29,6 +29,7 @@ type Server struct {
 
 	// Config
 	RegisterCode string
+	GoEnv        string
 }
 
 // ***** Test
@@ -83,6 +84,7 @@ func StartServer() (*Server, error) {
 	s.ConversationRepo = &repo.PgxConversationRepo{Pool: s.Pool}
 	s.FriendshipRepo = &repo.PgxFriendshipRepo{Pool: s.Pool}
 	s.RegisterCode = cfg.REGISTER_CODE
+	s.GoEnv = cfg.GO_ENV
 
 	s.MessageService = service.NewMessageService(
 		s.Hub,

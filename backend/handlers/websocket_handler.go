@@ -16,12 +16,17 @@ type WebsocketHandler struct {
 	Hub              *server.Hub
 	MessageService   *service.MessageService
 	ConversationRepo repo.ConversationRepo
+	GoEnv            string
 }
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // For dev; restrict in prod!
-	},
+// checkOrigin only enforces the allowlist in production. Locally, the
+// frontend dev server and backend run on different ports (different
+// origins), so a strict check would break local development.
+func (wh WebsocketHandler) checkOrigin(r *http.Request) bool {
+	if wh.GoEnv != "production" {
+		return true
+	}
+	return r.Header.Get("Origin") == "https://flashatapp.com"
 }
 
 func (wh WebsocketHandler) ServeWs(c *gin.Context) {
@@ -39,6 +44,7 @@ func (wh WebsocketHandler) ServeWs(c *gin.Context) {
 		return
 	}
 
+	upgrader := websocket.Upgrader{CheckOrigin: wh.checkOrigin}
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		slog.Error("WebSocket upgrade failed", "error", err)

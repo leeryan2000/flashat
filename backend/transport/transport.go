@@ -12,7 +12,7 @@ import (
 func BuildRouter(s *server.Server) *gin.Engine {
 	h := handlers.Handlers{
 		User:         handlers.UserHandler{Repo: s.UserRepo, RegisterCode: s.RegisterCode},
-		Auth:         handlers.AuthHandler{Repo: s.UserRepo, RedisClient: s.RedisClient},
+		Auth:         handlers.AuthHandler{Repo: s.UserRepo, RedisClient: s.RedisClient, GoEnv: s.GoEnv},
 		Conversation: handlers.ConversationHandler{Repo: s.ConversationRepo},
 		Message:      handlers.MessageHandler{Repo: s.MessageRepo},
 		Friendship: handlers.FriendshipHandler{
@@ -23,6 +23,7 @@ func BuildRouter(s *server.Server) *gin.Engine {
 			Hub:              s.Hub,
 			MessageService:   s.MessageService,
 			ConversationRepo: s.ConversationRepo,
+			GoEnv:            s.GoEnv,
 		},
 	}
 

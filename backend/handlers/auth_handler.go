@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,10 +13,11 @@ import (
 type AuthHandler struct {
 	Repo        repo.UserRepo
 	RedisClient *db.RedisClient
+	GoEnv       string
 }
 
-func cookieOptions() (domain string, secure bool) {
-	if os.Getenv("GO_ENV") == "production" {
+func (h AuthHandler) cookieOptions() (domain string, secure bool) {
+	if h.GoEnv == "production" {
 		return ".flashatapp.com", true
 	}
 	return "", false
@@ -52,7 +52,7 @@ func (h AuthHandler) Login(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Login failed"})
 		return
 	}
-	domain, secure := cookieOptions()
+	domain, secure := h.cookieOptions()
 	c.SetCookie("session_id", sessionID, int(3*24*60*60), "/", domain, secure, true)
 
 	c.JSON(http.StatusOK, user)
@@ -64,7 +64,7 @@ func (h AuthHandler) Logout(c *gin.Context) {
 	if err == nil && sessionID != "" {
 		h.RedisClient.DeleteSession(c.Request.Context(), sessionID)
 	}
-	domain, secure := cookieOptions()
+	domain, secure := h.cookieOptions()
 	c.SetCookie("session_id", "", -1, "/", domain, secure, true)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
