@@ -63,8 +63,14 @@ func (w *MessageWorker) Start() {
 	}
 }
 
+// Bounds how long a single message's processing can run — without this,
+// a hung DB call or downstream dependency would permanently tie up one
+// of the workerPoolSize goroutines draining the delivery channel.
+const processDeliveryTimeout = 30 * time.Second
+
 func (w *MessageWorker) processDelivery(d amqp.Delivery) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), processDeliveryTimeout)
+	defer cancel()
 
 	var env wire.Msg
 	if err := json.Unmarshal(d.Body, &env); err != nil {
