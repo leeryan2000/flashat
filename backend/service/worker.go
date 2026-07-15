@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/leeryan2000/flashat/db"
@@ -18,6 +19,8 @@ import (
 type MessageWorker struct {
 	MQ      *db.RabbitMQClient
 	Service *MessageService
+
+	wg sync.WaitGroup
 }
 
 // Number of goroutines concurrently draining the delivery channel.
@@ -40,7 +43,10 @@ func NewMessageWorker(mq *db.RabbitMQClient, svc *MessageService) *MessageWorker
 }
 
 // Launch a pool of goroutines consuming from the same delivery channel.
-func (w *MessageWorker) Start() {
+// ctx is a shutdown signal, not a per-message context — cancelling it stops
+// the pool from picking up new deliveries and bounds how long an in-flight
+// one can keep running; see WaitForShutdown.
+func (w *MessageWorker) Start(ctx context.Context) {
 	deliveries, err := w.MQ.Ch.Consume(
 		"chat_messages",
 		"",    // consumer tag (auto-generated)
@@ -54,22 +60,47 @@ func (w *MessageWorker) Start() {
 
 	slog.Info("worker: starting pool, waiting for messages", "pool_size", workerPoolSize)
 	for range workerPoolSize {
+		w.wg.Add(1)
 		go func() {
-			for d := range deliveries {
-				w.processDelivery(d)
+			defer w.wg.Done()
+			for {
+				select {
+				case d, ok := <-deliveries:
+					if !ok {
+						slog.Info("worker: delivery channel closed, shutting down")
+						return
+					}
+					w.processDelivery(ctx, d)
+				case <-ctx.Done():
+					slog.Info("worker: shutdown signal received, stopping")
+					return
+				}
 			}
-			slog.Info("worker: delivery channel closed, shutting down")
 		}()
 	}
 }
 
-// Bounds how long a single message's processing can run — without this,
-// a hung DB call or downstream dependency would permanently tie up one
-// of the workerPoolSize goroutines draining the delivery channel.
 const processDeliveryTimeout = 30 * time.Second
 
-func (w *MessageWorker) processDelivery(d amqp.Delivery) {
-	ctx, cancel := context.WithTimeout(context.Background(), processDeliveryTimeout)
+const ShutdownTimeout = processDeliveryTimeout + 5*time.Second
+
+func (w *MessageWorker) WaitForShutdown() {
+	done := make(chan struct{})
+	go func() {
+		w.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		slog.Info("worker: pool drained cleanly")
+	case <-time.After(ShutdownTimeout):
+		slog.Warn("worker: pool did not drain before timeout, continuing shutdown anyway")
+	}
+}
+
+func (w *MessageWorker) processDelivery(parent context.Context, d amqp.Delivery) {
+	ctx, cancel := context.WithTimeout(parent, processDeliveryTimeout)
 	defer cancel()
 
 	var env wire.Msg

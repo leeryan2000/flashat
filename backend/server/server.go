@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
@@ -49,7 +50,9 @@ func checkClients(s *Server) {
 	slog.Info("connected clients", "connections", clients, "unique_users", uniqueUsers)
 }
 
-func StartServer() (*Server, error) {
+// ctx is a shutdown signal, threaded down to MessageWorker so it can stop
+// picking up new deliveries and bound in-flight ones on shutdown.
+func StartServer(ctx context.Context) (*Server, error) {
 	s := &Server{}
 
 	cfg := config.LoadConfig()
@@ -96,7 +99,7 @@ func StartServer() (*Server, error) {
 	s.MessageService.RegisterObserver(&service.BroadcastObserver{Hub: s.Hub})
 
 	s.MessageWorker = service.NewMessageWorker(s.RabbitMQClient, s.MessageService)
-	s.MessageWorker.Start()
+	s.MessageWorker.Start(ctx)
 
 	RunPeriodicTask(func() {
 		checkClients(s)

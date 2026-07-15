@@ -20,7 +20,12 @@ func main() {
 		Level: slog.LevelInfo,
 	})))
 
-	s, err := server.StartServer()
+	// ctx is cancelled the moment SIGINT/SIGTERM arrives — passed down to
+	// MessageWorker so it can stop cleanly instead of being cut off mid-shutdown.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	s, err := server.StartServer(ctx)
 	if err != nil {
 		log.Fatal("failed to start server: ", err)
 	}
@@ -40,15 +45,17 @@ func main() {
 	}()
 
 	// Block until SIGINT or SIGTERM
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	<-ctx.Done()
 	slog.Info("shutting down...")
 
 	// Give in-flight HTTP requests 10s to finish
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	httpServer.Shutdown(ctx)
+	httpServer.Shutdown(shutdownCtx)
+
+	// Let in-flight message deliveries finish (or hit their own timeout)
+	// before pulling the connections they depend on out from under them.
+	s.MessageWorker.WaitForShutdown()
 
 	// Close connections cleanly
 	s.RabbitMQClient.Close()
