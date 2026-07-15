@@ -28,13 +28,6 @@ type MessageWorker struct {
 // isn't tied to runtime.NumCPU().
 const workerPoolSize = 4
 
-// Max times a failing message is retried before being dropped for good.
-// Without this, a permanently-failing message (e.g. referencing a deleted
-// conversation) requeues and fails forever, spinning the CPU and flooding logs.
-const maxDeliveryRetries = 5
-
-const retryCountHeader = "x-retry-count"
-
 func NewMessageWorker(mq *db.RabbitMQClient, svc *MessageService) *MessageWorker {
 	return &MessageWorker{
 		MQ:      mq,
@@ -80,7 +73,13 @@ func (w *MessageWorker) Start(ctx context.Context) {
 	}
 }
 
-const processDeliveryTimeout = 30 * time.Second
+// processDeliveryTimeout bounds a single ProcessChat attempt. Kept under the
+// frontend's 10s ack-timeout (ChatContext.tsx) with a safety margin for
+// network/broadcast latency — there's little point letting a save succeed
+// after the sender has already been shown "failed" and moved on. It also
+// still serves the original purpose of not letting a hung DB call
+// permanently tie up one of the workerPoolSize goroutines.
+const processDeliveryTimeout = 8 * time.Second
 
 const ShutdownTimeout = processDeliveryTimeout + 5*time.Second
 
@@ -110,86 +109,11 @@ func (w *MessageWorker) processDelivery(parent context.Context, d amqp.Delivery)
 		return
 	}
 
-	processErr := w.Service.ProcessChat(ctx, &env)
-	retryCount := retryCountFromHeaders(d.Headers)
-
-	switch decideOutcome(processErr, retryCount) {
-	case outcomeAck:
-		d.Ack(false)
-
-	case outcomeDiscard:
-		slog.Error("worker: ProcessChat failed after max retries, discarding", "error", processErr, "retry_count", retryCount)
-		d.Nack(false, false) // give up — stop requeuing this message
-
-	case outcomeRetry:
-		slog.Error("worker: ProcessChat failed, requeueing", "error", processErr, "retry_count", retryCount+1)
-		// Re-publish with an incremented retry count (Nack's requeue can't carry
-		// custom headers), then remove the original delivery from the queue —
-		// but only once the replacement is safely enqueued.
-		if pubErr := w.republishWithRetry(d.Body, amqp.Table{retryCountHeader: int32(retryCount + 1)}); pubErr != nil {
-			slog.Error("worker: republish failed after retries, requeueing original instead", "error", pubErr)
-			d.Nack(false, true)
-			return
-		}
-		d.Ack(false)
+	if processErr := w.Service.ProcessChat(ctx, &env); processErr != nil {
+		slog.Error("worker: ProcessChat failed, discarding", "error", processErr)
+		d.Nack(false, false) // no retry — a single failed attempt is final
+		return
 	}
-}
 
-// republishRetryAttempts and republishRetryDelay bound how hard we try to get
-// the incremented-retry copy onto the queue before giving up and requeuing the
-// original untouched. This absorbs brief broker blips without ever needing the
-// no-counter-increment fallback in processDelivery.
-const republishRetryAttempts = 3
-const republishRetryDelay = 100 * time.Millisecond
-
-func (w *MessageWorker) republishWithRetry(body []byte, headers amqp.Table) error {
-	var err error
-	for i := 0; i < republishRetryAttempts; i++ {
-		if err = w.MQ.PublishRaw(body, headers); err == nil {
-			return nil
-		}
-		time.Sleep(republishRetryDelay)
-	}
-	return err
-}
-
-// deliveryOutcome is what a delivery should be resolved to. Kept separate
-// from processDelivery's actual Ack/Nack/PublishRaw calls so the branching
-// can be unit tested without a real AMQP channel or MessageService.
-type deliveryOutcome int
-
-const (
-	outcomeAck     deliveryOutcome = iota // ProcessChat succeeded
-	outcomeDiscard                        // failed and out of retries — drop it
-	outcomeRetry                          // failed but retries remain — republish with count+1
-)
-
-// decideOutcome is the pure decision: given whether ProcessChat succeeded
-// and how many times this delivery has already been retried, what happens
-// to it next.
-func decideOutcome(processErr error, retryCount int) deliveryOutcome {
-	if processErr == nil {
-		return outcomeAck
-	}
-	if retryCount >= maxDeliveryRetries {
-		return outcomeDiscard
-	}
-	return outcomeRetry
-}
-
-func retryCountFromHeaders(headers amqp.Table) int {
-	v, ok := headers[retryCountHeader]
-	if !ok {
-		return 0
-	}
-	switch n := v.(type) {
-	case int32:
-		return int(n)
-	case int64:
-		return int(n)
-	case int:
-		return n
-	default:
-		return 0
-	}
+	d.Ack(false)
 }

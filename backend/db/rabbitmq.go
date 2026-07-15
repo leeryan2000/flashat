@@ -15,6 +15,8 @@ type RabbitMQClient struct {
 	Ch   *amqp.Channel
 }
 
+const queueName = "chat_messages"
+
 func NewRabbitMQClient(cfg config.Configuration) (*RabbitMQClient, error) {
 	addr := fmt.Sprintf("amqp://%s:%s@%s/", cfg.MQ_USER, cfg.MQ_PASS, cfg.MQ_ADDR)
 	conn, err := amqp.Dial(addr)
@@ -28,7 +30,7 @@ func NewRabbitMQClient(cfg config.Configuration) (*RabbitMQClient, error) {
 		return nil, fmt.Errorf("failed to open channel: %w", err)
 	}
 
-	_, err = ch.QueueDeclare("chat_messages", true, false, false, false, nil)
+	_, err = ch.QueueDeclare(queueName, true, false, false, false, nil)
 	if err != nil {
 		ch.Close()
 		conn.Close()
@@ -47,32 +49,14 @@ func (r *RabbitMQClient) Publish(env *wire.Msg) error {
 	slog.Debug("publishing message to RabbitMQ", "type", env.Type, "from_uid", env.FromUID, "conv_id", env.ConversationID)
 
 	return r.Ch.Publish(
-		"",              // default exchange
-		"chat_messages", // routing key (match queue name, when using default exchange)
+		"",        // default exchange
+		queueName, // routing key (match queue name, when using default exchange)
 		false,
 		false,
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
 			ContentType:  "application/json",
 			Body:         body,
-		},
-	)
-}
-
-// PublishRaw re-publishes an already-serialized message body, carrying custom
-// headers (e.g. a retry counter). Used by the worker to requeue a failed
-// message with an incremented attempt count.
-func (r *RabbitMQClient) PublishRaw(body []byte, headers amqp.Table) error {
-	return r.Ch.Publish(
-		"",              // default exchange
-		"chat_messages", // routing key (match queue name, when using default exchange)
-		false,
-		false,
-		amqp.Publishing{
-			DeliveryMode: amqp.Persistent,
-			ContentType:  "application/json",
-			Body:         body,
-			Headers:      headers,
 		},
 	)
 }
