@@ -91,7 +91,6 @@ func (r *PgxFriendshipRepo) AcceptFriendship(ctx context.Context, conv *models.C
 	return nil
 }
 
-// ***** continue: remove the conversation after deletion of friendship
 func (r *PgxFriendshipRepo) DeleteFriendship(ctx context.Context, uid1, uid2 uuid.UUID) error {
 	// Implementation for deleting friendship using pgx
 	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})

@@ -33,7 +33,6 @@ type Server struct {
 	GoEnv        string
 }
 
-// ***** Test
 func RunPeriodicTask(task func()) {
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)

@@ -9,10 +9,11 @@ import (
 
 func SetupRoutes(handlers *handlers.Handlers, server *server.Server) *gin.Engine {
 	router := gin.Default()
-	// cors config
-	// ***** modify cors settings for production
+	// cors config — production traffic is same-origin (nginx serves the
+	// frontend and proxies /api/ under the same domain), so these origins
+	// only matter for local dev and direct cross-origin API callers.
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://18.140.243.27"},
+		AllowOrigins:     []string{"http://localhost:5173", "https://flashatapp.com", "https://www.flashatapp.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
