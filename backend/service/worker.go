@@ -75,13 +75,15 @@ func (w *MessageWorker) Start(ctx context.Context) {
 
 // processDeliveryTimeout bounds a single ProcessChat attempt. Kept under the
 // frontend's 10s ack-timeout (ChatContext.tsx) with a safety margin for
-// network/broadcast latency — there's little point letting a save succeed
-// after the sender has already been shown "failed" and moved on. It also
-// still serves the original purpose of not letting a hung DB call
-// permanently tie up one of the workerPoolSize goroutines.
+// network/broadcast latency
 const processDeliveryTimeout = 8 * time.Second
 
 const ShutdownTimeout = processDeliveryTimeout + 5*time.Second
+
+// processRetryAttempts bounds how many times ProcessChat is retried in-process
+// before the delivery is given up on.
+const processRetryAttempts = 3
+const processRetryDelay = 200 * time.Millisecond
 
 func (w *MessageWorker) WaitForShutdown() {
 	done := make(chan struct{})
@@ -109,12 +111,25 @@ func (w *MessageWorker) processDelivery(parent context.Context, d amqp.Delivery)
 		return
 	}
 
-	// ***** 
-	if processErr := w.Service.ProcessChat(ctx, &env); processErr != nil {
-		slog.Error("worker: ProcessChat failed, discarding", "error", processErr)
-		d.Nack(false, false) // no retry — a single failed attempt is final
-		return
+	var processErr error
+retryLoop:
+	for attempt := 1; attempt <= processRetryAttempts; attempt++ {
+		processErr = w.Service.ProcessChat(ctx, &env)
+		if processErr == nil {
+			d.Ack(false)
+			return
+		}
+
+		slog.Error("worker: ProcessChat failed", "error", processErr, "attempt", attempt)
+		if attempt < processRetryAttempts {
+			select {
+			case <-time.After(processRetryDelay):
+			case <-ctx.Done():
+				break retryLoop // timeout/shutdown — stop retrying, fall through to discard
+			}
+		}
 	}
 
-	d.Ack(false)
+	slog.Error("worker: ProcessChat failed after retries, discarding", "error", processErr)
+	d.Nack(false, false) // no requeue — retries exhausted, this attempt is final
 }
