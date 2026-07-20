@@ -43,7 +43,7 @@ func (w *MessageWorker) Start(ctx context.Context) {
 	deliveries, err := w.MQ.Ch.Consume(
 		"chat_messages",
 		"",    // consumer tag (auto-generated)
-		false, // autoAck=false — we manually ACK after processing
+		false, // autoAck=false to allow explicit ack/nack
 		false, false, false, nil,
 	)
 	if err != nil {
@@ -109,6 +109,7 @@ func (w *MessageWorker) processDelivery(parent context.Context, d amqp.Delivery)
 		return
 	}
 
+	// ***** 
 	if processErr := w.Service.ProcessChat(ctx, &env); processErr != nil {
 		slog.Error("worker: ProcessChat failed, discarding", "error", processErr)
 		d.Nack(false, false) // no retry — a single failed attempt is final

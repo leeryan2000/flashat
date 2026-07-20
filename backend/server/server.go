@@ -33,13 +33,17 @@ type Server struct {
 	GoEnv        string
 }
 
-func RunPeriodicTask(task func()) {
+func RunPeriodicTask(ctx context.Context, task func()) {
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 		for {
-			<-ticker.C
-			task()
+			select {
+			case <-ticker.C:
+				task()
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 }
@@ -48,7 +52,6 @@ func checkClients(s *Server) {
 	clients, uniqueUsers := s.Hub.Counts()
 	slog.Info("connected clients", "connections", clients, "unique_users", uniqueUsers)
 }
-
 // ctx is a shutdown signal, threaded down to MessageWorker so it can stop
 // picking up new deliveries and bound in-flight ones on shutdown.
 func StartServer(ctx context.Context) (*Server, error) {
@@ -100,7 +103,7 @@ func StartServer(ctx context.Context) (*Server, error) {
 	s.MessageWorker = service.NewMessageWorker(s.RabbitMQClient, s.MessageService)
 	s.MessageWorker.Start(ctx)
 
-	RunPeriodicTask(func() {
+	RunPeriodicTask(ctx, func() {
 		checkClients(s)
 	})
 
