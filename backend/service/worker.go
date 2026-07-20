@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"hash/fnv"
 	"log/slog"
 	"os"
 	"sync"
@@ -12,6 +13,25 @@ import (
 	"github.com/leeryan2000/flashat/wire"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+// routedDelivery pairs a raw AMQP delivery (needed for Ack/Nack) with its
+// already-parsed envelope, so the dispatcher's one unmarshal is reused by
+// the worker instead of parsing the body twice.
+type routedDelivery struct {
+	d   amqp.Delivery
+	env wire.Msg
+}
+
+// workerIndexFor deterministically maps a conversation to the same worker
+// every time, for the life of the process — this is what makes per-worker
+// channels FIFO-safe for a given conversation. Do not change workerPoolSize
+// while running; that would remap every conversation to a different worker
+// mid-flight.
+func workerIndexFor(conversationID string, poolSize int) int {
+	h := fnv.New32a()
+	h.Write([]byte(conversationID))
+	return int(h.Sum32()) % poolSize
+}
 
 // MessageWorker owns all RabbitMQ consumer mechanics.
 // It knows nothing about business logic — it just dequeues,
@@ -23,9 +43,6 @@ type MessageWorker struct {
 	wg sync.WaitGroup
 }
 
-// Number of goroutines concurrently draining the delivery channel.
-// Bottleneck here is I/O (DB + websocket writes), not CPU, so this
-// isn't tied to runtime.NumCPU().
 const workerPoolSize = 4
 
 func NewMessageWorker(mq *db.RabbitMQClient, svc *MessageService) *MessageWorker {
@@ -35,10 +52,6 @@ func NewMessageWorker(mq *db.RabbitMQClient, svc *MessageService) *MessageWorker
 	}
 }
 
-// Launch a pool of goroutines consuming from the same delivery channel.
-// ctx is a shutdown signal, not a per-message context — cancelling it stops
-// the pool from picking up new deliveries and bounds how long an in-flight
-// one can keep running; see WaitForShutdown.
 func (w *MessageWorker) Start(ctx context.Context) {
 	deliveries, err := w.MQ.Ch.Consume(
 		"chat_messages",
@@ -51,26 +64,67 @@ func (w *MessageWorker) Start(ctx context.Context) {
 		os.Exit(1)
 	}
 
+	// Each worker gets its own buffered channel
+	workerChans := make([]chan routedDelivery, workerPoolSize)
+	for i := range workerChans {
+		workerChans[i] = make(chan routedDelivery, 32)
+	}
+
 	slog.Info("worker: starting pool, waiting for messages", "pool_size", workerPoolSize)
-	for range workerPoolSize {
+	for i := range workerPoolSize {
 		w.wg.Add(1)
-		go func() {
+		go func(ch <-chan routedDelivery) {
 			defer w.wg.Done()
 			for {
 				select {
-				case d, ok := <-deliveries:
+				case rd, ok := <-ch:
 					if !ok {
-						slog.Info("worker: delivery channel closed, shutting down")
 						return
 					}
-					w.processDelivery(ctx, d)
+					w.processDelivery(ctx, rd)
 				case <-ctx.Done():
 					slog.Info("worker: shutdown signal received, stopping")
 					return
 				}
 			}
-		}()
+		}(workerChans[i])
 	}
+
+	// Single dispatcher: the only goroutine reading the shared RabbitMQ
+	// delivery channel, so there's no race on read order.
+	w.wg.Add(1)
+	go func() {
+		defer w.wg.Done()
+		defer func() {
+			for _, ch := range workerChans {
+				close(ch)
+			}
+		}()
+		for {
+			select {
+			case d, ok := <-deliveries:
+				if !ok {
+					slog.Info("worker: delivery channel closed, shutting down")
+					return
+				}
+				var env wire.Msg
+				if err := json.Unmarshal(d.Body, &env); err != nil {
+					slog.Error("worker: malformed message, discarding", "error", err)
+					d.Nack(false, false)
+					continue
+				}
+				idx := workerIndexFor(env.ConversationID, workerPoolSize)
+				select {
+				case workerChans[idx] <- routedDelivery{d: d, env: env}:
+				case <-ctx.Done():
+					return
+				}
+			case <-ctx.Done():
+				slog.Info("worker: dispatcher shutdown signal received, stopping")
+				return
+			}
+		}
+	}()
 }
 
 // processDeliveryTimeout bounds a single ProcessChat attempt. Kept under the
@@ -100,16 +154,11 @@ func (w *MessageWorker) WaitForShutdown() {
 	}
 }
 
-func (w *MessageWorker) processDelivery(parent context.Context, d amqp.Delivery) {
+func (w *MessageWorker) processDelivery(parent context.Context, rd routedDelivery) {
 	ctx, cancel := context.WithTimeout(parent, processDeliveryTimeout)
 	defer cancel()
 
-	var env wire.Msg
-	if err := json.Unmarshal(d.Body, &env); err != nil {
-		slog.Error("worker: malformed message, discarding", "error", err)
-		d.Nack(false, false) // don't requeue — malformed will never succeed
-		return
-	}
+	d, env := rd.d, rd.env
 
 	var processErr error
 retryLoop:

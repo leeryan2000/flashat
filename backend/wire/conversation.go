@@ -14,7 +14,7 @@ type ParticipantSummary struct {
 type ConversationSummary struct {
 	ConversationID uuid.UUID `json:"id"`
 	ConvType       string    `json:"type"` // group | direct
-	
+
 	Title       string    `json:"title,omitempty"`
 	AvatarURL   string    `json:"avatar_url,omitempty"`
 	LastMsgID   uuid.UUID `json:"last_msg_id,omitempty"`

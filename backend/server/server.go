@@ -52,6 +52,7 @@ func checkClients(s *Server) {
 	clients, uniqueUsers := s.Hub.Counts()
 	slog.Info("connected clients", "connections", clients, "unique_users", uniqueUsers)
 }
+
 // ctx is a shutdown signal, threaded down to MessageWorker so it can stop
 // picking up new deliveries and bound in-flight ones on shutdown.
 func StartServer(ctx context.Context) (*Server, error) {
