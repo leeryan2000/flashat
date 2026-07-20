@@ -14,28 +14,18 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-// routedDelivery pairs a raw AMQP delivery (needed for Ack/Nack) with its
-// already-parsed envelope, so the dispatcher's one unmarshal is reused by
-// the worker instead of parsing the body twice.
 type routedDelivery struct {
 	d   amqp.Delivery
 	env wire.Msg
 }
 
-// workerIndexFor deterministically maps a conversation to the same worker
-// every time, for the life of the process — this is what makes per-worker
-// channels FIFO-safe for a given conversation. Do not change workerPoolSize
-// while running; that would remap every conversation to a different worker
-// mid-flight.
+// used to determine which worker in the pool should handle a given conversation.
 func workerIndexFor(conversationID string, poolSize int) int {
 	h := fnv.New32a()
 	h.Write([]byte(conversationID))
 	return int(h.Sum32()) % poolSize
 }
 
-// MessageWorker owns all RabbitMQ consumer mechanics.
-// It knows nothing about business logic — it just dequeues,
-// calls the service, and translates the result into ack/nack.
 type MessageWorker struct {
 	MQ      *db.RabbitMQClient
 	Service *MessageService
