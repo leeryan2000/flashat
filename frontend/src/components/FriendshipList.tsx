@@ -96,6 +96,8 @@ export default function FriendshipList({
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-xl font-medium transition text-sm shadow-lg"
             style={{ background: "var(--primary)", boxShadow: "0 4px 12px var(--primary-shadow)" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--primary-hover)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--primary)")}
           >
             <UserPlus size={18} />
           </button>
@@ -105,6 +107,8 @@ export default function FriendshipList({
             onClick={() => setIsGroupModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition text-sm"
             style={{ background: "var(--sidebar-item)", color: "var(--text)" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-muted-hover)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--sidebar-item)")}
           >
             <MessageSquarePlus size={18} />
             <span className="hidden sm:inline">New Group</span>
