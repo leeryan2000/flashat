@@ -13,7 +13,7 @@ import {
   ShieldOff,
 } from 'lucide-react';
 import type { Friendship } from '../wire/friendship';
-import { avatarColor, nameInitials } from '../utils/avatar';
+import Avatar from './Avatar';
 import { FriendshipOptions } from './FriendshipOptions';
 import { AddFriendModal } from './AddFriendModal';
 import { CreateGroupModal } from './CreateGroupModal';
@@ -62,10 +62,8 @@ export default function FriendshipList({
     };
   }, [data, query]);
 
-  const renderAvatar = (name: string) => (
-    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shrink-0 ${avatarColor(name)}`}>
-      {nameInitials(name)}
-    </div>
+  const renderAvatar = (name: string, avatarUrl?: string | null) => (
+    <Avatar name={name} avatarUrl={avatarUrl} size="sm" />
   );
 
   return (
@@ -128,7 +126,7 @@ export default function FriendshipList({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {incoming.map(user => (
                 <div key={user.uid} className="p-4 rounded-xl border flex items-center gap-4" style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}>
-                  {renderAvatar(user.name)}
+                  {renderAvatar(user.name, user.avatarUrl)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
                     <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>{user.email}</p>
@@ -180,7 +178,7 @@ export default function FriendshipList({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {outgoing.map(user => (
                 <div key={user.uid} className="p-4 rounded-xl border flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}>
-                  {renderAvatar(user.name)}
+                  {renderAvatar(user.name, user.avatarUrl)}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.name}</p>
                     <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>Pending...</p>
@@ -218,7 +216,7 @@ export default function FriendshipList({
                   className="group transition p-4 rounded-xl border border-transparent flex items-center gap-4"
                   style={{ background: "var(--sidebar-item)" }}
                 >
-                  {renderAvatar(user.name)}
+                  {renderAvatar(user.name, user.avatarUrl)}
 
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate" style={{ color: "var(--text)" }}>
@@ -265,7 +263,7 @@ export default function FriendshipList({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {blocked.map(user => (
                   <div key={user.uid} className="p-4 rounded-xl border flex items-center gap-4 opacity-75" style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}>
-                    {renderAvatar(user.name)}
+                    {renderAvatar(user.name, user.avatarUrl)}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{user.name}</p>
                       <p className="text-xs truncate" style={{ color: "var(--text-soft)" }}>{user.email}</p>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Check, Loader2, MessageSquarePlus } from "lucide-react";
 import type { Friendship } from "../wire/friendship";
-import { avatarColor, nameInitials } from "../utils/avatar";
+import Avatar from "./Avatar";
 
 type CreateGroupModalProps = {
   friends: Friendship[];
@@ -45,10 +45,8 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
     }
   };
 
-  const renderAvatar = (name: string) => (
-    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shrink-0 ${avatarColor(name)}`}>
-      {nameInitials(name)}
-    </div>
+  const renderAvatar = (name: string, avatarUrl?: string | null) => (
+    <Avatar name={name} avatarUrl={avatarUrl} size="sm" />
   );
 
   return (
@@ -109,7 +107,7 @@ export function CreateGroupModal({ friends, onClose, onCreateGroup }: CreateGrou
                         {isSelected && <Check size={14} className="text-white" />}
                       </div>
 
-                      {renderAvatar(friend.name)}
+                      {renderAvatar(friend.name, friend.avatarUrl)}
 
                       <div className="min-w-0">
                         <p className="text-sm font-medium" style={{ color: "var(--text)" }}>

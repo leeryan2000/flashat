@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Check, Loader2, UserPlus } from "lucide-react";
 import type { Friendship } from "../wire/friendship";
-import { avatarColor, nameInitials } from "../utils/avatar";
+import Avatar from "./Avatar";
 
 type AddMembersModalProps = {
   friends: Friendship[];
@@ -108,11 +108,7 @@ export function AddMembersModal({ friends, onClose, onAdd }: AddMembersModalProp
                         {isSelected && <Check size={14} className="text-white" />}
                       </div>
 
-                      <div
-                        className={`h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 ${avatarColor(friend.name)}`}
-                      >
-                        {nameInitials(friend.name)}
-                      </div>
+                      <Avatar name={friend.name} avatarUrl={friend.avatarUrl} size="sm" />
 
                       <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>
                         {friend.name}
