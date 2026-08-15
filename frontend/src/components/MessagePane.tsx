@@ -7,7 +7,7 @@ import type { Conversation } from "../wire/conversation";
 import { MoreVertical, Ban, LogOut, Users, UserPlus, Clock, AlertCircle, MessageSquare } from "lucide-react";
 import { ParticipantsPanel } from "./ParticipantsPanel";
 import { AddMembersModal } from "./AddMembersModal";
-import { avatarColor, nameInitials } from "../utils/avatar";
+import Avatar from "./Avatar";
 import { api } from "../api/api";
 
 type MessagePaneProps = {
@@ -20,14 +20,6 @@ type MessagePaneProps = {
 };
 
 
-
-function Avatar({ name }: { name: string }) {
-  return (
-    <div title={name} className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(name)}`}>
-      {nameInitials(name)}
-    </div>
-  );
-}
 
 function getDateLabel(ts: number): string {
   const now = new Date();
@@ -51,8 +43,8 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
   const { convs, markAsRead, friendships, loadConvs } = useChat();
 
   const participantMap = useMemo(() => {
-    const map = new Map<string, string>();
-    conv?.participants.forEach((p) => map.set(p.uid, p.name));
+    const map = new Map<string, { name: string; avatarUrl?: string }>();
+    conv?.participants.forEach((p) => map.set(p.uid, { name: p.name, avatarUrl: p.avatar_url }));
     return map;
   }, [conv?.participants]);
 
@@ -319,7 +311,12 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
               {/* Avatar for other users — only on the first message of a run */}
               {!isSelf(item.msg) && (
                 item.first ? (
-                  <Avatar name={participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "?"} />
+                  <Avatar
+                    name={participantMap.get(item.msg.fromUid)?.name ?? item.msg.fromName ?? "?"}
+                    avatarUrl={participantMap.get(item.msg.fromUid)?.avatarUrl}
+                    size="xs"
+                    title={participantMap.get(item.msg.fromUid)?.name ?? item.msg.fromName}
+                  />
                 ) : (
                   <div className="w-8 shrink-0" />
                 )
@@ -329,7 +326,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
                 {/* Sender name for group chats — only on the first message of a run */}
                 {!isSelf(item.msg) && conv?.type === "group" && item.first && (
                   <span className="text-xs mb-1 ml-1" style={{ color: "var(--text-faint)" }}>
-                    {participantMap.get(item.msg.fromUid) ?? item.msg.fromName ?? "Unknown"}
+                    {participantMap.get(item.msg.fromUid)?.name ?? item.msg.fromName ?? "Unknown"}
                   </span>
                 )}
                 <div
