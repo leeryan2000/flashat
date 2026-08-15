@@ -5,6 +5,12 @@ type User = {
   uid: string;
   email: string;
   name: string;
+  user_avatar_url?: string;
+};
+
+type AvatarUploadUrlResponse = {
+  upload_url: string;
+  object_url: string;
 };
 
 interface AuthContextType {
@@ -15,6 +21,8 @@ interface AuthContextType {
   logout: () => void;
   register: (username: string, email: string, password: string, code: string) => void;
   updateProfile: (updatedData: {name: string}) => void;
+  getAvatarUploadUrl: () => Promise<AvatarUploadUrlResponse>;
+  updateAvatarUrl: (url: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -94,6 +102,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getAvatarUploadUrl = async () => {
+    return api<AvatarUploadUrlResponse>("/user/auth/avatar/upload-url");
+  };
+
+  const updateAvatarUrl = async (url: string) => {
+    try {
+      const updatedUser = await api<User>("/user/auth/avatar", {
+        method: "PUT",
+        body: JSON.stringify({ avatar_url: url }),
+      });
+      setUser(updatedUser);
+    } catch (error) {
+      console.error("Failed to update avatar:", error);
+      throw error;
+    }
+  };
+
   // Memoize the context value
   const value = useMemo(
     () => ({
@@ -104,7 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       register,
       isLoading,
-      updateProfile
+      updateProfile,
+      getAvatarUploadUrl,
+      updateAvatarUrl
     }),
     [user, isInitialLoading, isLoading, login, logout, register]
   );

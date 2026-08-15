@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { MessageSquare, Users, User, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../context/WebSocketContext";
-import { avatarColor, nameInitials } from "../utils/avatar";
+import Avatar from "../components/Avatar";
 import { motion } from "framer-motion";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -76,9 +76,7 @@ export default function Sidebar() {
           title={`${user.name} · ${user.email} · ${STATUS_LABEL[status] ?? "Disconnected"}`}
           className="relative cursor-default mt-4"
         >
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0 ${avatarColor(user.name)}`}>
-            {nameInitials(user.name)}
-          </div>
+          <Avatar name={user.name} avatarUrl={user.user_avatar_url} size="sm9" />
           <span
             className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
             style={{ background: STATUS_COLOR[status] ?? "#94a3b8", borderColor: "var(--nav-bg)" }}
