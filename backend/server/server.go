@@ -34,6 +34,7 @@ type Server struct {
 	GoEnv        string
 
 	// S3
+	S3Client    *s3.Client
 	S3Presigner *s3.PresignClient
 	S3Bucket    string
 	S3Region    string
@@ -98,10 +99,11 @@ func StartServer(ctx context.Context) (*Server, error) {
 	s.RegisterCode = cfg.REGISTER_CODE
 	s.GoEnv = cfg.GO_ENV
 
-	s3Presigner, err := db.NewS3PresignClient(cfg)
+	s3Client, s3Presigner, err := db.NewS3Clients(cfg)
 	if err != nil {
 		return nil, err
 	}
+	s.S3Client = s3Client
 	s.S3Presigner = s3Presigner
 	s.S3Bucket = cfg.AWS_S3_BUCKET
 	s.S3Region = cfg.AWS_REGION

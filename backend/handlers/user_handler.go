@@ -19,6 +19,7 @@ import (
 type UserHandler struct {
 	Repo         repo.UserRepo
 	RegisterCode string
+	S3Client     *s3.Client
 	S3Presigner  *s3.PresignClient
 	S3Bucket     string
 	S3Region     string
@@ -191,6 +192,43 @@ func (h UserHandler) SetAvatarURL(c *gin.Context) {
 	}
 
 	if err := h.Repo.UpdateAvatarURL(c.Request.Context(), uid, input.AvatarURL); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.Repo.GetUserByUID(c.Request.Context(), uid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+func (h UserHandler) RemoveAvatar(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	if uidStr == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	key := fmt.Sprintf("avatars/%s.jpg", uid.String())
+	if _, err := h.S3Client.DeleteObject(c.Request.Context(), &s3.DeleteObjectInput{
+		Bucket: aws.String(h.S3Bucket),
+		Key:    aws.String(key),
+	}); err != nil {
+		slog.Error("failed to delete avatar object", "uid", uid, "error", err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove photo"})
+		return
+	}
+
+	if err := h.Repo.UpdateAvatarURL(c.Request.Context(), uid, ""); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

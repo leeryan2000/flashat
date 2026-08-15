@@ -7,7 +7,9 @@ import {
   Check,
   X,
   Edit2,
-  Loader2
+  Loader2,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import Avatar from '../components/Avatar';
 
@@ -47,7 +49,7 @@ async function resizeImageToBlob(file: File, maxSize = 512, quality = 0.85): Pro
 
 export default function ProfilePage() {
   // Pull current user data and logout function from your context
-  const { user, updateProfile, getAvatarUploadUrl, updateAvatarUrl } = useAuth();
+  const { user, updateProfile, getAvatarUploadUrl, updateAvatarUrl, removeAvatar } = useAuth();
 
   // State for toggling edit mode
   const [isEditing, setIsEditing] = useState(false);
@@ -56,17 +58,21 @@ export default function ProfilePage() {
 
   // Avatar upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
+  const [isAvatarBusy, setIsAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState("");
 
-  const handleAvatarClick = () => fileInputRef.current?.click();
+  const handleUploadOptionClick = () => {
+    setIsAvatarMenuOpen(false);
+    fileInputRef.current?.click();
+  };
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file next time
     if (!file) return;
 
-    setIsUploadingAvatar(true);
+    setIsAvatarBusy(true);
     setAvatarError("");
     try {
       const blob = await resizeImageToBlob(file);
@@ -84,7 +90,21 @@ export default function ProfilePage() {
       console.error("Failed to upload avatar:", error);
       setAvatarError("Failed to upload photo. Please try again.");
     } finally {
-      setIsUploadingAvatar(false);
+      setIsAvatarBusy(false);
+    }
+  };
+
+  const handleRemoveOptionClick = async () => {
+    setIsAvatarMenuOpen(false);
+    setIsAvatarBusy(true);
+    setAvatarError("");
+    try {
+      await removeAvatar();
+    } catch (error) {
+      console.error("Failed to remove avatar:", error);
+      setAvatarError("Failed to remove photo. Please try again.");
+    } finally {
+      setIsAvatarBusy(false);
     }
   };
 
@@ -118,7 +138,7 @@ export default function ProfilePage() {
 
         {/* Header & Avatar Section */}
         <div className="flex flex-col items-center mb-10">
-          <div className="relative group cursor-pointer mb-4" onClick={handleAvatarClick}>
+          <div className="relative group cursor-pointer mb-4" onClick={() => setIsAvatarMenuOpen(o => !o)}>
             {/* Avatar Circle */}
             <Avatar name={user?.name || "??"} avatarUrl={user?.user_avatar_url} size="lg" className="shadow-lg" />
 
@@ -132,12 +152,51 @@ export default function ProfilePage() {
 
             {/* Hover Overlay for changing avatar */}
             <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {isUploadingAvatar ? (
+              {isAvatarBusy ? (
                 <Loader2 className="w-8 h-8 text-white animate-spin" />
               ) : (
                 <Camera className="w-8 h-8 text-white" />
               )}
             </div>
+
+            {/* Upload / Remove menu */}
+            {isAvatarMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10 cursor-default"
+                  onClick={(e) => { e.stopPropagation(); setIsAvatarMenuOpen(false); }}
+                />
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 border rounded-xl shadow-xl z-20 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100 cursor-default"
+                  style={{ background: "var(--sidebar-item)", borderColor: "var(--panel-border)" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={handleUploadOptionClick}
+                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition"
+                    style={{ color: "var(--text)" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-muted)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "")}
+                  >
+                    <Upload size={16} />
+                    Upload Photo
+                  </button>
+
+                  {user?.user_avatar_url && (
+                    <button
+                      onClick={handleRemoveOptionClick}
+                      className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition"
+                      style={{ color: "var(--danger-text)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--danger-bg)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "")}
+                    >
+                      <Trash2 size={16} />
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {avatarError && <p className="text-sm mb-2" style={{ color: "var(--danger-text)" }}>{avatarError}</p>}

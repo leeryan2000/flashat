@@ -23,6 +23,7 @@ interface AuthContextType {
   updateProfile: (updatedData: {name: string}) => void;
   getAvatarUploadUrl: () => Promise<AvatarUploadUrlResponse>;
   updateAvatarUrl: (url: string) => Promise<void>;
+  removeAvatar: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -106,6 +107,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return api<AvatarUploadUrlResponse>("/user/auth/avatar/upload-url");
   };
 
+  const removeAvatar = async () => {
+    try {
+      const updatedUser = await api<User>("/user/auth/avatar", { method: "DELETE" });
+      setUser(updatedUser);
+    } catch (error) {
+      console.error("Failed to remove avatar:", error);
+      throw error;
+    }
+  };
+
   const updateAvatarUrl = async (url: string) => {
     try {
       const updatedUser = await api<User>("/user/auth/avatar", {
@@ -131,7 +142,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       updateProfile,
       getAvatarUploadUrl,
-      updateAvatarUrl
+      updateAvatarUrl,
+      removeAvatar
     }),
     [user, isInitialLoading, isLoading, login, logout, register]
   );

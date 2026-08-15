@@ -14,6 +14,7 @@ func BuildRouter(s *server.Server) *gin.Engine {
 		User: handlers.UserHandler{
 			Repo:         s.UserRepo,
 			RegisterCode: s.RegisterCode,
+			S3Client:     s.S3Client,
 			S3Presigner:  s.S3Presigner,
 			S3Bucket:     s.S3Bucket,
 			S3Region:     s.S3Region,
