@@ -128,3 +128,13 @@ func (r *PgxUserRepo) UpdateName(ctx context.Context, uid uuid.UUID, name string
 
 	return err
 }
+
+func (r *PgxUserRepo) UpdateAvatarURL(ctx context.Context, uid uuid.UUID, avatarURL string) error {
+	_, err := r.Pool.Exec(ctx, `
+		UPDATE users
+		SET user_avatar_url = $1
+		WHERE uid = $2
+	`, avatarURL, uid)
+
+	return err
+}

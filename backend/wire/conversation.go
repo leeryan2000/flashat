@@ -5,9 +5,10 @@ import (
 )
 
 type ParticipantSummary struct {
-	UID  uuid.UUID `json:"uid"`
-	Name string    `json:"name"`
-	Role string    `json:"role"` // "admin" | "member"
+	UID       uuid.UUID `json:"uid"`
+	Name      string    `json:"name"`
+	Role      string    `json:"role"` // "admin" | "member"
+	AvatarURL string    `json:"avatar_url"`
 }
 
 // conversation summary

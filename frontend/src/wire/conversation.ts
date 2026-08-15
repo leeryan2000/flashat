@@ -4,6 +4,7 @@ export type Participant = {
   uid: string;
   name: string;
   role: "creator" | "admin" | "member";
+  avatar_url?: string;
 };
 
 export type Conversation = {

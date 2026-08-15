@@ -359,7 +359,7 @@ func (r *PgxConversationRepo) GetSummary(ctx context.Context, uid uuid.UUID) ([]
 
 			COALESCE((
 				SELECT json_agg(
-					json_build_object('uid', p.uid, 'name', u2.name, 'role', p.role)
+					json_build_object('uid', p.uid, 'name', u2.name, 'role', p.role, 'avatar_url', u2.user_avatar_url)
 					ORDER BY CASE WHEN p.role IN ('creator', 'admin') THEN 0 ELSE 1 END, u2.name
 				)
 				FROM conversation_participants p

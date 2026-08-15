@@ -13,4 +13,5 @@ type UserRepo interface {
 	GetUserByUID(ctx context.Context, uid uuid.UUID) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	UpdateName(ctx context.Context, uid uuid.UUID, name string) error
+	UpdateAvatarURL(ctx context.Context, uid uuid.UUID, avatarURL string) error
 }

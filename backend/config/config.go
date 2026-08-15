@@ -22,6 +22,9 @@ type Configuration struct {
 	MQ_ADDR    string
 
 	REGISTER_CODE string
+
+	AWS_REGION    string
+	AWS_S3_BUCKET string
 }
 
 func LoadConfig() Configuration {
@@ -45,6 +48,8 @@ func LoadConfig() Configuration {
 	configuration.MQ_PASS = os.Getenv("MQ_PASS")
 	configuration.MQ_ADDR = os.Getenv("MQ_ADDR")
 	configuration.REGISTER_CODE = os.Getenv("REGISTER_CODE")
+	configuration.AWS_REGION = os.Getenv("AWS_REGION")
+	configuration.AWS_S3_BUCKET = os.Getenv("AWS_S3_BUCKET")
 
 	return configuration
 }
