@@ -20,4 +20,6 @@ func InitializeUserRoutes(router *gin.RouterGroup, h *handlers.Handlers, s *serv
 	userAuthRoutes.GET("/all", uh.GetAllUsers)
 	userAuthRoutes.GET("/:id", uh.GetUserById)
 	userAuthRoutes.PUT("/name", uh.UpdateName)
+	userAuthRoutes.GET("/avatar/upload-url", uh.GetAvatarUploadURL)
+	userAuthRoutes.PUT("/avatar", uh.SetAvatarURL)
 }

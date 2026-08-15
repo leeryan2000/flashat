@@ -1,19 +1,27 @@
 package handlers
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/leeryan2000/flashat/models"
 	"github.com/leeryan2000/flashat/repo"
 	"github.com/leeryan2000/flashat/utils"
+	"github.com/leeryan2000/flashat/wire"
 )
 
 type UserHandler struct {
 	Repo         repo.UserRepo
 	RegisterCode string
+	S3Presigner  *s3.PresignClient
+	S3Bucket     string
+	S3Region     string
 }
 
 type createUserInput struct {
@@ -116,6 +124,73 @@ func (h UserHandler) UpdateName(c *gin.Context) {
 	}
 
 	if err := h.Repo.UpdateName(c.Request.Context(), uid, input.Name); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.Repo.GetUserByUID(c.Request.Context(), uid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+func (h UserHandler) GetAvatarUploadURL(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	if uidStr == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	key := fmt.Sprintf("avatars/%s.jpg", uid.String())
+
+	presignResult, err := h.S3Presigner.PresignPutObject(c.Request.Context(), &s3.PutObjectInput{
+		Bucket:      aws.String(h.S3Bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String("image/jpeg"),
+	}, s3.WithPresignExpires(5*time.Minute))
+	if err != nil {
+		slog.Error("failed to presign avatar upload url", "uid", uid, "error", err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload URL"})
+		return
+	}
+
+	objectURL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s?v=%d", h.S3Bucket, h.S3Region, key, time.Now().Unix())
+
+	c.JSON(http.StatusOK, wire.AvatarUploadURLResponse{
+		UploadURL: presignResult.URL,
+		ObjectURL: objectURL,
+	})
+}
+
+func (h UserHandler) SetAvatarURL(c *gin.Context) {
+	uidStr := c.GetString("uid")
+	if uidStr == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	uid, err := uuid.Parse(uidStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	var input wire.SetAvatarURLInput
+	if err := c.ShouldBindJSON(&input); err != nil || input.AvatarURL == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "avatar_url is required"})
+		return
+	}
+
+	if err := h.Repo.UpdateAvatarURL(c.Request.Context(), uid, input.AvatarURL); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
