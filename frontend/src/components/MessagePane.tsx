@@ -48,6 +48,7 @@ export default function MessagesPane({ conv, msg, activeConvId, onLoadMore, onBl
     return map;
   }, [conv?.participants]);
 
+  // Compute eligible friends for adding to the group
   const eligibleFriends = useMemo(() => {
     if (!conv || conv.type !== "group") return [];
     const participantUids = new Set(conv.participants.map((p) => p.uid));
