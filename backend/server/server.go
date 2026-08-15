@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/leeryan2000/flashat/config"
 	"github.com/leeryan2000/flashat/db"
@@ -31,6 +32,12 @@ type Server struct {
 	// Config
 	RegisterCode string
 	GoEnv        string
+
+	// S3
+	S3Client    *s3.Client
+	S3Presigner *s3.PresignClient
+	S3Bucket    string
+	S3Region    string
 }
 
 func RunPeriodicTask(ctx context.Context, task func()) {
@@ -91,6 +98,15 @@ func StartServer(ctx context.Context) (*Server, error) {
 	s.FriendshipRepo = &repo.PgxFriendshipRepo{Pool: s.Pool}
 	s.RegisterCode = cfg.REGISTER_CODE
 	s.GoEnv = cfg.GO_ENV
+
+	s3Client, s3Presigner, err := db.NewS3Clients(cfg)
+	if err != nil {
+		return nil, err
+	}
+	s.S3Client = s3Client
+	s.S3Presigner = s3Presigner
+	s.S3Bucket = cfg.AWS_S3_BUCKET
+	s.S3Region = cfg.AWS_REGION
 
 	s.MessageService = service.NewMessageService(
 		s.Hub,
