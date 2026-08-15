@@ -3,6 +3,8 @@ name: Docker CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   # ---------------------------------------------------
@@ -31,6 +33,7 @@ jobs:
   # JOB 1: Build and Push the Go Backend Image
   # ---------------------------------------------------
   build-backend:
+    if: github.event_name == 'push'
     needs: [test]
     runs-on: ubuntu-latest
     steps:
@@ -55,6 +58,7 @@ jobs:
   # ---------------------------------------------------
   deploy-to-ec2:
     # This ensures the deploy only happens if BOTH builds succeed
+    if: github.event_name == 'push'
     needs: [build-backend]
     runs-on: ubuntu-latest
     steps:
