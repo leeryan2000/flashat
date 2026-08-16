@@ -1,8 +1,0 @@
-{
-  "streams": [{
-    "stream": { "service": "backend" },
-    "values": [
-      ["1780120635885000000", "INFO server listening port=8080"]
-    ]
-  }]
-}

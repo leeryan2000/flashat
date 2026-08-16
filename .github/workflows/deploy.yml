@@ -8,9 +8,9 @@ on:
 
 jobs:
   # ---------------------------------------------------
-  # JOB 0: Run Backend Tests
+  # JOB 0a: Run Backend Tests
   # ---------------------------------------------------
-  test:
+  test-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -30,11 +30,33 @@ jobs:
         run: go test ./... -race -count=1
 
   # ---------------------------------------------------
-  # JOB 1: Build and Push the Go Backend Image
+  # JOB 0b: Run Posts Tests
+  # ---------------------------------------------------
+  test-posts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: posts/go.mod
+
+      - name: Vet
+        working-directory: posts
+        run: go vet ./...
+
+      - name: Test (race detector)
+        working-directory: posts
+        run: go test ./... -race -count=1
+
+  # ---------------------------------------------------
+  # JOB 1a: Build and Push the Go Backend Image
   # ---------------------------------------------------
   build-backend:
     if: github.event_name == 'push'
-    needs: [test]
+    needs: [test-backend]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -53,13 +75,37 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-backend:latest
 
+  # ---------------------------------------------------
+  # JOB 1b: Build and Push the Go Posts Image
+  # ---------------------------------------------------
+  build-posts:
+    if: github.event_name == 'push'
+    needs: [test-posts]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push Posts
+        uses: docker/build-push-action@v5
+        with:
+          context: ./posts
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/flashat-posts:latest
+
 # ---------------------------------------------------
   # JOB 2: Ship Configs and Restart EC2 Containers
   # ---------------------------------------------------
   deploy-to-ec2:
-    # This ensures the deploy only happens if BOTH builds succeed
+    # This ensures the deploy only happens if ALL builds succeed
     if: github.event_name == 'push'
-    needs: [build-backend]
+    needs: [build-backend, build-posts]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
