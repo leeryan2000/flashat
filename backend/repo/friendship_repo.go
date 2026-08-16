@@ -23,4 +23,9 @@ type FriendshipRepo interface {
 	ListFriendships(ctx context.Context, uid uuid.UUID) ([]wire.Friendship, error)
 
 	GetFriendshipStatus(ctx context.Context, uid1, uid2 uuid.UUID) (string, error)
+
+	// ListAcceptedFriendUIDs returns the UIDs of every accepted friend of
+	// uid, regardless of who sent the original request. Used by the
+	// internal gRPC AuthInternal service to scope the Posts feed.
+	ListAcceptedFriendUIDs(ctx context.Context, uid uuid.UUID) ([]uuid.UUID, error)
 }

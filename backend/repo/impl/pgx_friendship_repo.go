@@ -214,3 +214,26 @@ func (r *PgxFriendshipRepo) GetFriendshipStatus(ctx context.Context, userAUID, u
 	// Implementation for getting friendship status using pgx
 	return "", nil
 }
+
+func (r *PgxFriendshipRepo) ListAcceptedFriendUIDs(ctx context.Context, uid uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.Pool.Query(ctx, `
+		SELECT CASE WHEN requester_uid = $1 THEN receiver_uid ELSE requester_uid END
+		FROM friendships
+		WHERE (requester_uid = $1 OR receiver_uid = $1) AND status = 'accepted'`,
+		uid,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var friendUIDs []uuid.UUID
+	for rows.Next() {
+		var friendUID uuid.UUID
+		if err := rows.Scan(&friendUID); err != nil {
+			return nil, err
+		}
+		friendUIDs = append(friendUIDs, friendUID)
+	}
+	return friendUIDs, rows.Err()
+}
