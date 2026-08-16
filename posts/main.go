@@ -9,6 +9,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/leeryan2000/flashat-posts/server"
+	"github.com/leeryan2000/flashat-posts/transport"
 )
 
 func main() {
@@ -20,17 +23,15 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// TODO: replace with server.StartServer(ctx) once config/db/grpc client
-	// are wired up (mirrors backend/server/server.go's composition root).
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/posts/status", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	s, err := server.StartServer(ctx)
+	if err != nil {
+		log.Fatal("failed to start server: ", err)
+	}
 
+	router := transport.BuildRouter(s)
 	httpServer := &http.Server{
 		Addr:    ":8081",
-		Handler: mux,
+		Handler: router,
 	}
 
 	go func() {
@@ -39,13 +40,16 @@ func main() {
 			log.Fatal("listen error: ", err)
 		}
 	}()
-	
+
 	<-ctx.Done()
 	slog.Info("shutting down...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	httpServer.Shutdown(shutdownCtx)
+
+	s.AuthConn.Close()
+	s.Pool.Close()
 
 	slog.Info("shutdown complete")
 }
