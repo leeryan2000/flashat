@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL + "/api";
+const API_BASE = "/api";
 
 // ***** Optimize the api calls to not use application/json all the time and 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {

@@ -11,6 +11,8 @@ import { ChatProvider } from "../context/ChatContext";
 import { WebSocketProvider } from "../context/WebSocketContext";
 import Friendships from "../pages/Friendships";
 import RegisterPage from "../pages/RegisterPage";
+import Posts from "../pages/Posts";
+import { PostProvider } from "../context/PostContext";
 
 function AuthCheck({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -38,6 +40,14 @@ export default function AppRouter() {
         >
           <Route index element={<Chat />} />
           <Route path="friends" element={<Friendships />} />
+          <Route
+            path="posts"
+            element={
+              <PostProvider>
+                <Posts />
+              </PostProvider>
+            }
+          />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

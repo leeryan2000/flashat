@@ -20,10 +20,6 @@ type WebSocketContextType = {
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 const getWebSocketURL = () => {
-  const envUrl = import.meta.env.VITE_WS_URL;
-
-  // 1. Use the .env value if it exists (for local development)
-  if (envUrl) return envUrl;
 
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host; 

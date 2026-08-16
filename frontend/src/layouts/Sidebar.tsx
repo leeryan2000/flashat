@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { MessageSquare, Users, User, Settings } from "lucide-react";
+import { MessageSquare, Users, User, Settings, Rss } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../context/WebSocketContext";
 import Avatar from "../components/Avatar";
@@ -24,6 +24,7 @@ const STATUS_LABEL: Record<string, string> = {
 const navItems = [
   { to: "", end: true, icon: MessageSquare, label: "Chat" },
   { to: "friends", icon: Users, label: "Friends" },
+  { to: "posts", icon: Rss, label: "Posts" },
   { to: "profile", icon: User, label: "Profile" },
   { to: "settings", icon: Settings, label: "Settings" },
 ];
