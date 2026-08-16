@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package flashat.auth.v1;
+
+option go_package = "internal/genproto/authpb";
+
+// AuthInternal is exposed by the backend monolith over gRPC, on an
+// internal-only port not reachable from the public internet (never proxied
+// by nginx, never published in docker-compose). It lets other services
+// (e.g. posts) reuse the monolith's Redis-session auth and friendship data
+// without each service touching Redis/Postgres directly.
+//
+// Regenerate both consumers after editing this file:
+//   make proto-gen
+// which writes into backend/internal/genproto/authpb and
+// posts/internal/genproto/authpb — see the root Makefile.
+service AuthInternal {
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc GetFriendUIDs(GetFriendUIDsRequest) returns (GetFriendUIDsResponse);
+}
+
+message ValidateSessionRequest {
+  string session_id = 1;
+}
+
+message ValidateSessionResponse {
+  string uid = 1;
+  bool valid = 2;
+}
+
+message GetFriendUIDsRequest {
+  string uid = 1;
+}
+
+message GetFriendUIDsResponse {
+  repeated string friend_uids = 1;
+}
