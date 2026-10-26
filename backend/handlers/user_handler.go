@@ -81,7 +81,7 @@ func (h UserHandler) GetAllUsers(c *gin.Context) {
 }
 
 func (h UserHandler) GetUserById(c *gin.Context) {
-	uidStr := c.Param("uid")
+	uidStr := c.Param("id")
 
 	if uidStr == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "ID is required"})

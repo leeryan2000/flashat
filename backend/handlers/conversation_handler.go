@@ -358,7 +358,8 @@ func (h *ConversationHandler) GetLastReadSeq(c *gin.Context) {
 		return
 	}
 
-	conversationIDStr := c.Param("conversation_id")
+	// GET /read_seq has no path param, so the conversation comes from ?conversation_id=
+	conversationIDStr := c.Query("conversation_id")
 	if conversationIDStr == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "ConversationID is required"})
 		return

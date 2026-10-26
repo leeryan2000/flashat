@@ -57,6 +57,10 @@ func (c *Client) ReadPump(handle HandleEnvelope) {
 			break // ignore malformed
 		}
 
+		// Never trust the client-supplied sender — the authenticated session
+		// UID is the only identity a connection may act as.
+		env.FromUID = c.UID
+
 		if err = handle(c.Ctx, &env); err != nil {
 			slog.Error("failed to handle envelope", "uid", c.UID, "error", err)
 			break
