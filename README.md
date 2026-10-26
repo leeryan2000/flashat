@@ -61,6 +61,7 @@ Two accounts are pre-configured and already friends with each other so you can t
 
 ## Documentation
 
+- [Development](docs/DEVELOPMENT.md) — local setup, commands, environment
 - [Architecture](docs/ARCHITECTURE.md) — system overview, message pipeline, data model
 - [API Reference](docs/API.md) — REST endpoints and WebSocket protocol
 

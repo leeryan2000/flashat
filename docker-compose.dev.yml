@@ -1,6 +1,10 @@
 # Local development stack (backend + infrastructure).
 #   docker compose -f docker-compose.dev.yml up --build
 #
+# Or rebuild the backend automatically whenever files under backend/ change
+# (logs still stream in this terminal):
+#   docker compose -f docker-compose.dev.yml up --build --watch
+#
 # The frontend runs on the host, not in Docker:
 #   cd frontend && npm install && npm run dev
 #
@@ -42,6 +46,13 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend
+          ignore:
+            - bin/
+            - flashat-backend
 
   db:
     image: postgres:17-alpine
