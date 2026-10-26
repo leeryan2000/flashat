@@ -1,0 +1,93 @@
+# Local development stack (backend + infrastructure).
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# The frontend runs on the host, not in Docker:
+#   cd frontend && npm install && npm run dev
+#
+# Frontend: http://localhost:5173 (Vite, hot reload)
+# Backend:  http://localhost:8080/api/status
+# RabbitMQ: http://localhost:15672 (flashat / flashat)
+#
+# Host ports can be overridden, e.g. BACKEND_PORT=8090 if 8080 is taken
+# (then update VITE_API_URL / VITE_WS_URL in frontend/.env.development to match).
+name: flashat-dev
+
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      GO_ENV: development
+      DB_USER: flashat
+      DB_PASS: flashat
+      DB_NAME: flashat
+      DB_HOST: db
+      DB_PORT: "5432"
+      REDIS_ADDR: redis:6379
+      MQ_USER: flashat
+      MQ_PASS: flashat
+      MQ_ADDR: rabbitmq:5672
+      REGISTER_CODE: ${REGISTER_CODE:-123456}
+      # Avatar uploads need real AWS credentials; everything else works without them.
+      AWS_REGION: ${AWS_REGION:-ap-southeast-2}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: flashat
+      POSTGRES_PASSWORD: flashat
+      POSTGRES_DB: flashat
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flashat -d flashat"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    ports:
+      - "${MQ_PORT:-5672}:5672"
+      - "${MQ_UI_PORT:-15672}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: flashat
+      RABBITMQ_DEFAULT_PASS: flashat
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
