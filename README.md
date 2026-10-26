@@ -56,3 +56,11 @@ Two accounts are pre-configured and already friends with each other so you can t
 | Deployment | Docker Compose, AWS EC2 |
 | CI/CD | GitHub Actions |
 | Monitoring | Grafana |
+
+---
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — system overview, message pipeline, data model
+- [API Reference](docs/API.md) — REST endpoints and WebSocket protocol
+
